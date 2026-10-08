@@ -1,258 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- ===== PRIMARY SEO ===== -->
-  <title>Carbon Footprint Calculator | Free CO₂ Emissions Estimator</title>
-  <meta name="description" content="Free online carbon footprint calculator. Estimate your annual CO₂e emissions from home energy, transport, diet, waste & shopping. Built for CHE 110." />
-  <meta name="keywords" content="carbon footprint calculator, CO2 emissions, greenhouse gas, climate change, sustainable living, CHE 110" />
-  <meta name="author" content="CHE 110 Group Project" />
-  <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://example.com/carbon-footprint/" />
-
-  <!-- ===== OPEN GRAPH ===== -->
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Carbon Footprint Calculator | Free CO₂ Emissions Estimator" />
-  <meta property="og:description" content="Estimate your annual carbon footprint in tonnes of CO₂e. Free, fast, and privacy-friendly." />
-  <meta property="og:url" content="https://example.com/carbon-footprint/" />
-  <meta property="og:image" content="https://example.com/carbon-footprint/preview.png" />
-
-  <!-- ===== TWITTER CARD ===== -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Carbon Footprint Calculator" />
-  <meta name="twitter:description" content="Estimate your annual CO₂e emissions across home, transport, diet, waste and shopping." />
-  <meta name="twitter:image" content="https://example.com/carbon-footprint/preview.png" />
-
-  <!-- ===== FAVICON ===== -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>" />
-
-  <!-- ===== FONTS + ICONS ===== -->
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- ===== STRUCTURED DATA (JSON-LD) ===== -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "Carbon Footprint Calculator",
-    "url": "https://example.com/carbon-footprint/",
-    "applicationCategory": "UtilityApplication",
-    "operatingSystem": "Any",
-    "description": "Free carbon footprint calculator estimating annual CO₂e emissions.",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-    "author": { "@type": "Organization", "name": "CHE 110 Group Project" }
-  }
-  </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home | CarbonTrace</title>
+<meta name="description" content="CarbonTrace estimates your yearly carbon footprint from travel, energy, food and waste.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- ===== HEADER / NAV ===== -->
-  <header class="site-header">
-    <div class="container nav-wrap">
-      <a href="index.html" class="brand" aria-label="Home">
-        <i class="fas fa-earth-americas" aria-hidden="true"></i>
-        <span>CarbonCalc</span>
-      </a>
-
-      <nav aria-label="Main navigation">
-        <ul class="nav-list">
-          <li><a href="index.html" class="active"><i class="fas fa-calculator" aria-hidden="true"></i> Calculator</a></li>
-          <li><a href="tips.html"><i class="fas fa-lightbulb" aria-hidden="true"></i> Tips</a></li>
-          <li><a href="about.html"><i class="fas fa-circle-info" aria-hidden="true"></i> About</a></li>
-        </ul>
-      </nav>
-
-      <button id="themeToggle" class="icon-btn" aria-label="Toggle dark mode">
-        <i class="fas fa-moon" aria-hidden="true"></i>
-      </button>
-    </div>
-  </header>
-
-  <main id="main">
-    <!-- ===== HERO ===== -->
-    <section class="hero container">
-      <span class="tag"><i class="fas fa-flask" aria-hidden="true"></i> CHE 110 Group Project</span>
-      <h1>Carbon Footprint Calculator</h1>
-      <p class="lead">Estimate your annual greenhouse gas emissions in tonnes of CO₂ equivalent — and discover where you can make the biggest difference.</p>
-    </section>
-
-    <!-- ===== CALCULATOR ===== -->
-    <section class="container">
-      <form id="calcForm" class="card" novalidate>
-
-        <!-- Home Energy -->
-        <fieldset>
-          <legend><i class="fas fa-house" aria-hidden="true"></i> Home Energy</legend>
-
-          <div class="field">
-            <label for="electricity"><i class="fas fa-bolt" aria-hidden="true"></i> Electricity (kWh/month)</label>
-            <input type="number" id="electricity" value="200" min="0" step="1" inputmode="decimal" />
-          </div>
-
-          <div class="field">
-            <label for="lpg"><i class="fas fa-fire" aria-hidden="true"></i> LPG cylinders (14.2 kg/month)</label>
-            <input type="number" id="lpg" value="1" min="0" step="0.1" inputmode="decimal" />
-          </div>
-
-          <div class="field">
-            <label for="gas"><i class="fas fa-gas-pump" aria-hidden="true"></i> Natural gas (m³/month)</label>
-            <input type="number" id="gas" value="0" min="0" step="1" inputmode="decimal" />
-          </div>
-        </fieldset>
-
-        <!-- Transportation -->
-        <fieldset>
-          <legend><i class="fas fa-car-side" aria-hidden="true"></i> Transportation</legend>
-
-          <div class="field">
-            <label for="carKm"><i class="fas fa-car" aria-hidden="true"></i> Car (km/week)</label>
-            <input type="number" id="carKm" value="100" min="0" step="1" inputmode="decimal" />
-          </div>
-
-          <div class="field">
-            <label for="carFuel"><i class="fas fa-gas-pump" aria-hidden="true"></i> Car fuel type</label>
-            <select id="carFuel">
-              <option value="0.192">Petrol</option>
-              <option value="0.171">Diesel</option>
-              <option value="0.14">CNG</option>
-              <option value="0.05">Electric</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="motoKm"><i class="fas fa-motorcycle" aria-hidden="true"></i> Motorbike (km/week)</label>
-            <input type="number" id="motoKm" value="50" min="0" step="1" inputmode="decimal" />
-          </div>
-
-          <div class="field">
-            <label for="busKm"><i class="fas fa-bus" aria-hidden="true"></i> Bus (km/week)</label>
-            <input type="number" id="busKm" value="0" min="0" step="1" inputmode="decimal" />
-          </div>
-
-          <div class="field">
-            <label for="trainKm"><i class="fas fa-train" aria-hidden="true"></i> Train / Metro (km/week)</label>
-            <input type="number" id="trainKm" value="0" min="0" step="1" inputmode="decimal" />
-          </div>
-
-          <div class="field">
-            <label for="flightHours"><i class="fas fa-plane" aria-hidden="true"></i> Flights (hours/year)</label>
-            <input type="number" id="flightHours" value="0" min="0" step="1" inputmode="decimal" />
-          </div>
-        </fieldset>
-
-        <!-- Diet -->
-        <fieldset>
-          <legend><i class="fas fa-utensils" aria-hidden="true"></i> Diet</legend>
-          <div class="field">
-            <label for="diet"><i class="fas fa-drumstick-bite" aria-hidden="true"></i> Diet type</label>
-            <select id="diet">
-              <option value="3300">Meat-heavy</option>
-              <option value="2500" selected>Average</option>
-              <option value="1700">Vegetarian</option>
-              <option value="1500">Vegan</option>
-            </select>
-          </div>
-        </fieldset>
-
-        <!-- Waste -->
-        <fieldset>
-          <legend><i class="fas fa-recycle" aria-hidden="true"></i> Waste &amp; Shopping</legend>
-
-          <div class="field">
-            <label for="waste"><i class="fas fa-trash" aria-hidden="true"></i> Landfill waste (kg/week)</label>
-            <input type="number" id="waste" value="5" min="0" step="0.5" inputmode="decimal" />
-          </div>
-
-          <div class="field">
-            <label for="shopping"><i class="fas fa-shopping-bag" aria-hidden="true"></i> Shopping level</label>
-            <select id="shopping">
-              <option value="500">Low</option>
-              <option value="1500" selected>Medium</option>
-              <option value="3000">High</option>
-            </select>
-          </div>
-        </fieldset>
-
-        <!-- Actions -->
-        <div class="actions">
-          <button type="button" id="calcBtn" class="btn primary">
-            <i class="fas fa-calculator" aria-hidden="true"></i> Calculate
-          </button>
-          <button type="reset" id="resetBtn" class="btn ghost">
-            <i class="fas fa-rotate-left" aria-hidden="true"></i> Reset
-          </button>
-          <button type="button" id="shareBtn" class="btn ghost">
-            <i class="fas fa-share-nodes" aria-hidden="true"></i> Share
-          </button>
-          <button type="button" id="printBtn" class="btn ghost">
-            <i class="fas fa-print" aria-hidden="true"></i> Print
-          </button>
-        </div>
-      </form>
-    </section>
-
-    <!-- ===== RESULTS ===== -->
-    <section id="results" class="container hidden" aria-live="polite">
-      <div class="card">
-        <h2><i class="fas fa-chart-pie" aria-hidden="true"></i> Your Results</h2>
-
-        <div class="total">
-          <i class="fas fa-leaf" aria-hidden="true"></i>
-          <span id="total">0.00</span>
-          <small>tonnes CO₂e / year</small>
-        </div>
-
-        <div class="chart-wrap">
-          <canvas id="chart" width="360" height="360" aria-label="Emissions breakdown chart" role="img"></canvas>
-        </div>
-
-        <ul id="breakdown" class="breakdown"></ul>
-
-        <p id="comparison" class="comparison"></p>
-
-        <p class="note"><i class="fas fa-circle-info" aria-hidden="true"></i> Estimates only. Emission factors vary by region and data source.</p>
-      </div>
-    </section>
-
-    <!-- ===== FAQ (SEO) ===== -->
-    <section class="container faq">
-      <h2><i class="fas fa-circle-question" aria-hidden="true"></i> Frequently Asked Questions</h2>
-
-      <details>
-        <summary>What is a carbon footprint?</summary>
-        <p>A carbon footprint is the total greenhouse gas emissions caused directly or indirectly by an individual, organisation, event, or product, expressed as CO₂ equivalent (CO₂e).</p>
-      </details>
-
-      <details>
-        <summary>How is my footprint calculated?</summary>
-        <p>We multiply your activity data (kWh, km, kg waste) by published emission factors and sum the results across four categories: home energy, transportation, diet, and waste &amp; shopping.</p>
-      </details>
-
-      <details>
-        <summary>Is my data stored?</summary>
-        <p>All calculations run in your browser. Your inputs are saved locally in <code>localStorage</code> only — nothing is sent to a server.</p>
-      </details>
-
-      <details>
-        <summary>What is a good carbon footprint?</summary>
-        <p>The global sustainable target is roughly <strong>2 tonnes CO₂e per person per year</strong>. The current global average is around 4.7 tonnes.</p>
-      </details>
-    </section>
-  </main>
-
-  <!-- ===== FOOTER ===== -->
-  <footer class="site-footer">
-    <div class="container">
-      <p>&copy; <span id="year"></span> CarbonCalc — CHE 110 Group Project. Built for education.</p>
-      <p class="small">Made with <i class="fas fa-heart" aria-hidden="true"></i> for a greener planet.</p>
-    </div>
-  </footer>
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="script.js"></script>
+<header><nav><a class="logo" href="index.html">CarbonTrace</a><button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="links">Menu</button><div class="links" id="links"><a href="index.html" class="active">Home</a><a href="calculator.html">Calculator</a><a href="learn.html">Learn</a><a href="about.html">About</a></div></nav></header>
+<main>
+<div class="wrap hero"><div class="eyebrow">Personal carbon footprint calculator</div><h1>Know your carbon footprint. Then shrink it.</h1><p class="lead">Answer a few questions about how you travel, use energy, eat and throw things away. CarbonTrace estimates your yearly CO₂ emissions and shows where to cut first.</p><div class="btn-row"><a class="btn" href="calculator.html">Calculate my footprint</a><a class="btn ghost" href="about.html">How it works</a></div></div>
+<div class="wrap"><div class="grid">
+<div class="card"><div class="stat">4.7 t</div>Approx. world average CO₂ per person per year</div>
+<div class="card"><div class="stat">1.9 t</div>Approx. India average per person per year</div>
+<div class="card"><div class="stat">2.3 t</div>Commonly cited Paris-aligned level per person by 2030</div></div></div>
+<section class="wrap"><h2>How it works</h2><br><div class="grid">
+<div class="card"><div class="step">Step 1</div><h3>Enter your habits</h3><p>Travel, electricity, LPG, flights, diet and waste, using simple sliders.</p></div>
+<div class="card"><div class="step">Step 2</div><h3>See your estimate</h3><p>Get your annual footprint in tonnes of CO₂ with a category breakdown.</p></div>
+<div class="card"><div class="step">Step 3</div><h3>Act on it</h3><p>Get a tip for your biggest source and compare with national and global averages.</p></div></div></section>
+<section class="wrap"><h2>Why it matters</h2><p class="lead">Carbon dioxide from burning fuel, generating electricity and producing food traps heat in the atmosphere and drives climate change. Individual choices add up across communities, so seeing your own numbers is the first step towards reducing pollution.</p><p><a href="learn.html">Read practical ways to cut emissions</a></p></section>
+</main>
+<footer><div class="wrap"><span>CHE 110 Environmental Studies · Lovely Professional University · Section K4P26HB · Group 1</span><span>Estimates are approximate, for education.</span></div></footer>
+<script src="script.js"></script>
 </body>
 </html>

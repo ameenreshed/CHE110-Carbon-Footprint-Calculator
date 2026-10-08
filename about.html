@@ -1,72 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About | Carbon Footprint Calculator — CHE 110</title>
-  <meta name="description" content="Learn about the CHE 110 group project behind this free carbon footprint calculator, its methodology, and emission factors used." />
-  <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://example.com/carbon-footprint/about.html" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About | CarbonTrace</title>
+<meta name="description" content="CarbonTrace estimates your yearly carbon footprint from travel, energy, food and waste.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="container nav-wrap">
-      <a href="index.html" class="brand"><i class="fas fa-earth-americas"></i><span>CarbonCalc</span></a>
-      <nav aria-label="Main navigation">
-        <ul class="nav-list">
-          <li><a href="index.html"><i class="fas fa-calculator"></i> Calculator</a></li>
-          <li><a href="tips.html"><i class="fas fa-lightbulb"></i> Tips</a></li>
-          <li><a href="about.html" class="active"><i class="fas fa-circle-info"></i> About</a></li>
-        </ul>
-      </nav>
-      <button id="themeToggle" class="icon-btn" aria-label="Toggle dark mode"><i class="fas fa-moon"></i></button>
-    </div>
-  </header>
-
-  <main class="container prose">
-    <h1>About This Project</h1>
-    <p>This calculator was developed as part of a <strong>CHE 110</strong> group project to demonstrate how everyday activities translate into measurable greenhouse gas emissions.</p>
-
-    <h2><i class="fas fa-flask"></i> Our Goal</h2>
-    <p>To build an accessible, privacy-friendly tool that helps anyone estimate their annual CO₂e footprint in under two minutes.</p>
-
-    <h2><i class="fas fa-book"></i> Methodology</h2>
-    <p>We use published emission factors and simple arithmetic:</p>
-    <pre>footprint = Σ (activity × emission factor)</pre>
-    <p>All calculations run locally in your browser — no data is transmitted.</p>
-
-    <h2><i class="fas fa-table"></i> Emission Factors Used</h2>
-    <ul>
-      <li>Electricity: 0.82 kg CO₂e / kWh</li>
-      <li>LPG: 42.3 kg CO₂e / 14.2 kg cylinder</li>
-      <li>Natural gas: 2.0 kg CO₂e / m³</li>
-      <li>Petrol car: 0.192 kg CO₂e / km</li>
-      <li>Diesel car: 0.171 kg CO₂e / km</li>
-      <li>CNG car: 0.14 kg CO₂e / km</li>
-      <li>Electric car: 0.05 kg CO₂e / km</li>
-      <li>Motorbike: 0.07 kg CO₂e / km</li>
-      <li>Bus: 0.08 kg CO₂e / km</li>
-      <li>Train / Metro: 0.04 kg CO₂e / km</li>
-      <li>Flights: 150 kg CO₂e / hour</li>
-      <li>Landfill waste: 0.5 kg CO₂e / kg</li>
-    </ul>
-
-    <h2><i class="fas fa-users"></i> Team</h2>
-    <p>CHE 110 Group Project —
-      Shreya Singh
-      Ankit Singh
-      Ameen Reshed.</p>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container">
-      <p>&copy; <span id="year"></span> CarbonCalc — CHE 110 Group Project.</p>
-    </div>
-  </footer>
-
-  <script src="script.js"></script>
+<header><nav><a class="logo" href="index.html">CarbonTrace</a><button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="links">Menu</button><div class="links" id="links"><a href="index.html">Home</a><a href="calculator.html">Calculator</a><a href="learn.html">Learn</a><a href="about.html" class="active">About</a></div></nav></header>
+<main>
+<div class="wrap hero" style="padding-bottom:16px"><h1 style="font-size:52px">About the project</h1><p class="lead">CarbonTrace is a prototype built for CHE 110 Environmental Studies (CA1). It estimates an individual's yearly carbon footprint from lifestyle choices and suggests where to reduce emissions.</p></div>
+<section class="wrap"><h2>Method and emission factors</h2><p>Yearly emissions = activity amount × emission factor, summed over five categories. Factors are rounded approximations; verify them against sources such as CEA and IPCC before citing.</p>
+<div class="table-box card"><table><tbody>
+<tr><td>Petrol / diesel / CNG / electric car</td><td>0.17 / 0.15 / 0.12 / 0.08 kg CO₂ per km</td></tr>
+<tr><td>Two-wheeler</td><td>0.05 kg CO₂ per km</td></tr>
+<tr><td>Bus or train</td><td>0.04 kg CO₂ per km</td></tr>
+<tr><td>Return flight (average)</td><td>250 kg CO₂ each</td></tr>
+<tr><td>Grid electricity</td><td>0.71 kg CO₂ per kWh</td></tr>
+<tr><td>LPG cylinder (14.2 kg)</td><td>42.5 kg CO₂ each</td></tr>
+<tr><td>Diet (veg / mixed / non-veg)</td><td>1000 / 1500 / 1900 kg per year</td></tr>
+<tr><td>Household waste</td><td>0.45 kg CO₂ per kg</td></tr>
+<tr><td>Tree absorption (for the tree equivalent)</td><td>about 21 kg CO₂ per year</td></tr></tbody></table></div></section>
+<section class="wrap"><h2>Technologies</h2><p>HTML for structure, CSS for styling, and vanilla JavaScript for calculation, charts and saving results in the browser (localStorage). No frameworks or servers needed.</p></section>
+<section class="wrap"><h2>Team: Group 1</h2><br><div class="grid">
+<div class="card"><h3>Shreya Singh</h3><p>Reg. no. 12618141<br>Roll no. RK4P26HBA01</p></div>
+<div class="card"><h3>Ankit Singh</h3><p>Reg. no. 12619429<br>Roll no. RK4P26HBA02</p></div>
+<div class="card"><h3>Ameen Reshed</h3><p>Reg. no. 12617520<br>Roll no. RK4P26HBA03</p></div></div></section>
+</main>
+<footer><div class="wrap"><span>CHE 110 Environmental Studies · Lovely Professional University · Section K4P26HB · Group 1</span><span>Estimates are approximate, for education.</span></div></footer>
+<script src="script.js"></script>
 </body>
 </html>

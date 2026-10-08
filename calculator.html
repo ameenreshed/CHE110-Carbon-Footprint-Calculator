@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculator | CarbonTrace</title>
+<meta name="description" content="CarbonTrace estimates your yearly carbon footprint from travel, energy, food and waste.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><nav><a class="logo" href="index.html">CarbonTrace</a><button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="links">Menu</button><div class="links" id="links"><a href="index.html">Home</a><a href="calculator.html" class="active">Calculator</a><a href="learn.html">Learn</a><a href="about.html">About</a></div></nav></header>
+<main>
+<div class="wrap calc">
+<form class="form card" id="calcForm" onsubmit="return false">
+<h1 style="font-size:40px">Your carbon footprint</h1>
+<div class="field"><label for="vehicle">Main vehicle</label><select id="vehicle"><option value="petrol">Petrol car</option><option value="diesel">Diesel car</option><option value="cng">CNG car</option><option value="ev">Electric car</option><option value="bike">Two-wheeler</option></select></div>
+<div class="field"><label for="carKm">Car or two-wheeler distance (km/week): <output id="o-carKm"></output></label><input type="range" id="carKm" min="0" max="500" step="10" value="50"></div>
+<div class="field"><label for="pubKm">Bus or train (km/week): <output id="o-pubKm"></output></label><input type="range" id="pubKm" min="0" max="500" step="10" value="30"></div>
+<div class="field"><label for="flights">Return flights per year: <output id="o-flights"></output></label><input type="range" id="flights" min="0" max="12" step="1" value="1"></div>
+<div class="field"><label for="kwh">Electricity (kWh/month): <output id="o-kwh"></output></label><input type="range" id="kwh" min="0" max="800" step="10" value="150"></div>
+<div class="field"><label for="lpg">LPG cylinders per year: <output id="o-lpg"></output></label><input type="range" id="lpg" min="0" max="12" step="1" value="6"></div>
+<div class="field"><label for="waste">Household waste (kg/week): <output id="o-waste"></output></label><input type="range" id="waste" min="0" max="30" step="1" value="7"></div>
+<div class="field"><label for="diet">Diet</label><select id="diet"><option value="veg">Vegetarian</option><option value="mixed" selected>Mixed</option><option value="non">Non-vegetarian</option></select></div>
+<div class="btn-row" style="margin:0"><button type="button" class="btn" id="saveBtn">Save result</button><button type="button" class="btn ghost" id="resetBtn">Reset</button></div>
+</form>
+<aside class="result" aria-live="polite">
+<div><div class="small">Estimated yearly footprint</div><div class="total"><span id="total">0</span> <small>t CO₂</small></div><div id="verdict" style="margin-top:8px"></div><div class="small" id="trees" style="margin-top:6px"></div></div>
+<div><strong>Where it comes from</strong><div id="parts" style="margin-top:10px"></div></div>
+<div><strong>Compared with</strong><div id="compare" style="margin-top:10px"></div></div>
+<div class="tip" id="tip"></div>
+<div><strong>Saved results</strong><ul class="history" id="history" style="padding-left:20px;margin:8px 0 0"></ul><button type="button" class="btn ghost" id="clearBtn" style="color:#F2F4EA;border-color:#F2F4EA;font-size:15px;padding:8px 16px">Clear history</button></div>
+</aside></div>
+</main>
+<footer><div class="wrap"><span>CHE 110 Environmental Studies · Lovely Professional University · Section K4P26HB · Group 1</span><span>Estimates are approximate, for education.</span></div></footer>
+<script src="script.js"></script>
+</body>
+</html>
