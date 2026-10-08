@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About | Carbon Footprint Calculator — CHE 110</title>
+  <meta name="description" content="Learn about the CHE 110 group project behind this free carbon footprint calculator, its methodology, and emission factors used." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://example.com/carbon-footprint/about.html" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a href="index.html" class="brand"><i class="fas fa-earth-americas"></i><span>CarbonCalc</span></a>
+      <nav aria-label="Main navigation">
+        <ul class="nav-list">
+          <li><a href="index.html"><i class="fas fa-calculator"></i> Calculator</a></li>
+          <li><a href="tips.html"><i class="fas fa-lightbulb"></i> Tips</a></li>
+          <li><a href="about.html" class="active"><i class="fas fa-circle-info"></i> About</a></li>
+        </ul>
+      </nav>
+      <button id="themeToggle" class="icon-btn" aria-label="Toggle dark mode"><i class="fas fa-moon"></i></button>
+    </div>
+  </header>
+
+  <main class="container prose">
+    <h1>About This Project</h1>
+    <p>This calculator was developed as part of a <strong>CHE 110</strong> group project to demonstrate how everyday activities translate into measurable greenhouse gas emissions.</p>
+
+    <h2><i class="fas fa-flask"></i> Our Goal</h2>
+    <p>To build an accessible, privacy-friendly tool that helps anyone estimate their annual CO₂e footprint in under two minutes.</p>
+
+    <h2><i class="fas fa-book"></i> Methodology</h2>
+    <p>We use published emission factors and simple arithmetic:</p>
+    <pre>footprint = Σ (activity × emission factor)</pre>
+    <p>All calculations run locally in your browser — no data is transmitted.</p>
+
+    <h2><i class="fas fa-table"></i> Emission Factors Used</h2>
+    <ul>
+      <li>Electricity: 0.82 kg CO₂e / kWh</li>
+      <li>LPG: 42.3 kg CO₂e / 14.2 kg cylinder</li>
+      <li>Natural gas: 2.0 kg CO₂e / m³</li>
+      <li>Petrol car: 0.192 kg CO₂e / km</li>
+      <li>Diesel car: 0.171 kg CO₂e / km</li>
+      <li>CNG car: 0.14 kg CO₂e / km</li>
+      <li>Electric car: 0.05 kg CO₂e / km</li>
+      <li>Motorbike: 0.07 kg CO₂e / km</li>
+      <li>Bus: 0.08 kg CO₂e / km</li>
+      <li>Train / Metro: 0.04 kg CO₂e / km</li>
+      <li>Flights: 150 kg CO₂e / hour</li>
+      <li>Landfill waste: 0.5 kg CO₂e / kg</li>
+    </ul>
+
+    <h2><i class="fas fa-users"></i> Team</h2>
+    <p>CHE 110 Group Project — [Add your group member names here].</p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; <span id="year"></span> CarbonCalc — CHE 110 Group Project.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
