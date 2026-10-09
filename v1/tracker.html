@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Social Tracker | CarbonTrace</title>
+<meta name="description" content="CarbonTrace estimates your yearly carbon footprint from travel, energy, food and waste.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<script>document.documentElement.classList.add('js');try{var t=JSON.parse(localStorage.getItem('carbontrace-theme'));document.documentElement.setAttribute('data-theme',t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'))}catch(e){}</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><nav><a class="logo" href="index.html"><i class="fa-solid fa-leaf"></i>CarbonTrace</a><div class="links" id="links"><a href="index.html">Home</a><a href="calculator.html">Calculator</a><a href="learn.html">Learn</a><a href="quiz.html">Quiz</a><a href="tracker.html" class="active">Social Tracker</a><a href="about.html">About</a></div><a class="btn btn-sm nav-cta" href="calculator.html"><i class="fa-solid fa-calculator"></i>Calculate</a><button class="icon-btn" id="themeBtn" aria-label="Toggle dark or light theme"><i class="fa-solid fa-moon"></i></button><button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="links"><i class="fa-solid fa-bars"></i></button></nav></header>
+<main>
+<div class="page-head"><div class="wrap"><div class="chip rose"><i class="fa-solid fa-bullhorn"></i></div><h1>Social media tracker</h1><p class="lead">Log every post of your demonstration video and copy the table into your report.</p></div></div><section class="wrap"><form class="card tform" id="tForm" onsubmit="return false">
+<div><label for="tPlat">Platform</label><select id="tPlat"><option>YouTube</option><option>Instagram</option><option>LinkedIn</option><option>Facebook</option><option>X (Twitter)</option><option>WhatsApp</option><option>Other</option></select></div>
+<div><label for="tUrl">Post link</label><input id="tUrl" type="url" placeholder="https://"></div>
+<div><label for="tDate">Date</label><input id="tDate" type="date"></div>
+<div><label for="tViews">Views</label><input id="tViews" type="number" min="0" value="0"></div>
+<div><label for="tLikes">Likes</label><input id="tLikes" type="number" min="0" value="0"></div>
+<div><label for="tShares">Shares</label><input id="tShares" type="number" min="0" value="0"></div>
+<div><label for="tCom">Comments</label><input id="tCom" type="number" min="0" value="0"></div>
+<div style="align-self:end"><button class="btn" type="button" id="tAdd" style="width:100%"><i class="fa-solid fa-plus"></i>Add post</button></div></form>
+<div class="card table-box" style="margin-top:20px"><table><thead><tr><th>#</th><th>Platform</th><th>Link</th><th>Date</th><th>Views</th><th>Likes</th><th>Shares</th><th>Comments</th><th></th></tr></thead><tbody id="tBody"></tbody><tfoot id="tFoot"></tfoot></table></div>
+<div class="share-row" style="margin-top:16px;align-items:center"><button type="button" id="tCopy"><i class="fa-solid fa-copy"></i>Copy table for report</button><button type="button" id="tCsv"><i class="fa-solid fa-file-csv"></i>Download CSV</button><span class="small" id="tMsg" role="status"></span></div></section>
+</main>
+<footer><div class="wrap"><div class="f-grid"><div><a class="logo" href="index.html" style="padding:0"><i class="fa-solid fa-leaf"></i>CarbonTrace</a><p class="muted" style="margin-top:12px;max-width:360px">Estimate your yearly carbon footprint, see where it comes from, and plan how to cut it.</p></div>
+<div><h4>Pages</h4><a href="calculator.html">Calculator</a><a href="learn.html">Learn</a><a href="quiz.html">Quiz</a><a href="tracker.html">Social tracker</a><a href="about.html">About</a></div>
+<div><h4>Project</h4><span class="muted" style="font-size:15px">CHE 110 Environmental Studies<br>Lovely Professional University<br>Section K4P26HB · Group 1</span></div></div>
+<div class="f-bot">Estimates are approximate and for education. Built with HTML, CSS and JavaScript.</div></div></footer>
+<script src="script.js"></script>
+</body>
+</html>

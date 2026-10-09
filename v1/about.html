@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About | CarbonTrace</title>
+<meta name="description" content="CarbonTrace estimates your yearly carbon footprint from travel, energy, food and waste.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<script>document.documentElement.classList.add('js');try{var t=JSON.parse(localStorage.getItem('carbontrace-theme'));document.documentElement.setAttribute('data-theme',t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'))}catch(e){}</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><nav><a class="logo" href="index.html"><i class="fa-solid fa-leaf"></i>CarbonTrace</a><div class="links" id="links"><a href="index.html">Home</a><a href="calculator.html">Calculator</a><a href="learn.html">Learn</a><a href="quiz.html">Quiz</a><a href="tracker.html">Social Tracker</a><a href="about.html" class="active">About</a></div><a class="btn btn-sm nav-cta" href="calculator.html"><i class="fa-solid fa-calculator"></i>Calculate</a><button class="icon-btn" id="themeBtn" aria-label="Toggle dark or light theme"><i class="fa-solid fa-moon"></i></button><button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="links"><i class="fa-solid fa-bars"></i></button></nav></header>
+<main>
+<div class="page-head"><div class="wrap"><div class="chip blue"><i class="fa-solid fa-circle-info"></i></div><h1>About the project</h1><p class="lead">CarbonTrace is a CHE 110 Environmental Studies (CA1) prototype that estimates yearly carbon footprints and suggests where to cut.</p></div></div><section class="wrap"><div class="sec-head"><span class="eyebrow">Method</span><h2>Emission factors</h2><p class="muted">Yearly emissions = activity amount × emission factor, summed over five categories. Factors are rounded approximations; verify against sources such as CEA and IPCC before citing.</p></div><div class="card table-box reveal"><table><tbody><tr><td>Petrol / diesel / CNG / electric car</td><td><b>0.17 / 0.15 / 0.12 / 0.08 kg CO₂ per km</b></td></tr><tr><td>Two-wheeler</td><td><b>0.05 kg CO₂ per km</b></td></tr><tr><td>Bus or train</td><td><b>0.04 kg CO₂ per km</b></td></tr><tr><td>Return flight (average)</td><td><b>250 kg CO₂ each</b></td></tr><tr><td>Grid electricity</td><td><b>0.71 kg CO₂ per kWh</b></td></tr><tr><td>LPG cylinder (14.2 kg)</td><td><b>42.5 kg CO₂ each</b></td></tr><tr><td>Diet (veg / mixed / non-veg)</td><td><b>1000 / 1500 / 1900 kg per year</b></td></tr><tr><td>Household waste</td><td><b>0.45 kg CO₂ per kg</b></td></tr><tr><td>Tree absorption</td><td><b>about 21 kg CO₂ per year</b></td></tr></tbody></table></div></section><section class="wrap"><div class="sec-head"><span class="eyebrow">Tech</span><h2>Technologies</h2><p class="muted">HTML for structure, CSS for styling and theming, and vanilla JavaScript for calculation, canvas charts and saved data in the browser (localStorage). Icons by Font Awesome and type by Inter. No frameworks or servers needed.</p></div></section><section class="wrap"><div class="sec-head"><span class="eyebrow">People</span><h2>Team: Group 1</h2></div><div class="grid"><div class="card hover reveal"><div class="chip blue"><i class="fa-solid fa-user-graduate"></i></div><h3>Shreya Singh</h3><p class="muted">Reg. no. 12618141<br>Roll no. RK4P26HBA01</p></div><div class="card hover reveal"><div class="chip rose"><i class="fa-solid fa-user-graduate"></i></div><h3>Ankit Singh</h3><p class="muted">Reg. no. 12619429<br>Roll no. RK4P26HBA02</p></div><div class="card hover reveal"><div class="chip emerald"><i class="fa-solid fa-user-graduate"></i></div><h3>Ameen Reshed</h3><p class="muted">Reg. no. 12617520<br>Roll no. RK4P26HBA03</p></div></div></section>
+</main>
+<footer><div class="wrap"><div class="f-grid"><div><a class="logo" href="index.html" style="padding:0"><i class="fa-solid fa-leaf"></i>CarbonTrace</a><p class="muted" style="margin-top:12px;max-width:360px">Estimate your yearly carbon footprint, see where it comes from, and plan how to cut it.</p></div>
+<div><h4>Pages</h4><a href="calculator.html">Calculator</a><a href="learn.html">Learn</a><a href="quiz.html">Quiz</a><a href="tracker.html">Social tracker</a><a href="about.html">About</a></div>
+<div><h4>Project</h4><span class="muted" style="font-size:15px">CHE 110 Environmental Studies<br>Lovely Professional University<br>Section K4P26HB · Group 1</span></div></div>
+<div class="f-bot">Estimates are approximate and for education. Built with HTML, CSS and JavaScript.</div></div></footer>
+<script src="script.js"></script>
+</body>
+</html>

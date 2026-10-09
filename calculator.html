@@ -1,39 +1,485 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Calculator | CarbonTrace</title>
-<meta name="description" content="CarbonTrace estimates your yearly carbon footprint from travel, energy, food and waste.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carbon Footprint Calculator — Carbotrack</title>
+  <meta name="description" content="Step through six modules — transport, energy, diet, water, waste and lifestyle — to calculate your annual carbon footprint.">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
 </head>
-<body>
-<header><nav><a class="logo" href="index.html">CarbonTrace</a><button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="links">Menu</button><div class="links" id="links"><a href="index.html">Home</a><a href="calculator.html" class="active">Calculator</a><a href="learn.html">Learn</a><a href="about.html">About</a></div></nav></header>
-<main>
-<div class="wrap calc">
-<form class="form card" id="calcForm" onsubmit="return false">
-<h1 style="font-size:40px">Your carbon footprint</h1>
-<div class="field"><label for="vehicle">Main vehicle</label><select id="vehicle"><option value="petrol">Petrol car</option><option value="diesel">Diesel car</option><option value="cng">CNG car</option><option value="ev">Electric car</option><option value="bike">Two-wheeler</option></select></div>
-<div class="field"><label for="carKm">Car or two-wheeler distance (km/week): <output id="o-carKm"></output></label><input type="range" id="carKm" min="0" max="500" step="10" value="50"></div>
-<div class="field"><label for="pubKm">Bus or train (km/week): <output id="o-pubKm"></output></label><input type="range" id="pubKm" min="0" max="500" step="10" value="30"></div>
-<div class="field"><label for="flights">Return flights per year: <output id="o-flights"></output></label><input type="range" id="flights" min="0" max="12" step="1" value="1"></div>
-<div class="field"><label for="kwh">Electricity (kWh/month): <output id="o-kwh"></output></label><input type="range" id="kwh" min="0" max="800" step="10" value="150"></div>
-<div class="field"><label for="lpg">LPG cylinders per year: <output id="o-lpg"></output></label><input type="range" id="lpg" min="0" max="12" step="1" value="6"></div>
-<div class="field"><label for="waste">Household waste (kg/week): <output id="o-waste"></output></label><input type="range" id="waste" min="0" max="30" step="1" value="7"></div>
-<div class="field"><label for="diet">Diet</label><select id="diet"><option value="veg">Vegetarian</option><option value="mixed" selected>Mixed</option><option value="non">Non-vegetarian</option></select></div>
-<div class="btn-row" style="margin:0"><button type="button" class="btn" id="saveBtn">Save result</button><button type="button" class="btn ghost" id="resetBtn">Reset</button></div>
-</form>
-<aside class="result" aria-live="polite">
-<div><div class="small">Estimated yearly footprint</div><div class="total"><span id="total">0</span> <small>t CO₂</small></div><div id="verdict" style="margin-top:8px"></div><div class="small" id="trees" style="margin-top:6px"></div></div>
-<div><strong>Where it comes from</strong><div id="parts" style="margin-top:10px"></div></div>
-<div><strong>Compared with</strong><div id="compare" style="margin-top:10px"></div></div>
-<div class="tip" id="tip"></div>
-<div><strong>Saved results</strong><ul class="history" id="history" style="padding-left:20px;margin:8px 0 0"></ul><button type="button" class="btn ghost" id="clearBtn" style="color:#F2F4EA;border-color:#F2F4EA;font-size:15px;padding:8px 16px">Clear history</button></div>
-</aside></div>
-</main>
-<footer><div class="wrap"><span>CHE 110 Environmental Studies · Lovely Professional University · Section K4P26HB · Group 1</span><span>Estimates are approximate, for education.</span></div></footer>
-<script src="script.js"></script>
+
+<body class="font-sans bg-earth text-slate-800">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header" id="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="index.html" class="brand">
+          <span class="brand__mark"><i class="fa-solid fa-leaf"></i></span>
+          <span>
+            <span class="brand__name">Carbotrack</span>
+            <span class="brand__tag">Understand Your Impact</span>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary">
+          <a href="index.html" data-nav-link>Home</a>
+          <a href="index.html#problem-section">Why It Matters</a>
+          <a href="calculator.html" data-nav-link>Calculator</a>
+          <a href="results.html" data-nav-link>Results</a>
+          <a href="simulator.html" data-nav-link>Simulator</a>
+          <a href="challenge.html" data-nav-link>Challenge</a>
+          <a href="methodology.html" data-nav-link>Methodology</a>
+          <a href="about.html" data-nav-link>Academic</a>
+        </nav>
+
+        <div class="header-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-action="quick-demo">⚡ Quick Demo</button>
+          <a href="results.html" class="btn btn-primary btn-sm">
+            <span>View Results</span>
+            <i class="fa-solid fa-chart-simple text-[10px]"></i>
+          </a>
+        </div>
+
+        <button id="mobile-menu-btn" class="mobile-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="mobile-menu hidden">
+      <a href="index.html">Home</a>
+      <a href="index.html#problem-section">Why It Matters</a>
+      <a href="calculator.html">Calculator</a>
+      <a href="results.html">Results</a>
+      <a href="simulator.html">Simulator</a>
+      <a href="challenge.html">7-Day Challenge</a>
+      <a href="methodology.html">Methodology</a>
+      <a href="about.html">Academic Info</a>
+      <div class="mobile-menu__actions">
+        <button type="button" class="btn btn-ghost btn-block" data-action="quick-demo">⚡ Try Demo Calculation</button>
+        <a href="results.html" class="btn btn-primary btn-block">View Results Dashboard</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== CALCULATOR ===================== -->
+  <main id="calculator-section" class="section section--alt section--border">
+    <div class="container" style="max-width:56rem;">
+
+      <div class="section-head" style="margin-bottom:2.5rem;">
+        <span class="eyebrow">Interactive Assessment</span>
+        <h2 class="section-heading">Carbotrack Emission Calculator</h2>
+        <p class="section-sub">
+          Step through the 6 modules below. Values are pre-filled with reasonable defaults —
+          adjust them to reflect your typical routine.
+        </p>
+      </div>
+
+      <div class="calc-shell">
+
+        <!-- Stepper header -->
+        <div class="calc-head">
+          <div class="calc-head__row">
+            <span id="step-indicator-text" class="calc-head__step">Step 1 of 6: Transportation</span>
+            <span id="step-percentage" class="calc-head__pct">16% Completed</span>
+          </div>
+
+          <div class="progress progress--dark">
+            <div id="step-progress-bar" class="progress__fill" style="width:16.66%;"></div>
+          </div>
+
+          <div class="step-track">
+            <div id="badge-step-1" class="step-badge is-active">
+              <span class="step-badge__num">1</span><span class="step-badge__label">Travel</span>
+            </div>
+            <div id="badge-step-2" class="step-badge is-pending">
+              <span class="step-badge__num">2</span><span class="step-badge__label">Energy</span>
+            </div>
+            <div id="badge-step-3" class="step-badge is-pending">
+              <span class="step-badge__num">3</span><span class="step-badge__label">Diet</span>
+            </div>
+            <div id="badge-step-4" class="step-badge is-pending">
+              <span class="step-badge__num">4</span><span class="step-badge__label">Water</span>
+            </div>
+            <div id="badge-step-5" class="step-badge is-pending">
+              <span class="step-badge__num">5</span><span class="step-badge__label">Waste</span>
+            </div>
+            <div id="badge-step-6" class="step-badge is-pending">
+              <span class="step-badge__num">6</span><span class="step-badge__label">Lifestyle</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form body -->
+        <form id="footprint-form" class="calc-body" novalidate>
+
+          <!-- ---------- STEP 1 : TRANSPORT ---------- -->
+          <section id="step-1" class="step-content">
+            <div class="step-content__head">
+              <h3 class="step-content__title">
+                <i class="fa-solid fa-car"></i> Daily Travel &amp; Transportation
+              </h3>
+              <p class="step-content__desc">
+                Include personal vehicles, public transit, and annual flight frequencies.
+              </p>
+            </div>
+
+            <div class="field-grid">
+              <div class="field">
+                <label class="field__label" for="vehicle-type">Primary Personal Vehicle</label>
+                <select id="vehicle-type" class="select">
+                  <option value="petrol_car">Petrol / Gasoline Car</option>
+                  <option value="diesel_car">Diesel Car</option>
+                  <option value="cng_car">CNG Car</option>
+                  <option value="electric_car">Electric Vehicle (EV)</option>
+                  <option value="motorcycle">Motorcycle / Scooty (Petrol)</option>
+                  <option value="electric_scooter">Electric Two-Wheeler</option>
+                  <option value="none">No Personal Vehicle (Transit / Walk)</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="personal-km">Distance Driven per Day (km)</label>
+                <input id="personal-km" type="number" min="0" max="500" value="12" class="input" placeholder="e.g. 15">
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="commute-days">Days Driven per Week</label>
+                <input id="commute-days" type="number" min="0" max="7" value="5" class="input">
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="public-km">Bus / Metro Transit per Day (km)</label>
+                <input id="public-km" type="number" min="0" max="300" value="8" class="input">
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="carpool-freq">Carpooling Habits</label>
+                <select id="carpool-freq" class="select">
+                  <option value="1.0">Never (Always drive solo)</option>
+                  <option value="0.75" selected>Sometimes (1–2 times weekly)</option>
+                  <option value="0.5">Regularly (Split with friends/colleagues)</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="flights-domestic">Domestic Flights per Year</label>
+                <input id="flights-domestic" type="number" min="0" max="100" value="2" class="input">
+              </div>
+
+              <div class="field" style="grid-column:1/-1;">
+                <label class="field__label" for="flights-intl">International Long-Haul Flights per Year</label>
+                <input id="flights-intl" type="number" min="0" max="50" value="0" class="input">
+                <span class="field__hint">Leave 0 if you do not take international flights.</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- ---------- STEP 2 : ENERGY ---------- -->
+          <section id="step-2" class="step-content hidden">
+            <div class="step-content__head">
+              <h3 class="step-content__title">
+                <i class="fa-solid fa-bolt"></i> Home Energy &amp; Power Grid
+              </h3>
+              <p class="step-content__desc">Calculate your share of household electricity consumption.</p>
+            </div>
+
+            <div class="field-grid">
+              <div class="field">
+                <label class="field__label" for="household-size">Number of People in Household</label>
+                <input id="household-size" type="number" min="1" max="20" value="4" class="input">
+                <span class="field__hint">Shared power is divided among household members.</span>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="power-kwh">Monthly Electricity Units (kWh)</label>
+                <input id="power-kwh" type="number" min="0" max="5000" value="240" class="input">
+                <span class="field__hint">Tip: Check 'Units Billed' on your power statement.</span>
+              </div>
+            </div>
+
+            <div class="appliance-box">
+              <span class="appliance-box__title">High Consumption Appliances in Use:</span>
+              <div class="appliance-grid">
+                <label class="checkbox-row">
+                  <input id="appliance-ac" type="checkbox" checked class="checkbox">
+                  <span>Air Conditioner</span>
+                </label>
+                <label class="checkbox-row">
+                  <input id="appliance-geyser" type="checkbox" checked class="checkbox">
+                  <span>Water Geyser</span>
+                </label>
+                <label class="checkbox-row">
+                  <input id="appliance-ev" type="checkbox" class="checkbox">
+                  <span>Home EV Charger</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="cooking-fuel">Primary Cooking Fuel</label>
+              <select id="cooking-fuel" class="select">
+                <option value="lpg">LPG Cylinder (Standard domestic)</option>
+                <option value="piped_gas">Piped Natural Gas (PNG)</option>
+                <option value="electric_induction">Electric Induction / Induction cooktop</option>
+              </select>
+            </div>
+          </section>
+
+          <!-- ---------- STEP 3 : DIET ---------- -->
+          <section id="step-3" class="step-content hidden">
+            <div class="step-content__head">
+              <h3 class="step-content__title">
+                <i class="fa-solid fa-utensils"></i> Food Habits &amp; Diet Type
+              </h3>
+              <p class="step-content__desc">
+                Diet choices drive agricultural emissions, deforestation, and water usage.
+              </p>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="diet-type">Primary Diet Profile</label>
+              <select id="diet-type" class="select">
+                <option value="vegan">Vegan (Strictly plant-based, no dairy/eggs)</option>
+                <option value="vegetarian" selected>Vegetarian (Dairy included, no meat/fish)</option>
+                <option value="pescatarian">Pescatarian (Vegetarian + Fish &amp; Seafood)</option>
+                <option value="mixed_low">Mixed (Meat 1–2 times weekly)</option>
+                <option value="heavy_meat">Meat Lover (Daily poultry or red meat)</option>
+              </select>
+            </div>
+
+            <div class="field-grid">
+              <div class="field">
+                <label class="field__label" for="dairy-servings">Dairy Consumption (Servings/Day)</label>
+                <select id="dairy-servings" class="select">
+                  <option value="0">None / Plant milks only</option>
+                  <option value="1">1 serving (1 cup milk or curd)</option>
+                  <option value="2" selected>2–3 servings (milk, tea, paneer/cheese)</option>
+                  <option value="4">High (&gt;4 servings daily)</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="food-waste-freq">How often do you waste food?</label>
+                <select id="food-waste-freq" class="select">
+                  <option value="low" selected>Rarely (Plan meals, finish leftovers)</option>
+                  <option value="medium">Occasionally (Throw out leftovers once a week)</option>
+                  <option value="high">Frequently (Substantial discarded food)</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- ---------- STEP 4 : WATER ---------- -->
+          <section id="step-4" class="step-content hidden">
+            <div class="step-content__head">
+              <h3 class="step-content__title">
+                <i class="fa-solid fa-droplet"></i> Domestic Water Consumption
+              </h3>
+              <p class="step-content__desc">
+                Pumping, treating, and heating water carries an embedded carbon footprint.
+              </p>
+            </div>
+
+            <div class="field-grid">
+              <div class="field">
+                <label class="field__label" for="shower-minutes">Average Shower Duration (Minutes)</label>
+                <input id="shower-minutes" type="number" min="1" max="60" value="8" class="input">
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="showers-per-day">Showers Taken per Day</label>
+                <input id="showers-per-day" type="number" min="0" max="5" value="1" class="input">
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="washing-loads">Washing Machine Loads / Week</label>
+                <input id="washing-loads" type="number" min="0" max="30" value="3" class="input">
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="tap-habits">Tap Running Habits</label>
+                <select id="tap-habits" class="select">
+                  <option value="frugal">Careful (Turn off tap while brushing/washing)</option>
+                  <option value="average" selected>Average (Moderate running water)</option>
+                  <option value="lavish">High (Frequent running water or bathtub use)</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- ---------- STEP 5 : WASTE ---------- -->
+          <section id="step-5" class="step-content hidden">
+            <div class="step-content__head">
+              <h3 class="step-content__title">
+                <i class="fa-solid fa-recycle"></i> Waste Management &amp; Recycling
+              </h3>
+              <p class="step-content__desc">
+                Segregation and diversion prevent organic decomposition in landfills.
+              </p>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="waste-bags">Approx. Household Waste Bags per Week</label>
+              <input id="waste-bags" type="number" min="1" max="25" value="3" class="input">
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="recycling-rate">
+                How much of your dry waste is recycled or handed to kabadiwalas?
+              </label>
+              <select id="recycling-rate" class="select">
+                <option value="0">0% — Everything goes into general bin</option>
+                <option value="0.25">Less than 25%</option>
+                <option value="0.5" selected>25% – 50% (Paper and major bottles)</option>
+                <option value="0.75">50% – 75% (Segregate plastics, metals, paper)</option>
+                <option value="0.9">More than 75% (Strict segregation + composting)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="composting-status">Do you compost kitchen wet waste?</label>
+              <select id="composting-status" class="select">
+                <option value="no" selected>No (Goes to municipal truck)</option>
+                <option value="yes">Yes (Home garden compost bin / society composter)</option>
+              </select>
+            </div>
+          </section>
+
+          <!-- ---------- STEP 6 : LIFESTYLE ---------- -->
+          <section id="step-6" class="step-content hidden">
+            <div class="step-content__head">
+              <h3 class="step-content__title">
+                <i class="fa-solid fa-bag-shopping"></i> Shopping &amp; Consumer Goods
+              </h3>
+              <p class="step-content__desc">
+                Embodied carbon in manufactured goods, packaging, and logistics.
+              </p>
+            </div>
+
+            <div class="field-grid">
+              <div class="field">
+                <label class="field__label" for="clothing-items">New Apparel / Shoes Purchased Monthly</label>
+                <input id="clothing-items" type="number" min="0" max="30" value="2" class="input">
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="online-orders">Online E-commerce Deliveries Monthly</label>
+                <input id="online-orders" type="number" min="0" max="60" value="4" class="input">
+              </div>
+
+              <div class="field" style="grid-column:1/-1;">
+                <label class="field__label" for="plastic-habits">
+                  Single-Use Habits (Plastic bags, bottled water, coffee cups)
+                </label>
+                <select id="plastic-habits" class="select">
+                  <option value="eco">Eco-conscious: Always carry reusable bottle &amp; tote bag</option>
+                  <option value="moderate" selected>Moderate: Occasionally accept disposable cups/bags</option>
+                  <option value="heavy">Frequent: Frequently purchase bottled water &amp; plastic items</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- Error banner -->
+          <div id="calculator-error-banner" class="alert alert--error hidden">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="calculator-error-msg">Please check your inputs for invalid values.</span>
+          </div>
+
+          <!-- Navigation -->
+          <div class="calc-nav">
+            <button type="button" id="prev-step-btn" class="btn btn-neutral" disabled>
+              <i class="fa-solid fa-chevron-left text-[10px]"></i> Previous
+            </button>
+
+            <div style="display:flex;gap:.6rem;">
+              <button type="button" id="calc-reset-btn" class="btn btn-ghost">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+              </button>
+
+              <button type="button" id="next-step-btn" class="btn btn-primary">
+                Next Step <i class="fa-solid fa-chevron-right text-[10px]"></i>
+              </button>
+
+              <button type="button" id="calc-submit-btn" class="btn btn-leaf hidden">
+                <i class="fa-solid fa-calculator"></i> Compute Results
+              </button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <span class="footer-brand__mark"><i class="fa-solid fa-leaf"></i></span>
+            <span>Carbotrack</span>
+          </div>
+          <p style="font-size:.75rem;line-height:1.8;">
+            Measure your impact. Understand your footprint. Take informed action.
+          </p>
+        </div>
+        <div>
+          <h4 class="footer-title">Quick Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home Overview</a></li>
+            <li><a href="calculator.html">Carbon Calculator</a></li>
+            <li><a href="results.html">Results Dashboard</a></li>
+            <li><a href="simulator.html">Reduction Simulator</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Academic Resources</h4>
+          <ul class="footer-links">
+            <li><a href="methodology.html">Emission Factors</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
+            <li><a href="about.html">CHE110 Assignment</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Project Dissemination</h4>
+          <div class="footer-social">
+            <a href="https://linkedin.com" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://youtube.com" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
+            <a href="https://x.com" target="_blank" rel="noopener"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://github.com" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-current-year>2026</span> Carbotrack Environmental Platform.</span>
+        <span>Built with HTML5, Tailwind CSS &amp; Chart.js</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================== SCRIPTS ===================== -->
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/calculator.js"></script>
 </body>
 </html>

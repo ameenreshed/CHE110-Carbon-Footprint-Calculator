@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Methodology &amp; Emission Factors — Carbotrack</title>
+  <meta name="description" content="Transparent documentation of the emission factors and formula used by the Carbotrack carbon footprint calculator.">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+
+<body class="font-sans bg-earth text-slate-800">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header" id="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="index.html" class="brand">
+          <span class="brand__mark"><i class="fa-solid fa-leaf"></i></span>
+          <span>
+            <span class="brand__name">Carbotrack</span>
+            <span class="brand__tag">Understand Your Impact</span>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary">
+          <a href="index.html" data-nav-link>Home</a>
+          <a href="index.html#problem-section">Why It Matters</a>
+          <a href="calculator.html" data-nav-link>Calculator</a>
+          <a href="results.html" data-nav-link>Results</a>
+          <a href="simulator.html" data-nav-link>Simulator</a>
+          <a href="challenge.html" data-nav-link>Challenge</a>
+          <a href="methodology.html" data-nav-link>Methodology</a>
+          <a href="about.html" data-nav-link>Academic</a>
+        </nav>
+
+        <div class="header-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-action="quick-demo">⚡ Quick Demo</button>
+          <a href="calculator.html" class="btn btn-primary btn-sm">
+            <span>Calculator</span>
+            <i class="fa-solid fa-calculator text-[10px]"></i>
+          </a>
+        </div>
+
+        <button id="mobile-menu-btn" class="mobile-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="mobile-menu hidden">
+      <a href="index.html">Home</a>
+      <a href="calculator.html">Calculator</a>
+      <a href="results.html">Results</a>
+      <a href="simulator.html">Simulator</a>
+      <a href="challenge.html">7-Day Challenge</a>
+      <a href="methodology.html">Methodology</a>
+      <a href="about.html">Academic Info</a>
+    </div>
+  </header>
+
+  <!-- ===================== METHODOLOGY ===================== -->
+  <main id="methodology-section" class="section section--alt section--border">
+    <div class="container" style="max-width:72rem;">
+
+      <div class="section-head">
+        <span class="eyebrow">Educational Transparency</span>
+        <h2 class="section-heading">Calculation Methodology &amp; Emission Factors</h2>
+        <p class="section-sub">
+          Carbotrack uses standardized linear models based on IPCC (Intergovernmental Panel on
+          Climate Change) guidelines and national grid baselines.
+        </p>
+      </div>
+
+      <div class="method-grid">
+
+        <div class="method-card">
+          <h3 class="method-card__title">
+            <i class="fa-solid fa-square-root-variable"></i> The Core Calculation Formula
+          </h3>
+          <div class="formula">
+            Total CO₂e (kg/year) = Σ [ Activity Metric (Units/Yr) × Specific Emission Factor (kg CO₂e/Unit) ]
+          </div>
+          <p>
+            Each category estimates annual volume multiplied by peer-reviewed factors. For
+            instance, private commuting calculates annual kilometres multiplied by a fuel-burn
+            factor, adjusted for vehicle occupancy and carpooling frequency. Household
+            electricity is divided by the number of occupants before applying the grid factor.
+          </p>
+        </div>
+
+        <div class="method-card">
+          <h3 class="method-card__title">
+            <i class="fa-solid fa-graduation-cap"></i> Academic Model Scope
+          </h3>
+          <p>
+            This tool is built for educational demonstration in CHE110 Environmental Studies.
+            Calculations reflect generalized regional constants rather than audited industrial
+            ISO 14064 standards. The goal is personal awareness and proportional priority
+            identification — not regulatory reporting.
+          </p>
+          <p style="margin-top:.85rem;">
+            <strong style="color:var(--forest-900);">Interpretation guide:</strong>
+            treat outputs as directional estimates accurate to roughly ±20%, and compare your
+            own categories against each other rather than chasing an exact number.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Factor table -->
+      <div class="table-shell">
+        <div class="table-shell__head">
+          <h3 class="table-shell__title">Documented Emission Factors Benchmark</h3>
+          <span class="table-shell__meta">Values used inside the JavaScript computational engine</span>
+        </div>
+
+        <div class="scroll-x">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Activity Category</th>
+                <th>Factor Applied</th>
+                <th>Unit</th>
+                <th>Scientific Reference Base</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Petrol Car Commute</td>
+                <td>0.170</td>
+                <td>kg CO₂e / km</td>
+                <td>DEFRA / EPA Standard Vehicle Profile</td>
+              </tr>
+              <tr>
+                <td>Diesel Car Commute</td>
+                <td>0.185</td>
+                <td>kg CO₂e / km</td>
+                <td>UK Government GHG Conversion Factors</td>
+              </tr>
+              <tr>
+                <td>CNG Car</td>
+                <td>0.125</td>
+                <td>kg CO₂e / km</td>
+                <td>Natural gas combustion lifecycle</td>
+              </tr>
+              <tr>
+                <td>Electric Vehicle (Grid-charged)</td>
+                <td>0.053</td>
+                <td>kg CO₂e / km</td>
+                <td>Average subcontinental grid efficiency (~0.18 kWh/km)</td>
+              </tr>
+              <tr>
+                <td>Motorcycle / Scooter (Petrol)</td>
+                <td>0.075</td>
+                <td>kg CO₂e / km</td>
+                <td>Two-wheeler segment emission profile</td>
+              </tr>
+              <tr>
+                <td>Electric Two-Wheeler</td>
+                <td>0.022</td>
+                <td>kg CO₂e / km</td>
+                <td>Battery + grid charging lifecycle</td>
+              </tr>
+              <tr>
+                <td>Public Metro / Transit</td>
+                <td>0.045</td>
+                <td>kg CO₂e / passenger-km</td>
+                <td>Mass Transit Lifecycle Carbon Metrics</td>
+              </tr>
+              <tr>
+                <td>Electricity Grid Consumption</td>
+                <td>0.820</td>
+                <td>kg CO₂e / kWh</td>
+                <td>Central Electricity Authority (CEA) Baseline Database</td>
+              </tr>
+              <tr>
+                <td>Domestic Round-Trip Flight</td>
+                <td>250</td>
+                <td>kg CO₂e / flight</td>
+                <td>ICAO Carbon Emissions Calculator (~700 km hop)</td>
+              </tr>
+              <tr>
+                <td>International Long-Haul Flight</td>
+                <td>1,100</td>
+                <td>kg CO₂e / flight</td>
+                <td>ICAO long-haul economy class estimate</td>
+              </tr>
+              <tr>
+                <td>Water Supply &amp; Heating</td>
+                <td>0.00035</td>
+                <td>kg CO₂e / litre</td>
+                <td>Municipal pumping + thermal heating energy</td>
+              </tr>
+              <tr>
+                <td>Municipal Landfill Waste</td>
+                <td>0.45</td>
+                <td>kg CO₂e / kg</td>
+                <td>Anaerobic decomposition methane potential</td>
+              </tr>
+              <tr>
+                <td>New Apparel Item</td>
+                <td>8.5</td>
+                <td>kg CO₂e / item</td>
+                <td>Textile manufacturing + logistics lifecycle</td>
+              </tr>
+              <tr>
+                <td>E-commerce Delivery</td>
+                <td>2.2</td>
+                <td>kg CO₂e / order</td>
+                <td>Packaging + last-mile logistics</td>
+              </tr>
+              <tr>
+                <td>Vegan Diet Baseline</td>
+                <td>1,400</td>
+                <td>kg CO₂e / year</td>
+                <td>Poore &amp; Nemecek (Science, 2018 Life Cycle Food Study)</td>
+              </tr>
+              <tr>
+                <td>Vegetarian Diet Baseline</td>
+                <td>1,750</td>
+                <td>kg CO₂e / year</td>
+                <td>Dairy-inclusive lacto-vegetarian profile</td>
+              </tr>
+              <tr>
+                <td>Pescatarian Diet Baseline</td>
+                <td>2,100</td>
+                <td>kg CO₂e / year</td>
+                <td>Fish &amp; seafood lifecycle addition</td>
+              </tr>
+              <tr>
+                <td>Mixed (Low Meat) Diet Baseline</td>
+                <td>2,500</td>
+                <td>kg CO₂e / year</td>
+                <td>1–2 meat servings per week</td>
+              </tr>
+              <tr>
+                <td>Heavy Meat Diet Baseline</td>
+                <td>3,300</td>
+                <td>kg CO₂e / year</td>
+                <td>High-methane ruminant beef/mutton + poultry lifecycle</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Benchmark targets -->
+      <div class="method-grid" style="margin-top:3rem;">
+        <div class="method-card">
+          <h3 class="method-card__title">
+            <i class="fa-solid fa-bullseye"></i> Sustainability Benchmarks
+          </h3>
+          <p>The calculator classifies results against four reference points:</p>
+          <ul style="margin-top:.85rem;display:grid;gap:.55rem;">
+            <li style="font-size:.78rem;color:var(--text-muted);">
+              🟢 <strong style="color:var(--forest-900);">≤ 2.2 t</strong> — Paris-Aligned / Target Compliant
+            </li>
+            <li style="font-size:.78rem;color:var(--text-muted);">
+              🟡 <strong style="color:var(--forest-900);">2.2 – 4.5 t</strong> — Moderate Impact
+            </li>
+            <li style="font-size:.78rem;color:var(--text-muted);">
+              🟠 <strong style="color:var(--forest-900);">4.5 – 7.5 t</strong> — High Impact
+            </li>
+            <li style="font-size:.78rem;color:var(--text-muted);">
+              🔴 <strong style="color:var(--forest-900);">&gt; 7.5 t</strong> — Very High Impact
+            </li>
+          </ul>
+        </div>
+
+        <div class="method-card">
+          <h3 class="method-card__title">
+            <i class="fa-solid fa-triangle-exclamation"></i> Known Limitations
+          </h3>
+          <p>
+            Regional grid intensity varies by state and season. Aviation radiative forcing
+            (non-CO₂ effects at altitude) is not fully captured. Embodied carbon in durable
+            goods (electronics, furniture) is approximated rather than itemised. Food waste
+            modelling is frequency-based, not mass-based.
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:center;gap:.75rem;flex-wrap:wrap;margin-top:3rem;">
+        <a href="calculator.html" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-calculator"></i>
+          <span>Apply the Methodology</span>
+        </a>
+        <a href="about.html" class="btn btn-outline btn-lg">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <span>About the Project</span>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <span class="footer-brand__mark"><i class="fa-solid fa-leaf"></i></span>
+            <span>Carbotrack</span>
+          </div>
+          <p style="font-size:.75rem;line-height:1.8;">
+            Measure your impact. Understand your footprint. Take informed action.
+          </p>
+        </div>
+        <div>
+          <h4 class="footer-title">Quick Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home Overview</a></li>
+            <li><a href="calculator.html">Carbon Calculator</a></li>
+            <li><a href="results.html">Results Dashboard</a></li>
+            <li><a href="simulator.html">Reduction Simulator</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Academic Resources</h4>
+          <ul class="footer-links">
+            <li><a href="methodology.html">Emission Factors</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
+            <li><a href="about.html">CHE110 Assignment</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Project Dissemination</h4>
+          <div class="footer-social">
+            <a href="https://linkedin.com" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://youtube.com" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
+            <a href="https://x.com" target="_blank" rel="noopener"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://github.com" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-current-year>2026</span> Carbotrack Environmental Platform.</span>
+        <span>Built with HTML5, Tailwind CSS &amp; Chart.js</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================== SCRIPTS ===================== -->
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

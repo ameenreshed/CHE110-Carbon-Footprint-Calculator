@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home | CarbonTrace</title>
+<meta name="description" content="CarbonTrace estimates your yearly carbon footprint from travel, energy, food and waste.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<script>document.documentElement.classList.add('js');try{var t=JSON.parse(localStorage.getItem('carbontrace-theme'));document.documentElement.setAttribute('data-theme',t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'))}catch(e){}</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><nav><a class="logo" href="index.html"><i class="fa-solid fa-leaf"></i>CarbonTrace</a><div class="links" id="links"><a href="index.html" class="active">Home</a><a href="calculator.html">Calculator</a><a href="learn.html">Learn</a><a href="quiz.html">Quiz</a><a href="tracker.html">Social Tracker</a><a href="about.html">About</a></div><a class="btn btn-sm nav-cta" href="calculator.html"><i class="fa-solid fa-calculator"></i>Calculate</a><button class="icon-btn" id="themeBtn" aria-label="Toggle dark or light theme"><i class="fa-solid fa-moon"></i></button><button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="links"><i class="fa-solid fa-bars"></i></button></nav></header>
+<main>
+<div class="hero"><div class="wrap hero-grid"><div>
+<span class="pill"><i class="fa-solid fa-seedling"></i> Personal carbon footprint calculator</span>
+<h1>Know your carbon footprint. <span>Then shrink it.</span></h1>
+<p class="lead">Tell us how you travel, use energy, eat and throw things away. CarbonTrace estimates your yearly CO₂ emissions, shows where they come from, and helps you plan real reductions.</p>
+<div class="btn-row" style="margin-top:28px"><a class="btn" href="calculator.html"><i class="fa-solid fa-calculator"></i>Calculate my footprint</a><a class="btn btn-outline" href="about.html"><i class="fa-solid fa-circle-info"></i>How it works</a></div>
+<div class="trust"><span><i class="fa-solid fa-circle-check"></i>Free to use</span><span><i class="fa-solid fa-circle-check"></i>No sign-up</span><span><i class="fa-solid fa-circle-check"></i>Data stays in your browser</span></div></div>
+<div class="card preview"><div class="pv-top"><span class="pill"><i class="fa-solid fa-chart-pie"></i> Sample result</span><span class="pill" style="background:rgba(245,158,11,.16);color:#B45309">Grade D</span></div>
+<div class="pv-total">3.95 <small>t CO₂ per year</small></div>
+<div class="mini"><div class="lab"><span><i class="fa-solid fa-car-side" style="color:#3B82F6;width:20px"></i> Transport</span><span>13%</span></div><div class="track"><div class="fill" style="width:13%;background:#3B82F6"></div></div></div><div class="mini"><div class="lab"><span><i class="fa-solid fa-plane" style="color:#F43F5E;width:20px"></i> Flights</span><span>6%</span></div><div class="track"><div class="fill" style="width:6%;background:#F43F5E"></div></div></div><div class="mini"><div class="lab"><span><i class="fa-solid fa-bolt" style="color:#F59E0B;width:20px"></i> Home energy</span><span>39%</span></div><div class="track"><div class="fill" style="width:39%;background:#F59E0B"></div></div></div><div class="mini"><div class="lab"><span><i class="fa-solid fa-utensils" style="color:#10B981;width:20px"></i> Food</span><span>38%</span></div><div class="track"><div class="fill" style="width:38%;background:#10B981"></div></div></div><div class="mini"><div class="lab"><span><i class="fa-solid fa-recycle" style="color:#8B5CF6;width:20px"></i> Waste</span><span>4%</span></div><div class="track"><div class="fill" style="width:4%;background:#8B5CF6"></div></div></div></div></div></div>
+<section class="wrap"><div class="grid">
+<div class="card hover reveal"><div class="chip blue"><i class="fa-solid fa-earth-asia"></i></div><div class="stat">4.7 t</div><p class="muted">Approx. world average CO₂ per person per year</p></div>
+<div class="card hover reveal"><div class="chip rose"><i class="fa-solid fa-flag"></i></div><div class="stat">1.9 t</div><p class="muted">Approx. India average per person per year</p></div>
+<div class="card hover reveal"><div class="chip emerald"><i class="fa-solid fa-bullseye"></i></div><div class="stat">2.3 t</div><p class="muted">Commonly cited Paris-aligned level per person by 2030</p></div></div></section>
+<section class="wrap"><div class="sec-head"><span class="eyebrow">Features</span><h2>Everything you need in one place</h2><p class="muted">From a quick estimate to a plan you can act on.</p></div><div class="grid">
+<div class="card hover reveal"><div class="chip emerald"><i class="fa-solid fa-calculator"></i></div><h3>Live calculator</h3><p class="muted">Travel, flights, electricity, LPG, diet, waste and household size, updated as you move the sliders.</p></div>
+<div class="card hover reveal"><div class="chip blue"><i class="fa-solid fa-chart-column"></i></div><h3>Clear charts</h3><p class="muted">Doughnut, comparison bars, a 10-year projection and your saved trend.</p></div>
+<div class="card hover reveal"><div class="chip amber"><i class="fa-solid fa-list-check"></i></div><h3>Reduction planner</h3><p class="muted">Pledge actions and see the kilograms and years of emissions you could save.</p></div>
+<div class="card hover reveal"><div class="chip violet"><i class="fa-solid fa-brain"></i></div><h3>Eco quiz</h3><p class="muted">Eight questions with explanations and a badge for your score.</p></div>
+<div class="card hover reveal"><div class="chip rose"><i class="fa-solid fa-share-nodes"></i></div><h3>Share and export</h3><p class="muted">Share your result, download CSV, or print a report as PDF.</p></div>
+<div class="card hover reveal"><div class="chip emerald"><i class="fa-solid fa-circle-half-stroke"></i></div><h3>Dark and light mode</h3><p class="muted">Switch themes any time. Your choice is remembered.</p></div></div></section>
+<section class="wrap"><div class="sec-head"><span class="eyebrow">How it works</span><h2>Three simple steps</h2></div><div class="grid">
+<div class="card reveal"><div class="num">1</div><h3>Enter your habits</h3><p class="muted">Use simple sliders and buttons for your daily life.</p></div>
+<div class="card reveal"><div class="num">2</div><h3>See your estimate</h3><p class="muted">Get your annual footprint in tonnes of CO₂ with a category breakdown.</p></div>
+<div class="card reveal"><div class="num">3</div><h3>Act on it</h3><p class="muted">Pledge changes and watch your projected footprint fall.</p></div></div></section>
+<section class="wrap"><div class="cta reveal"><div><h2>Ready to find your number?</h2><p>It takes less than a minute.</p></div><a class="btn" href="calculator.html"><i class="fa-solid fa-arrow-right"></i>Start calculating</a></div></section>
+</main>
+<footer><div class="wrap"><div class="f-grid"><div><a class="logo" href="index.html" style="padding:0"><i class="fa-solid fa-leaf"></i>CarbonTrace</a><p class="muted" style="margin-top:12px;max-width:360px">Estimate your yearly carbon footprint, see where it comes from, and plan how to cut it.</p></div>
+<div><h4>Pages</h4><a href="calculator.html">Calculator</a><a href="learn.html">Learn</a><a href="quiz.html">Quiz</a><a href="tracker.html">Social tracker</a><a href="about.html">About</a></div>
+<div><h4>Project</h4><span class="muted" style="font-size:15px">CHE 110 Environmental Studies<br>Lovely Professional University<br>Section K4P26HB · Group 1</span></div></div>
+<div class="f-bot">Estimates are approximate and for education. Built with HTML, CSS and JavaScript.</div></div></footer>
+<script src="script.js"></script>
+</body>
+</html>

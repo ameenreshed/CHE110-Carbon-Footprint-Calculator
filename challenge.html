@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7-Day Campus Eco Challenge — Carbotrack</title>
+  <meta name="description" content="Take one concrete climate action every day for a week and earn your campus eco badge.">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+
+<body class="font-sans bg-earth text-slate-800">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header" id="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="index.html" class="brand">
+          <span class="brand__mark"><i class="fa-solid fa-leaf"></i></span>
+          <span>
+            <span class="brand__name">Carbotrack</span>
+            <span class="brand__tag">Understand Your Impact</span>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary">
+          <a href="index.html" data-nav-link>Home</a>
+          <a href="index.html#problem-section">Why It Matters</a>
+          <a href="calculator.html" data-nav-link>Calculator</a>
+          <a href="results.html" data-nav-link>Results</a>
+          <a href="simulator.html" data-nav-link>Simulator</a>
+          <a href="challenge.html" data-nav-link>Challenge</a>
+          <a href="methodology.html" data-nav-link>Methodology</a>
+          <a href="about.html" data-nav-link>Academic</a>
+        </nav>
+
+        <div class="header-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-action="quick-demo">⚡ Quick Demo</button>
+          <a href="calculator.html" class="btn btn-primary btn-sm">
+            <span>Calculator</span>
+            <i class="fa-solid fa-calculator text-[10px]"></i>
+          </a>
+        </div>
+
+        <button id="mobile-menu-btn" class="mobile-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="mobile-menu hidden">
+      <a href="index.html">Home</a>
+      <a href="calculator.html">Calculator</a>
+      <a href="results.html">Results</a>
+      <a href="simulator.html">Simulator</a>
+      <a href="challenge.html">7-Day Challenge</a>
+      <a href="methodology.html">Methodology</a>
+      <a href="about.html">Academic Info</a>
+    </div>
+  </header>
+
+  <!-- ===================== CHALLENGE ===================== -->
+  <main class="section section--white section--border">
+    <div class="container" style="max-width:64rem;">
+
+      <div class="section-head">
+        <span class="eyebrow">Student &amp; Campus Initiative</span>
+        <h2 class="section-heading">7-Day Campus Eco Challenge</h2>
+        <p class="section-sub">
+          Take one concrete climate action every day this week. Check them off as you complete
+          them to earn your campus eco certificate badge!
+        </p>
+
+        <div class="challenge-tracker">
+          <div class="progress">
+            <div id="challenge-progress-fill" class="progress__fill" style="width:0%;"></div>
+          </div>
+          <span id="challenge-score-label"
+                style="font-size:.75rem;font-weight:800;color:var(--forest-900);">0 / 7 Completed</span>
+          <button type="button" id="challenge-reset-btn" class="btn btn-neutral btn-sm">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+          </button>
+        </div>
+      </div>
+
+      <div class="challenge-grid">
+
+        <label class="challenge-item">
+          <input type="checkbox" class="checkbox challenge-checkbox">
+          <span>
+            <span class="challenge-item__day">Day 1</span>
+            <span class="challenge-item__title">Zero Single-Use Day</span>
+            <span class="challenge-item__desc">
+              Carry your own water bottle, cutlery, and cloth tote bag everywhere.
+            </span>
+          </span>
+        </label>
+
+        <label class="challenge-item">
+          <input type="checkbox" class="checkbox challenge-checkbox">
+          <span>
+            <span class="challenge-item__day">Day 2</span>
+            <span class="challenge-item__title">Vampire Power Audit</span>
+            <span class="challenge-item__desc">
+              Switch off chargers, monitors, and standby plug strips at night.
+            </span>
+          </span>
+        </label>
+
+        <label class="challenge-item">
+          <input type="checkbox" class="checkbox challenge-checkbox">
+          <span>
+            <span class="challenge-item__day">Day 3</span>
+            <span class="challenge-item__title">Green Commute Day</span>
+            <span class="challenge-item__desc">
+              Use public transit, bicycle, or walk for your primary trips today.
+            </span>
+          </span>
+        </label>
+
+        <label class="challenge-item">
+          <input type="checkbox" class="checkbox challenge-checkbox">
+          <span>
+            <span class="challenge-item__day">Day 4</span>
+            <span class="challenge-item__title">Zero Food Waste</span>
+            <span class="challenge-item__desc">
+              Take only what you can finish; preserve leftover food in the hostel/home.
+            </span>
+          </span>
+        </label>
+
+        <label class="challenge-item">
+          <input type="checkbox" class="checkbox challenge-checkbox">
+          <span>
+            <span class="challenge-item__day">Day 5</span>
+            <span class="challenge-item__title">5-Minute Shower Challenge</span>
+            <span class="challenge-item__desc">
+              Keep shower under five minutes to save water and water-heating energy.
+            </span>
+          </span>
+        </label>
+
+        <label class="challenge-item">
+          <input type="checkbox" class="checkbox challenge-checkbox">
+          <span>
+            <span class="challenge-item__day">Day 6</span>
+            <span class="challenge-item__title">Segregation Master</span>
+            <span class="challenge-item__desc">
+              Rinse and properly separate dry paper, plastics, and e-waste.
+            </span>
+          </span>
+        </label>
+
+        <label class="challenge-item challenge-item--wide">
+          <input type="checkbox" class="checkbox challenge-checkbox">
+          <span>
+            <span class="challenge-item__day">Day 7</span>
+            <span class="challenge-item__title">Plant &amp; Spread the Word</span>
+            <span class="challenge-item__desc">
+              Nurture a plant or tree on campus and share the Carbotrack calculator with 3 peers!
+            </span>
+          </span>
+        </label>
+
+      </div>
+
+      <!-- Completion badge -->
+      <div id="challenge-badge-banner" class="challenge-badge hidden">
+        <i class="fa-solid fa-award"></i>
+        <h4>Congratulations! 7-Day Challenge Completed</h4>
+        <p>
+          You have demonstrated that conscious, practical student actions compound into a
+          sustainable environmental footprint!
+        </p>
+      </div>
+
+      <div style="display:flex;justify-content:center;gap:.75rem;flex-wrap:wrap;margin-top:3rem;">
+        <a href="calculator.html" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-calculator"></i>
+          <span>Recalculate My Footprint</span>
+        </a>
+        <a href="simulator.html" class="btn btn-outline btn-lg">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Simulate More Savings</span>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <span class="footer-brand__mark"><i class="fa-solid fa-leaf"></i></span>
+            <span>Carbotrack</span>
+          </div>
+          <p style="font-size:.75rem;line-height:1.8;">
+            Measure your impact. Understand your footprint. Take informed action.
+          </p>
+        </div>
+        <div>
+          <h4 class="footer-title">Quick Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home Overview</a></li>
+            <li><a href="calculator.html">Carbon Calculator</a></li>
+            <li><a href="results.html">Results Dashboard</a></li>
+            <li><a href="simulator.html">Reduction Simulator</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Academic Resources</h4>
+          <ul class="footer-links">
+            <li><a href="methodology.html">Emission Factors</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
+            <li><a href="about.html">CHE110 Assignment</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Project Dissemination</h4>
+          <div class="footer-social">
+            <a href="https://linkedin.com" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://youtube.com" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
+            <a href="https://x.com" target="_blank" rel="noopener"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://github.com" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-current-year>2026</span> Carbotrack Environmental Platform.</span>
+        <span>Built with HTML5, Tailwind CSS &amp; Chart.js</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================== SCRIPTS ===================== -->
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/challenge.js"></script>
+</body>
+</html>

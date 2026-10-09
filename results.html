@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Footprint Results — Carbotrack</title>
+  <meta name="description" content="Your personalised carbon footprint dashboard with emission breakdown charts and actionable recommendations.">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+
+<body class="font-sans bg-earth text-slate-800">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header no-print" id="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="index.html" class="brand">
+          <span class="brand__mark"><i class="fa-solid fa-leaf"></i></span>
+          <span>
+            <span class="brand__name">Carbotrack</span>
+            <span class="brand__tag">Understand Your Impact</span>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary">
+          <a href="index.html" data-nav-link>Home</a>
+          <a href="index.html#problem-section">Why It Matters</a>
+          <a href="calculator.html" data-nav-link>Calculator</a>
+          <a href="results.html" data-nav-link>Results</a>
+          <a href="simulator.html" data-nav-link>Simulator</a>
+          <a href="challenge.html" data-nav-link>Challenge</a>
+          <a href="methodology.html" data-nav-link>Methodology</a>
+          <a href="about.html" data-nav-link>Academic</a>
+        </nav>
+
+        <div class="header-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-action="quick-demo">⚡ Quick Demo</button>
+          <a href="calculator.html" class="btn btn-primary btn-sm">
+            <span>Recalculate</span>
+            <i class="fa-solid fa-rotate text-[10px]"></i>
+          </a>
+        </div>
+
+        <button id="mobile-menu-btn" class="mobile-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="mobile-menu hidden">
+      <a href="index.html">Home</a>
+      <a href="calculator.html">Calculator</a>
+      <a href="results.html">Results</a>
+      <a href="simulator.html">Simulator</a>
+      <a href="challenge.html">7-Day Challenge</a>
+      <a href="methodology.html">Methodology</a>
+      <a href="about.html">Academic Info</a>
+      <div class="mobile-menu__actions">
+        <a href="calculator.html" class="btn btn-primary btn-block">Recalculate Footprint</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== EMPTY STATE ===================== -->
+  <section id="results-empty" class="section section--white hidden">
+    <div class="container">
+      <div class="empty-state">
+        <div class="empty-state__icon"><i class="fa-solid fa-chart-pie"></i></div>
+        <h2 class="section-heading">No Results Yet</h2>
+        <p class="section-sub">
+          Complete the six-step assessment to generate your personalised carbon footprint
+          dashboard with charts and tailored recommendations.
+        </p>
+        <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:1.75rem;">
+          <a href="calculator.html" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-calculator"></i>
+            <span>Open the Calculator</span>
+          </a>
+          <button type="button" class="btn btn-outline btn-lg" data-action="quick-demo">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Try a Demo Profile</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== RESULTS ===================== -->
+  <section id="results-section" class="section section--white section--border hidden">
+    <div class="container">
+
+      <!-- Toolbar -->
+      <div class="results-toolbar">
+        <div>
+          <span class="eyebrow">Verified Assessment Output</span>
+          <h2 class="section-heading">Your Environmental Footprint</h2>
+          <p class="section-sub" id="res-comparison-note"></p>
+          <p style="font-size:.68rem;color:#94a3b8;margin-top:.4rem;" id="res-timestamp"></p>
+        </div>
+
+        <div class="toolbar-actions no-print">
+          <button type="button" id="results-print-btn" class="btn btn-ghost btn-sm">
+            <i class="fa-solid fa-print"></i> Print Report
+          </button>
+          <a href="calculator.html" class="btn btn-neutral btn-sm">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Inputs
+          </a>
+          <button type="button" id="results-reset-btn" class="btn btn-neutral btn-sm">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI cards -->
+      <div class="kpi-grid">
+
+        <div class="kpi-hero">
+          <div class="kpi-hero__glyph"><i class="fa-solid fa-globe"></i></div>
+          <span class="kpi-hero__label">Total Annual Footprint</span>
+          <div class="kpi-hero__value">
+            <span id="res-total-tons" class="kpi-hero__number">4.82</span>
+            <span class="kpi-hero__unit">tonnes CO₂e / yr</span>
+          </div>
+          <div class="kpi-hero__foot">
+            <span>Impact Classification:</span>
+            <span id="res-rating-badge" class="rating-badge rating-moderate">Moderate Impact</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div>
+            <span class="kpi-card__label">Monthly Equivalent</span>
+            <div class="kpi-card__value">
+              <span id="res-monthly-kg" class="kpi-card__number">402</span>
+              <span class="kpi-card__unit">kg CO₂e</span>
+            </div>
+          </div>
+          <div class="kpi-card__foot">
+            Equivalent to burning ~45 gallons of petrol every 30 days.
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span class="kpi-card__label">Eco Score</span>
+              <span id="res-eco-score-pill"
+                    style="font-size:.68rem;font-weight:800;color:var(--leaf-600);background:#ecfdf5;padding:.15rem .45rem;border-radius:6px;">
+                74/100
+              </span>
+            </div>
+            <div class="kpi-card__value">
+              <span id="res-daily-kg" class="kpi-card__number">13.2</span>
+              <span class="kpi-card__unit">kg CO₂e / day</span>
+            </div>
+          </div>
+          <div class="kpi-card__foot">
+            <div class="progress progress--thin" style="margin-bottom:.6rem;">
+              <div id="res-eco-score-bar" class="progress__fill" style="width:74%;"></div>
+            </div>
+            <span id="res-trees-note"></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Charts -->
+      <div class="chart-grid">
+        <div class="chart-container">
+          <div class="chart-container__head">
+            <h3 class="chart-container__title">Emission Sources Breakdown</h3>
+            <span class="chart-container__meta">By Proportion</span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="categoryDonutChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <div class="chart-container__head">
+            <h3 class="chart-container__title">Category Emissions (kg CO₂e / Year)</h3>
+            <span class="chart-container__meta">Absolute Load</span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="categoryBarChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommendations -->
+      <div class="rec-panel">
+        <div class="rec-panel__head">
+          <div class="rec-panel__icon"><i class="fa-solid fa-bullseye"></i></div>
+          <div>
+            <h3 style="font-size:1.2rem;">Actionable Personal Recommendations</h3>
+            <p style="font-size:.72rem;color:var(--text-muted);">
+              Tailored suggestions targeted at your highest emitting sectors.
+            </p>
+          </div>
+        </div>
+
+        <div id="dynamic-recommendations-list" class="rec-grid"></div>
+      </div>
+
+      <!-- Next steps -->
+      <div class="about-panel no-print" style="background:linear-gradient(100deg,var(--forest-900),var(--forest-800));">
+        <div>
+          <h3>Want to see what changes would do?</h3>
+          <p style="margin-top:.75rem;">
+            Run your numbers through the What-If simulator, or commit to the 7-Day Campus
+            Eco Challenge and start building habits that stick.
+          </p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.75rem;">
+          <a href="simulator.html" class="btn btn-leaf btn-block">
+            <i class="fa-solid fa-sliders"></i> Open What-If Simulator
+          </a>
+          <a href="challenge.html" class="btn btn-outline btn-block">
+            <i class="fa-solid fa-list-check"></i> Join 7-Day Challenge
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="site-footer no-print">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <span class="footer-brand__mark"><i class="fa-solid fa-leaf"></i></span>
+            <span>Carbotrack</span>
+          </div>
+          <p style="font-size:.75rem;line-height:1.8;">
+            Measure your impact. Understand your footprint. Take informed action.
+          </p>
+        </div>
+        <div>
+          <h4 class="footer-title">Quick Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home Overview</a></li>
+            <li><a href="calculator.html">Carbon Calculator</a></li>
+            <li><a href="results.html">Results Dashboard</a></li>
+            <li><a href="simulator.html">Reduction Simulator</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Academic Resources</h4>
+          <ul class="footer-links">
+            <li><a href="methodology.html">Emission Factors</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
+            <li><a href="about.html">CHE110 Assignment</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Project Dissemination</h4>
+          <div class="footer-social">
+            <a href="https://linkedin.com" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://youtube.com" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
+            <a href="https://x.com" target="_blank" rel="noopener"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://github.com" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-current-year>2026</span> Carbotrack Environmental Platform.</span>
+        <span>Built with HTML5, Tailwind CSS &amp; Chart.js</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================== SCRIPTS ===================== -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/results.js"></script>
+</body>
+</html>

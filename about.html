@@ -1,36 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>About | CarbonTrace</title>
-<meta name="description" content="CarbonTrace estimates your yearly carbon footprint from travel, energy, food and waste.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Project Info — Carbotrack | CHE110</title>
+  <meta name="description" content="CHE110 Environmental Studies continuous assessment project — Carbon Footprint Calculator web application by B.Tech CSE students.">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
 </head>
-<body>
-<header><nav><a class="logo" href="index.html">CarbonTrace</a><button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="links">Menu</button><div class="links" id="links"><a href="index.html">Home</a><a href="calculator.html">Calculator</a><a href="learn.html">Learn</a><a href="about.html" class="active">About</a></div></nav></header>
-<main>
-<div class="wrap hero" style="padding-bottom:16px"><h1 style="font-size:52px">About the project</h1><p class="lead">CarbonTrace is a prototype built for CHE 110 Environmental Studies (CA1). It estimates an individual's yearly carbon footprint from lifestyle choices and suggests where to reduce emissions.</p></div>
-<section class="wrap"><h2>Method and emission factors</h2><p>Yearly emissions = activity amount × emission factor, summed over five categories. Factors are rounded approximations; verify them against sources such as CEA and IPCC before citing.</p>
-<div class="table-box card"><table><tbody>
-<tr><td>Petrol / diesel / CNG / electric car</td><td>0.17 / 0.15 / 0.12 / 0.08 kg CO₂ per km</td></tr>
-<tr><td>Two-wheeler</td><td>0.05 kg CO₂ per km</td></tr>
-<tr><td>Bus or train</td><td>0.04 kg CO₂ per km</td></tr>
-<tr><td>Return flight (average)</td><td>250 kg CO₂ each</td></tr>
-<tr><td>Grid electricity</td><td>0.71 kg CO₂ per kWh</td></tr>
-<tr><td>LPG cylinder (14.2 kg)</td><td>42.5 kg CO₂ each</td></tr>
-<tr><td>Diet (veg / mixed / non-veg)</td><td>1000 / 1500 / 1900 kg per year</td></tr>
-<tr><td>Household waste</td><td>0.45 kg CO₂ per kg</td></tr>
-<tr><td>Tree absorption (for the tree equivalent)</td><td>about 21 kg CO₂ per year</td></tr></tbody></table></div></section>
-<section class="wrap"><h2>Technologies</h2><p>HTML for structure, CSS for styling, and vanilla JavaScript for calculation, charts and saving results in the browser (localStorage). No frameworks or servers needed.</p></section>
-<section class="wrap"><h2>Team: Group 1</h2><br><div class="grid">
-<div class="card"><h3>Shreya Singh</h3><p>Reg. no. 12618141<br>Roll no. RK4P26HBA01</p></div>
-<div class="card"><h3>Ankit Singh</h3><p>Reg. no. 12619429<br>Roll no. RK4P26HBA02</p></div>
-<div class="card"><h3>Ameen Reshed</h3><p>Reg. no. 12617520<br>Roll no. RK4P26HBA03</p></div></div></section>
-</main>
-<footer><div class="wrap"><span>CHE 110 Environmental Studies · Lovely Professional University · Section K4P26HB · Group 1</span><span>Estimates are approximate, for education.</span></div></footer>
-<script src="script.js"></script>
+
+<body class="font-sans bg-earth text-slate-800">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header" id="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="index.html" class="brand">
+          <span class="brand__mark"><i class="fa-solid fa-leaf"></i></span>
+          <span>
+            <span class="brand__name">Carbotrack</span>
+            <span class="brand__tag">Understand Your Impact</span>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary">
+          <a href="index.html" data-nav-link>Home</a>
+          <a href="index.html#problem-section">Why It Matters</a>
+          <a href="calculator.html" data-nav-link>Calculator</a>
+          <a href="results.html" data-nav-link>Results</a>
+          <a href="simulator.html" data-nav-link>Simulator</a>
+          <a href="challenge.html" data-nav-link>Challenge</a>
+          <a href="methodology.html" data-nav-link>Methodology</a>
+          <a href="about.html" data-nav-link>Academic</a>
+        </nav>
+
+        <div class="header-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-action="quick-demo">⚡ Quick Demo</button>
+          <a href="calculator.html" class="btn btn-primary btn-sm">
+            <span>Calculator</span>
+            <i class="fa-solid fa-calculator text-[10px]"></i>
+          </a>
+        </div>
+
+        <button id="mobile-menu-btn" class="mobile-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="mobile-menu hidden">
+      <a href="index.html">Home</a>
+      <a href="calculator.html">Calculator</a>
+      <a href="results.html">Results</a>
+      <a href="simulator.html">Simulator</a>
+      <a href="challenge.html">7-Day Challenge</a>
+      <a href="methodology.html">Methodology</a>
+      <a href="about.html">Academic Info</a>
+    </div>
+  </header>
+
+  <!-- ===================== ABOUT ===================== -->
+  <main id="about-project" class="section section--white section--border">
+    <div class="container" style="max-width:72rem;">
+
+      <div class="section-head">
+        <span class="eyebrow">Academic Documentation</span>
+        <h2 class="section-heading">CHE110 — Environmental Studies Project</h2>
+        <p class="section-sub">
+          Topic 1: Carbon Footprint Calculator — a working web prototype demonstrating
+          software engineering applied to climate awareness.
+        </p>
+      </div>
+
+      <!-- Main panel -->
+      <div class="about-panel">
+        <div>
+          <span class="badge badge--soft" style="background:rgba(47,87,71,.6);color:var(--leaf-300);border-color:rgba(47,87,71,.8);">
+            <i class="fa-solid fa-code"></i>
+            Computer Science &amp; Engineering Demonstration
+          </span>
+
+          <h3 style="margin-top:1rem;">Course: CHE110 — Environmental Studies</h3>
+
+          <p style="margin-top:1rem;">
+            This prototype addresses <strong style="color:#fff;">Topic 1: Carbon Footprint
+            Calculator</strong>. It exemplifies the practical application of software
+            engineering, dynamic mathematical modelling, and interactive visualisation toward
+            climate action and public awareness.
+          </p>
+
+          <div style="display:flex;flex-wrap:wrap;gap:1rem;margin-top:1.25rem;font-size:.75rem;color:#cbd5e1;">
+            <span><strong style="color:#fff;">Component:</strong> Continuous Assessment 1 (CA1)</span>
+            <span style="color:var(--forest-600);">•</span>
+            <span><strong style="color:#fff;">Deliverables:</strong> Web Prototype, Demo Video, Social Dissemination, Handwritten Report</span>
+          </div>
+        </div>
+
+        <div class="about-specs">
+          <span class="about-specs__title">Team Submission Specs</span>
+          <ul style="display:grid;gap:.55rem;">
+            <li>Group 1 — Section CSE</li>
+            <li>Codebase hosted on GitHub</li>
+            <li>Transparent calculation factors</li>
+            <li>Fully responsive mobile UI</li>
+            <li>Modular HTML / CSS / JS separation</li>
+          </ul>
+          <a href="https://github.com" target="_blank" rel="noopener"
+             style="display:inline-flex;align-items:center;gap:.5rem;font-size:.75rem;font-weight:700;color:var(--leaf-400);padding-top:.35rem;">
+            <i class="fa-brands fa-github"></i>
+            <span>View Repository Codebase</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Deliverables grid -->
+      <div class="method-grid" style="margin-top:3rem;">
+
+        <div class="method-card">
+          <h3 class="method-card__title">
+            <i class="fa-solid fa-laptop-code"></i> Technical Implementation
+          </h3>
+          <p>
+            Built as a static, dependency-light multi-page web application. Styling uses a
+            Tailwind utility layer over a hand-authored design-token system. All calculation
+            logic lives in a pure, testable engine module with no DOM coupling.
+          </p>
+          <ul style="margin-top:.85rem;display:grid;gap:.5rem;font-size:.78rem;color:var(--text-muted);">
+            <li>• <strong>config.js</strong> — emission factors &amp; benchmarks</li>
+            <li>• <strong>engine.js</strong> — pure calculation functions</li>
+            <li>• <strong>storage.js</strong> — safe persistence with memory fallback</li>
+            <li>• <strong>charts.js</strong> — Chart.js donut &amp; bar wrappers</li>
+          </ul>
+        </div>
+
+        <div class="method-card">
+          <h3 class="method-card__title">
+            <i class="fa-solid fa-list-check"></i> Assessment Deliverables
+          </h3>
+          <ul style="display:grid;gap:.75rem;font-size:.78rem;color:var(--text-muted);">
+            <li>✅ <strong style="color:var(--forest-900);">Web Prototype</strong> — this application</li>
+            <li>✅ <strong style="color:var(--forest-900);">Demo Video</strong> — recorded walkthrough</li>
+            <li>✅ <strong style="color:var(--forest-900);">Social Dissemination</strong> — shared across student networks</li>
+            <li>✅ <strong style="color:var(--forest-900);">Handwritten Report</strong> — methodology &amp; findings</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Feature checklist -->
+      <div class="method-card" style="margin-top:2rem;">
+        <h3 class="method-card__title">
+          <i class="fa-solid fa-star"></i> Feature Summary
+        </h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.75rem;margin-top:.5rem;">
+          <span style="font-size:.78rem;color:var(--text-muted);">✅ 6-module guided calculator</span>
+          <span style="font-size:.78rem;color:var(--text-muted);">✅ Real-time input validation</span>
+          <span style="font-size:.78rem;color:var(--text-muted);">✅ Annual / monthly / daily breakdowns</span>
+          <span style="font-size:.78rem;color:var(--text-muted);">✅ Eco-score &amp; impact classification</span>
+          <span style="font-size:.78rem;color:var(--text-muted);">✅ Donut + bar category charts</span>
+          <span style="font-size:.78rem;color:var(--text-muted);">✅ Dynamic priority recommendations</span>
+          <span style="font-size:.78rem;color:var(--text-muted);">✅ What-If habit simulator</span>
+          <span style="font-size:.78rem;color:var(--text-muted);">✅ 7-Day challenge tracker</span>
+          <span style="font-size:.78rem;color:var(--text-muted);">✅ Printable PDF report</span>
+          <span style="font-size:.78rem;color:var(--text-muted);">✅ Persistent localStorage state</span>
+          <span style="font-size:.78rem;color:var(--text-muted);">✅ Fully responsive mobile UI</span>
+          <span style="font-size:.78rem;color:var(--text-muted);">✅ Accessibility-conscious markup</span>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:center;gap:.75rem;flex-wrap:wrap;margin-top:3rem;">
+        <a href="calculator.html" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-calculator"></i>
+          <span>Try the Calculator</span>
+        </a>
+        <a href="methodology.html" class="btn btn-outline btn-lg">
+          <i class="fa-solid fa-flask"></i>
+          <span>Read the Methodology</span>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <span class="footer-brand__mark"><i class="fa-solid fa-leaf"></i></span>
+            <span>Carbotrack</span>
+          </div>
+          <p style="font-size:.75rem;line-height:1.8;">
+            Measure your impact. Understand your footprint. Take informed action.
+          </p>
+        </div>
+        <div>
+          <h4 class="footer-title">Quick Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home Overview</a></li>
+            <li><a href="calculator.html">Carbon Calculator</a></li>
+            <li><a href="results.html">Results Dashboard</a></li>
+            <li><a href="simulator.html">Reduction Simulator</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Academic Resources</h4>
+          <ul class="footer-links">
+            <li><a href="methodology.html">Emission Factors</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
+            <li><a href="about.html">CHE110 Assignment</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Project Dissemination</h4>
+          <div class="footer-social">
+            <a href="https://linkedin.com" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://youtube.com" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
+            <a href="https://x.com" target="_blank" rel="noopener"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://github.com" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-current-year>2026</span> Carbotrack Environmental Platform.</span>
+        <span>Built with HTML5, Tailwind CSS &amp; Chart.js</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================== SCRIPTS ===================== -->
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

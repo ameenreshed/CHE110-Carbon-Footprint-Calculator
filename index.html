@@ -1,29 +1,366 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Home | CarbonTrace</title>
-<meta name="description" content="CarbonTrace estimates your yearly carbon footprint from travel, energy, food and waste.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carbotrack — Carbon Footprint Calculator & Environmental Impact Platform</title>
+  <meta name="description" content="Measure your personal carbon footprint across travel, electricity, diet, water, waste and lifestyle. Get science-backed recommendations to reduce your impact.">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Tailwind (utility layer) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+
+  <!-- Custom stylesheets -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
 </head>
-<body>
-<header><nav><a class="logo" href="index.html">CarbonTrace</a><button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="links">Menu</button><div class="links" id="links"><a href="index.html" class="active">Home</a><a href="calculator.html">Calculator</a><a href="learn.html">Learn</a><a href="about.html">About</a></div></nav></header>
-<main>
-<div class="wrap hero"><div class="eyebrow">Personal carbon footprint calculator</div><h1>Know your carbon footprint. Then shrink it.</h1><p class="lead">Answer a few questions about how you travel, use energy, eat and throw things away. CarbonTrace estimates your yearly CO₂ emissions and shows where to cut first.</p><div class="btn-row"><a class="btn" href="calculator.html">Calculate my footprint</a><a class="btn ghost" href="about.html">How it works</a></div></div>
-<div class="wrap"><div class="grid">
-<div class="card"><div class="stat">4.7 t</div>Approx. world average CO₂ per person per year</div>
-<div class="card"><div class="stat">1.9 t</div>Approx. India average per person per year</div>
-<div class="card"><div class="stat">2.3 t</div>Commonly cited Paris-aligned level per person by 2030</div></div></div>
-<section class="wrap"><h2>How it works</h2><br><div class="grid">
-<div class="card"><div class="step">Step 1</div><h3>Enter your habits</h3><p>Travel, electricity, LPG, flights, diet and waste, using simple sliders.</p></div>
-<div class="card"><div class="step">Step 2</div><h3>See your estimate</h3><p>Get your annual footprint in tonnes of CO₂ with a category breakdown.</p></div>
-<div class="card"><div class="step">Step 3</div><h3>Act on it</h3><p>Get a tip for your biggest source and compare with national and global averages.</p></div></div></section>
-<section class="wrap"><h2>Why it matters</h2><p class="lead">Carbon dioxide from burning fuel, generating electricity and producing food traps heat in the atmosphere and drives climate change. Individual choices add up across communities, so seeing your own numbers is the first step towards reducing pollution.</p><p><a href="learn.html">Read practical ways to cut emissions</a></p></section>
-</main>
-<footer><div class="wrap"><span>CHE 110 Environmental Studies · Lovely Professional University · Section K4P26HB · Group 1</span><span>Estimates are approximate, for education.</span></div></footer>
-<script src="script.js"></script>
+
+<body class="font-sans bg-earth text-slate-800">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header" id="site-header">
+    <div class="container">
+      <div class="header-inner">
+
+        <a href="index.html" class="brand">
+          <span class="brand__mark"><i class="fa-solid fa-leaf"></i></span>
+          <span>
+            <span class="brand__name">Carbotrack</span>
+            <span class="brand__tag">Understand Your Impact</span>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary">
+          <a href="index.html" data-nav-link>Home</a>
+          <a href="index.html#problem-section">Why It Matters</a>
+          <a href="calculator.html" data-nav-link>Calculator</a>
+          <a href="results.html" data-nav-link>Results</a>
+          <a href="simulator.html" data-nav-link>Simulator</a>
+          <a href="challenge.html" data-nav-link>Challenge</a>
+          <a href="methodology.html" data-nav-link>Methodology</a>
+          <a href="about.html" data-nav-link>Academic</a>
+        </nav>
+
+        <div class="header-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-action="quick-demo">
+            ⚡ Quick Demo
+          </button>
+          <a href="calculator.html" class="btn btn-primary btn-sm">
+            <span>Calculate Footprint</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </a>
+        </div>
+
+        <button id="mobile-menu-btn" class="mobile-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Mobile navigation -->
+    <div id="mobile-menu" class="mobile-menu hidden">
+      <a href="index.html">Home</a>
+      <a href="index.html#problem-section">Why It Matters</a>
+      <a href="calculator.html">Calculator</a>
+      <a href="results.html">Results</a>
+      <a href="simulator.html">Simulator</a>
+      <a href="challenge.html">7-Day Challenge</a>
+      <a href="methodology.html">Methodology</a>
+      <a href="about.html">Academic Info</a>
+
+      <div class="mobile-menu__actions">
+        <button type="button" class="btn btn-ghost btn-block" data-action="quick-demo">
+          ⚡ Try Demo Calculation
+        </button>
+        <a href="calculator.html" class="btn btn-primary btn-block">
+          Calculate Footprint Now
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero__grid">
+
+        <!-- Left -->
+        <div>
+          <span class="badge badge--soft">
+            <span class="pulse-dot" style="width:.5rem;height:.5rem;border-radius:50%;background:var(--leaf-500);"></span>
+            B.Tech CSE CHE110 Environmental Initiative
+          </span>
+
+          <h1 class="hero__title" style="margin-top:1.25rem;">
+            How much does your everyday life
+            <em>impact the planet?</em>
+          </h1>
+
+          <p class="hero__lede">
+            Measure your personal carbon emissions across travel, electricity, diet, and
+            lifestyle. Discover science-backed, small daily adjustments that generate real
+            environmental recovery.
+          </p>
+
+          <div class="hero__cta">
+            <a href="calculator.html" class="btn btn-primary btn-lg">
+              <span>Start Free Assessment</span>
+              <i class="fa-solid fa-arrow-down-long" style="color:var(--leaf-400);"></i>
+            </a>
+            <button type="button" class="btn btn-outline btn-lg" data-action="quick-demo">
+              <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--leaf-600);"></i>
+              <span>Test With Demo Profile</span>
+            </button>
+          </div>
+
+          <div class="hero__pills">
+            <span class="pill">🚗 Transport</span>
+            <span class="pill">⚡ Home Power</span>
+            <span class="pill">🍽️ Food &amp; Diet</span>
+            <span class="pill">💧 Water</span>
+            <span class="pill">♻️ Recycling</span>
+            <span class="pill">🛍️ Consumption</span>
+          </div>
+        </div>
+
+        <!-- Right: benchmark card -->
+        <div>
+          <div class="benchmark-card">
+            <span class="benchmark-card__flag">Global Target: &lt; 2.0 t</span>
+
+            <h3 class="benchmark-card__title">Climate Benchmark Reference</h3>
+            <p class="benchmark-card__sub">
+              Compare individual annual footprints against planetary sustainability goals.
+            </p>
+
+            <div>
+              <div class="benchmark-row">
+                <div class="benchmark-row__head">
+                  <span>UN Paris Target (Ideal by 2030)</span>
+                  <span style="color:var(--leaf-600);font-weight:800;">2.0 Tonnes / Year</span>
+                </div>
+                <div class="progress progress--thin">
+                  <div class="progress__fill" style="width:25%;background:var(--leaf-500);"></div>
+                </div>
+              </div>
+
+              <div class="benchmark-row">
+                <div class="benchmark-row__head">
+                  <span>Indian National Average</span>
+                  <span style="color:#d97706;font-weight:800;">~1.9 Tonnes / Year</span>
+                </div>
+                <div class="progress progress--thin">
+                  <div class="progress__fill" style="width:24%;background:#f59e0b;"></div>
+                </div>
+              </div>
+
+              <div class="benchmark-row">
+                <div class="benchmark-row__head">
+                  <span>Global Average</span>
+                  <span style="color:#ea580c;font-weight:800;">~4.7 Tonnes / Year</span>
+                </div>
+                <div class="progress progress--thin">
+                  <div class="progress__fill" style="width:58%;background:#f97316;"></div>
+                </div>
+              </div>
+
+              <div class="benchmark-row" style="margin-bottom:0;">
+                <div class="benchmark-row__head">
+                  <span>Developed Nations Average</span>
+                  <span style="color:#ef4444;font-weight:800;">~14.5 Tonnes / Year</span>
+                </div>
+                <div class="progress progress--thin">
+                  <div class="progress__fill" style="width:95%;background:#ef4444;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="benchmark-card__tip">
+              <i class="fa-solid fa-circle-info" style="color:var(--forest-600);margin-top:.15rem;"></i>
+              <p>
+                Carbotrack calculates the CO₂e (equivalent) footprint based on peer-reviewed
+                life-cycle emission factors, helping you identify where small cuts make the
+                biggest impact.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== WHY IT MATTERS ===================== -->
+  <section id="problem-section" class="section section--white section--border">
+    <div class="container">
+
+      <div class="section-head">
+        <span class="eyebrow">The Problem We Face</span>
+        <h2 class="section-heading">Everyday Choices Leave an Invisible Trail</h2>
+        <p class="section-sub">
+          From commuting to charging our electronics, individual habits compound globally.
+          Understanding where emissions originate is the first step toward mitigation.
+        </p>
+      </div>
+
+      <div class="problem-grid">
+
+        <article class="card card--pad">
+          <div class="card__icon"><i class="fa-solid fa-car"></i></div>
+          <h3 class="card__title">Transportation</h3>
+          <p class="card__body">
+            Fossil fuels in private cars, aviation, and daily traffic represent the single
+            highest individual source of tailpipe CO₂ and smog particulates.
+          </p>
+          <div class="card__foot">
+            <span>Avg petrol car</span>
+            <span>~170g CO₂/km</span>
+          </div>
+        </article>
+
+        <article class="card card--pad">
+          <div class="card__icon"><i class="fa-solid fa-bolt"></i></div>
+          <h3 class="card__title">Home Power Grid</h3>
+          <p class="card__body">
+            Over 60% of domestic power in developing nations is still fueled by thermal coal.
+            Continuous air-conditioning and standby appliances strain the grid.
+          </p>
+          <div class="card__foot">
+            <span>Thermal grid intensity</span>
+            <span>~0.82 kg CO₂/kWh</span>
+          </div>
+        </article>
+
+        <article class="card card--pad">
+          <div class="card__icon"><i class="fa-solid fa-utensils"></i></div>
+          <h3 class="card__title">Food Systems</h3>
+          <p class="card__body">
+            Intensive livestock production produces high amounts of methane (CH₄), while
+            rotting organic food in municipal dumps emits potent greenhouse gases.
+          </p>
+          <div class="card__foot">
+            <span>Dietary variance</span>
+            <span>Up to 2.5× diff</span>
+          </div>
+        </article>
+
+        <article class="card card--pad">
+          <div class="card__icon"><i class="fa-solid fa-recycle"></i></div>
+          <h3 class="card__title">Waste &amp; Materials</h3>
+          <p class="card__body">
+            Single-use plastics, unsegregated garbage, and rapid fashion consumerism require
+            immense petroleum extraction and high energy during fabrication.
+          </p>
+          <div class="card__foot">
+            <span>Recycling diversion</span>
+            <span>Saves ~30% CO₂</span>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CTA STRIP ===================== -->
+  <section class="section section--alt section--border">
+    <div class="container">
+      <div class="about-panel" style="background:linear-gradient(100deg,var(--forest-900),var(--forest-800));">
+        <div>
+          <h3>Ready to see your number?</h3>
+          <p style="margin-top:.75rem;">
+            Six quick modules — travel, energy, diet, water, waste and lifestyle — produce a
+            verified annual estimate in under two minutes, with a personalised action plan.
+          </p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.75rem;">
+          <a href="calculator.html" class="btn btn-leaf btn-block">
+            <i class="fa-solid fa-calculator"></i>
+            <span>Open the Calculator</span>
+          </a>
+          <a href="methodology.html" class="btn btn-outline btn-block">
+            <i class="fa-solid fa-flask"></i>
+            <span>See the Methodology</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+
+        <div>
+          <div class="footer-brand">
+            <span class="footer-brand__mark"><i class="fa-solid fa-leaf"></i></span>
+            <span>Carbotrack</span>
+          </div>
+          <p style="font-size:.75rem;line-height:1.8;">
+            Measure your impact. Understand your footprint. Take informed action for an
+            ecologically sustainable tomorrow.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Quick Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home Overview</a></li>
+            <li><a href="index.html#problem-section">Why Footprints Matter</a></li>
+            <li><a href="calculator.html">Carbon Calculator</a></li>
+            <li><a href="simulator.html">Reduction Simulator</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Academic Resources</h4>
+          <ul class="footer-links">
+            <li><a href="methodology.html">Emission Factors Methodology</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
+            <li><a href="about.html">CHE110 Assignment Details</a></li>
+            <li><a href="results.html">Saved Results Dashboard</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Project Dissemination</h4>
+          <p style="font-size:.75rem;">
+            Follow and share our CHE110 demonstration campaign across student networks:
+          </p>
+          <div class="footer-social">
+            <a href="https://linkedin.com" target="_blank" rel="noopener" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://youtube.com" target="_blank" rel="noopener" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+            <a href="https://x.com" target="_blank" rel="noopener" title="X / Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://github.com" target="_blank" rel="noopener" title="GitHub"><i class="fa-brands fa-github"></i></a>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <span>© <span data-current-year>2026</span> Carbotrack Environmental Platform. B.Tech 1st Year CSE CHE110 Initiative.</span>
+        <span>Built with HTML5, Tailwind CSS &amp; Chart.js</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================== SCRIPTS ===================== -->
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

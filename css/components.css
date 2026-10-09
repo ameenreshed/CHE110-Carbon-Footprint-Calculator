@@ -1,0 +1,521 @@
+/* ==========================================================================
+   Carbotrack — components.css
+   Buttons, cards, badges, form controls, progress bars, tables
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. BUTTONS
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .75rem 1.5rem;
+  border-radius: var(--r-md);
+  font-size: .875rem;
+  font-weight: 600;
+  line-height: 1;
+  border: 1px solid transparent;
+  transition: all var(--dur) var(--ease);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.btn:disabled,
+.btn[disabled] {
+  opacity: .35;
+  pointer-events: none;
+}
+
+.btn-sm  { padding: .55rem 1rem;  font-size: .78rem; }
+.btn-lg  { padding: 1rem 2rem;    font-size: 1rem; border-radius: var(--r-lg); }
+.btn-block { width: 100%; }
+
+.btn-primary {
+  background: var(--forest-900);
+  color: #fff;
+  box-shadow: var(--sh-md);
+}
+.btn-primary:hover {
+  background: var(--forest-800);
+  box-shadow: var(--sh-lg);
+  transform: translateY(-1px);
+}
+
+.btn-leaf {
+  background: var(--leaf-600);
+  color: #fff;
+  box-shadow: var(--sh-md);
+}
+.btn-leaf:hover { background: var(--leaf-700); transform: translateY(-1px); }
+
+.btn-outline {
+  background: #fff;
+  color: var(--forest-900);
+  border-color: var(--forest-200);
+  box-shadow: var(--sh-sm);
+}
+.btn-outline:hover { background: var(--forest-50); border-color: var(--forest-300); }
+
+.btn-ghost {
+  background: var(--forest-50);
+  color: var(--forest-700);
+  border-color: var(--forest-200);
+}
+.btn-ghost:hover { background: var(--forest-100); }
+
+.btn-neutral {
+  background: #f1f5f9;
+  color: #475569;
+}
+.btn-neutral:hover { background: #e2e8f0; }
+
+.btn-sm-icon { padding: .5rem .8rem; font-size: .72rem; }
+
+/* --------------------------------------------------------------------------
+   2. CARDS
+   -------------------------------------------------------------------------- */
+.card {
+  background: #fff;
+  border: 1px solid var(--forest-100);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-sm);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.card:hover { border-color: var(--forest-300); box-shadow: var(--sh-lg); }
+
+.card--pad    { padding: 1.5rem; }
+.card--pad-lg { padding: 2rem; }
+.card--flat   { box-shadow: none; }
+
+.card__icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--r-md);
+  background: var(--forest-100);
+  color: var(--forest-800);
+  display: grid;
+  place-items: center;
+  font-size: 1.15rem;
+  margin-bottom: 1.25rem;
+  transition: all var(--dur) var(--ease);
+}
+
+.card:hover .card__icon {
+  background: var(--forest-900);
+  color: var(--leaf-400);
+}
+
+.card__title {
+  font-size: 1.05rem;
+  margin-bottom: .5rem;
+}
+
+.card__body {
+  font-size: .85rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.card__foot {
+  margin-top: 1rem;
+  padding-top: .75rem;
+  border-top: 1px solid var(--forest-100);
+  display: flex;
+  justify-content: space-between;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--forest-700);
+}
+
+/* --------------------------------------------------------------------------
+   3. BADGES & PILLS
+   -------------------------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .35rem .75rem;
+  border-radius: var(--r-pill);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.badge--soft {
+  background: var(--forest-100);
+  color: var(--forest-800);
+  border: 1px solid var(--forest-200);
+}
+
+.badge--leaf { background: var(--leaf-500); color: #fff; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .4rem .75rem;
+  border-radius: var(--r-sm);
+  background: #fff;
+  border: 1px solid var(--forest-100);
+  box-shadow: var(--sh-sm);
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--forest-800);
+}
+
+/* Rating badge variants (results dashboard) */
+.rating-badge {
+  display: inline-block;
+  padding: .3rem .75rem;
+  border-radius: var(--r-pill);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+.rating-low       { background: rgba(16,185,129,.18); color: #6ee7b7; border-color: rgba(52,211,153,.4); }
+.rating-moderate  { background: rgba(245,158,11,.18); color: #fcd34d; border-color: rgba(245,158,11,.4); }
+.rating-high      { background: rgba(249,115,22,.18); color: #fdba74; border-color: rgba(249,115,22,.4); }
+.rating-very-high { background: rgba(239,68,68,.18);  color: #fca5a5; border-color: rgba(239,68,68,.4); }
+
+/* --------------------------------------------------------------------------
+   4. FORM CONTROLS
+   -------------------------------------------------------------------------- */
+.field { display: block; }
+
+.field__label {
+  display: block;
+  font-size: .72rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: .35rem;
+}
+
+.field__hint {
+  display: block;
+  font-size: .68rem;
+  color: #94a3b8;
+  margin-top: .3rem;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  padding: .75rem .9rem;
+  font-size: .875rem;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--r-md);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--leaf-500);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, .16);
+}
+
+.input:invalid { border-color: #fca5a5; }
+
+.select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234d8871' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right .75rem center;
+  background-size: 1rem;
+  padding-right: 2.4rem;
+}
+
+.checkbox {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--forest-700);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  font-size: .8rem;
+  color: #334155;
+  cursor: pointer;
+}
+
+/* Range sliders */
+.range {
+  width: 100%;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: #e2e8f0;
+  appearance: none;
+  cursor: pointer;
+}
+
+.range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--forest-700);
+  border: 3px solid #fff;
+  box-shadow: var(--sh-md);
+  transition: transform var(--dur) var(--ease);
+}
+
+.range::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+.range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--forest-700);
+  border: 3px solid #fff;
+  box-shadow: var(--sh-md);
+}
+
+/* Alert banner */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .85rem 1rem;
+  border-radius: var(--r-md);
+  font-size: .78rem;
+}
+
+.alert--error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.alert--info {
+  background: var(--forest-50);
+  border: 1px solid var(--forest-200);
+  color: var(--forest-800);
+}
+
+/* --------------------------------------------------------------------------
+   5. PROGRESS BARS
+   -------------------------------------------------------------------------- */
+.progress {
+  width: 100%;
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.progress__fill {
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: var(--leaf-500);
+  transition: width .5s var(--ease);
+}
+
+.progress--dark { background: var(--forest-800); }
+
+.progress--thin { height: 6px; }
+
+/* Benchmark rows */
+.benchmark-row { margin-bottom: 1rem; }
+
+.benchmark-row__head {
+  display: flex;
+  justify-content: space-between;
+  font-size: .72rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: .35rem;
+}
+
+/* --------------------------------------------------------------------------
+   6. TABLES
+   -------------------------------------------------------------------------- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .78rem;
+  text-align: left;
+}
+
+.data-table thead {
+  background: var(--forest-50);
+  color: var(--forest-900);
+  text-transform: uppercase;
+  font-size: .68rem;
+  letter-spacing: .06em;
+  font-weight: 700;
+}
+
+.data-table th,
+.data-table td { padding: 1rem; }
+
+.data-table tbody tr { border-top: 1px solid #f1f5f3; }
+.data-table tbody tr:hover { background: #fafdfb; }
+
+.data-table td:first-child { font-weight: 600; color: var(--forest-950); }
+.data-table td:last-child  { color: var(--text-muted); }
+
+/* --------------------------------------------------------------------------
+   7. RECOMMENDATION CARDS
+   -------------------------------------------------------------------------- */
+.rec-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid var(--forest-100);
+  border-radius: var(--r-lg);
+  transition: all var(--dur) var(--ease);
+}
+
+.rec-card:hover { box-shadow: var(--sh-md); transform: translateY(-2px); }
+
+.rec-card--top {
+  border-color: var(--leaf-500);
+  box-shadow: 0 0 0 1px var(--leaf-400), var(--sh-md);
+}
+
+.rec-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .85rem;
+}
+
+.rec-card__icon {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: var(--r-sm);
+  background: var(--forest-50);
+  color: var(--forest-800);
+  display: grid;
+  place-items: center;
+  font-size: .85rem;
+}
+
+.rec-card__flag {
+  font-size: .58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: .2rem .5rem;
+  border-radius: 5px;
+  background: var(--forest-100);
+  color: var(--forest-800);
+}
+
+.rec-card__title { font-size: 1rem; margin-bottom: .25rem; }
+
+.rec-card__load {
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--leaf-600);
+  margin-bottom: .85rem;
+}
+
+.rec-card__tips { display: grid; gap: .6rem; margin-bottom: 1rem; }
+
+.rec-card__tips li {
+  display: flex;
+  gap: .55rem;
+  font-size: .78rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.rec-card__tips i {
+  color: var(--leaf-600);
+  font-size: .7rem;
+  margin-top: .28rem;
+  flex-shrink: 0;
+}
+
+.rec-card__foot {
+  padding-top: .75rem;
+  border-top: 1px solid #f1f5f3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .72rem;
+  color: var(--forest-700);
+}
+
+.rec-card__foot strong { font-weight: 800; }
+
+/* --------------------------------------------------------------------------
+   8. CHALLENGE ITEMS
+   -------------------------------------------------------------------------- */
+.challenge-item {
+  display: flex;
+  gap: .9rem;
+  align-items: flex-start;
+  padding: 1rem;
+  background: var(--earth);
+  border: 1px solid var(--forest-100);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+}
+
+.challenge-item:hover {
+  background: var(--forest-50);
+  border-color: var(--forest-200);
+}
+
+.challenge-item:has(.challenge-checkbox:checked) {
+  background: #ecfdf5;
+  border-color: var(--leaf-400);
+}
+
+.challenge-item__day {
+  font-size: .65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--leaf-600);
+}
+
+.challenge-item__title {
+  font-family: 'Poppins', sans-serif;
+  font-size: .875rem;
+  font-weight: 700;
+  color: var(--forest-950);
+}
+
+.challenge-item__desc {
+  font-size: .75rem;
+  color: var(--text-muted);
+  margin-top: .15rem;
+  line-height: 1.6;
+}
+
+/* --------------------------------------------------------------------------
+   9. UTILITIES
+   -------------------------------------------------------------------------- */
+.hidden { display: none !important; }
+
+.divider {
+  height: 1px;
+  background: var(--forest-100);
+  border: 0;
+  margin-block: 1.5rem;
+}
+
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
