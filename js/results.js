@@ -1,19 +1,27 @@
 /* ==========================================================================
    Carbotrack — results.js
-   Renders the results dashboard on results.html
+   Renders the results dashboard. Reads inputs from URL hash (preferred),
+   then storage; re-computes results on the fly for full cross-protocol
+   durability (works on file:// and incognito).
    ========================================================================== */
 (function () {
   'use strict';
 
   const $ = (id) => document.getElementById(id);
 
+  const RATING_ICONS = {
+    low:          'fa-circle-check',
+    moderate:     'fa-circle-exclamation',
+    high:         'fa-triangle-exclamation',
+    'very-high':  'fa-circle-xmark'
+  };
+
   /* ------------------------------------------------------------------ */
   /*  Recommendation library                                            */
   /* ------------------------------------------------------------------ */
   const RECOMMENDATION_LIBRARY = {
     transport: {
-      name: 'Transportation',
-      icon: 'fa-car',
+      name: 'Transportation', icon: 'fa-car',
       tips: [
         'Switch to bus/metro two days a week to cut commute emissions by up to 35%.',
         'Maintain correct tyre pressure for 3–5% better fuel economy.',
@@ -22,8 +30,7 @@
       potential: 'Save ~400–700 kg CO₂e / yr'
     },
     flights: {
-      name: 'Air Travel',
-      icon: 'fa-plane',
+      name: 'Air Travel', icon: 'fa-plane',
       tips: [
         'Replace one short-haul flight per year with rail or video conferencing.',
         'Choose direct flights — take-off and landing burn the most fuel.',
@@ -32,8 +39,7 @@
       potential: 'Save ~250–1100 kg CO₂e / yr'
     },
     energy: {
-      name: 'Home Energy',
-      icon: 'fa-bolt',
+      name: 'Home Energy', icon: 'fa-bolt',
       tips: [
         'Set AC thermostats to 24 °C instead of 18 °C — saves up to 24% per unit.',
         'Unplug standby chargers, monitors and TV setups before sleeping.',
@@ -42,8 +48,7 @@
       potential: 'Save ~250–500 kg CO₂e / yr'
     },
     food: {
-      name: 'Food & Nutrition',
-      icon: 'fa-utensils',
+      name: 'Food & Nutrition', icon: 'fa-utensils',
       tips: [
         'Add two meat-free days per week to cut methane-intensive food impact.',
         'Plan portions carefully to eliminate discarded plate waste.',
@@ -52,8 +57,7 @@
       potential: 'Save ~300–600 kg CO₂e / yr'
     },
     water: {
-      name: 'Water Usage',
-      icon: 'fa-droplet',
+      name: 'Water Usage', icon: 'fa-droplet',
       tips: [
         'Cap showers at five minutes — saves water and water-heating energy.',
         'Run washing machines only with full loads and on eco cycles.',
@@ -62,8 +66,7 @@
       potential: 'Save ~40–90 kg CO₂e / yr'
     },
     waste: {
-      name: 'Waste Management',
-      icon: 'fa-recycle',
+      name: 'Waste Management', icon: 'fa-recycle',
       tips: [
         'Rinse and segregate plastics and aluminium so recyclers can divert them.',
         'Start simple pot composting for fruit peels and tea leaves.',
@@ -72,8 +75,7 @@
       potential: 'Save ~90–180 kg CO₂e / yr'
     },
     shopping: {
-      name: 'Shopping & Goods',
-      icon: 'fa-bag-shopping',
+      name: 'Shopping & Goods', icon: 'fa-bag-shopping',
       tips: [
         'Apply a 30-day rule before non-essential purchases.',
         'Buy second-hand or repair clothing instead of fast fashion.',
@@ -83,44 +85,79 @@
     }
   };
 
+  /* ================================================================== */
+  /*  RESOLVE — hash → storage → recompute from inputs → null           */
+  /* ================================================================== */
+  function resolveResults() {
+    /* 1. URL-hash payload (bulletproof cross-protocol) */
+    const hashInputs = window.CT_STORAGE.readHashPayload();
+    if (hashInputs) {
+      try {
+        const normalized = window.CT_ENGINE.normalize(hashInputs);
+        const results    = window.CT_ENGINE.calculate(normalized);
+        window.CT_STORAGE.saveInputs(normalized);
+        window.CT_STORAGE.saveResults(results);
+        return results;
+      } catch (e) {
+        console.warn('[Carbotrack] Hash payload invalid, falling through.', e);
+      }
+    }
+
+    /* 2. Stored results object */
+    const stored = window.CT_STORAGE.getResults();
+    if (stored && typeof stored.totalKg === 'number') return stored;
+
+    /* 3. Recompute from stored inputs */
+    const inputs = window.CT_STORAGE.getInputs();
+    if (inputs) {
+      try {
+        const normalized = window.CT_ENGINE.normalize(inputs);
+        const results    = window.CT_ENGINE.calculate(normalized);
+        window.CT_STORAGE.saveResults(results);
+        return results;
+      } catch (e) {
+        console.warn('[Carbotrack] Recompute failed.', e);
+      }
+    }
+
+    return null;
+  }
+
   /* ------------------------------------------------------------------ */
   /*  KPI rendering                                                     */
   /* ------------------------------------------------------------------ */
   function renderKPIs(r) {
     const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
 
-    set('res-total-tons', r.totalTons.toFixed(2));
-    set('res-monthly-kg', r.monthlyKg.toLocaleString());
-    set('res-daily-kg',   r.dailyKg);
+    set('res-total-tons',     r.totalTons.toFixed(2));
+    set('res-monthly-kg',     r.monthlyKg.toLocaleString());
+    set('res-daily-kg',       r.dailyKg);
     set('res-eco-score-pill', `${r.ecoScore}/100`);
 
     const bar = $('res-eco-score-bar');
     if (bar) bar.style.width = `${r.ecoScore}%`;
 
-    /* Rating badge */
     const badge = $('res-rating-badge');
     if (badge) {
-      badge.textContent = r.rating.label;
+      const iconCls = RATING_ICONS[r.rating.key] || RATING_ICONS.moderate;
+      badge.innerHTML = `<i class="fa-solid ${iconCls}"></i> <span>${r.rating.label}</span>`;
       badge.className = `rating-badge rating-${r.rating.key}`;
     }
 
-    /* Comparison line */
     const cmp = $('res-comparison-note');
     if (cmp) {
       if (r.vsParis > 100) {
         cmp.innerHTML = `Your footprint is <strong>${r.vsParis}%</strong> of the Paris Agreement 2.0 t personal target — about <strong>${(r.totalTons - 2).toFixed(2)} t</strong> above it.`;
       } else {
-        cmp.innerHTML = `Excellent — you are within the Paris Agreement 2.0 t personal target. 🌍`;
+        cmp.innerHTML = 'Excellent — you are within the Paris Agreement 2.0 t personal target.';
       }
     }
 
-    /* Trees equivalent */
     const trees = $('res-trees-note');
     if (trees) {
       trees.textContent = `Equivalent to the annual carbon sequestered by ${r.treesEquivalent} mature urban trees.`;
     }
 
-    /* Timestamp */
     const ts = $('res-timestamp');
     if (ts && r.generatedAt) {
       ts.textContent = `Generated ${new Date(r.generatedAt).toLocaleString()}`;
@@ -131,17 +168,15 @@
   /*  Charts                                                            */
   /* ------------------------------------------------------------------ */
   function renderCharts(r) {
+    if (typeof Chart === 'undefined') {
+      console.warn('[Carbotrack] Chart.js not loaded — skipping charts.');
+      return;
+    }
     const labels = window.CT_CONFIG.categoryLabels;
     const values = [
-      r.breakdown.commute,
-      r.breakdown.flights,
-      r.breakdown.energy,
-      r.breakdown.food,
-      r.breakdown.water,
-      r.breakdown.waste,
-      r.breakdown.shopping
+      r.breakdown.commute, r.breakdown.flights, r.breakdown.energy,
+      r.breakdown.food, r.breakdown.water, r.breakdown.waste, r.breakdown.shopping
     ];
-
     window.CT_CHARTS.renderDonut('categoryDonutChart', labels, values, window.CT_CONFIG.palette);
     window.CT_CHARTS.renderBar('categoryBarChart', labels, values, window.CT_CONFIG.palette);
   }
@@ -198,23 +233,45 @@
     if (main)  main.classList.add('hidden');
   }
 
+  function showResults() {
+    const empty = $('results-empty');
+    const main  = $('results-section');
+    if (empty) empty.classList.add('hidden');
+    if (main)  main.classList.remove('hidden');
+  }
+
   /* ------------------------------------------------------------------ */
   /*  Init                                                              */
   /* ------------------------------------------------------------------ */
   function init() {
     if (!$('results-section')) return; // not the results page
 
-    const results = window.CT_STORAGE.getResults();
+    const results = resolveResults();
 
-    if (!results) { showEmptyState(); return; }
+    if (!results) {
+      showEmptyState();
+      return;
+    }
 
+    showResults();
     renderKPIs(results);
     renderCharts(results);
     renderRecommendations(results);
 
+    /* Re-render on resize (charts are responsive but legend can clip) */
+    window.addEventListener('resize', () => {
+      window.CT_CHARTS.destroyAll();
+      renderCharts(results);
+    });
+
     /* Print */
     const printBtn = $('results-print-btn');
     if (printBtn) printBtn.addEventListener('click', () => window.print());
+
+    /* Edit inputs — go back to calculator with same hash payload so it
+       re-hydrates the form */
+    const editBtn = document.querySelector('a[href="calculator.html"]');
+    /* (existing link already navigates; no override needed) */
 
     /* Reset */
     const resetBtn = $('results-reset-btn');

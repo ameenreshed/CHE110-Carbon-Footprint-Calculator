@@ -4,13 +4,60 @@
      • mobile navigation
      • header scroll elevation
      • active nav link highlighting
+     • toast notification system
      • "Quick Demo" handoff (URL-param based — works on file://)
      • footer year stamp
    ========================================================================== */
 (function () {
   'use strict';
 
-  /* ---------------- Mobile navigation ------------------------------- */
+  /* ================================================================== */
+  /*  TOAST SYSTEM                                                      */
+  /* ================================================================== */
+  const TOAST_ICONS = {
+    info:    'fa-circle-info',
+    success: 'fa-check',
+    warning: 'fa-triangle-exclamation',
+    error:   'fa-xmark'
+  };
+
+  let toastContainer = null;
+
+  function ensureToastContainer() {
+    if (toastContainer) return toastContainer;
+    toastContainer = document.createElement('div');
+    toastContainer.className = 'toast-container';
+    toastContainer.setAttribute('aria-live', 'polite');
+    toastContainer.setAttribute('aria-atomic', 'false');
+    document.body.appendChild(toastContainer);
+    return toastContainer;
+  }
+
+  function showToast(message, type = 'success', duration = 3200) {
+    const container = ensureToastContainer();
+    const toast = document.createElement('div');
+    toast.className = `toast toast--${type}`;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    toast.innerHTML = `
+      <span class="toast__icon">
+        <i class="fa-solid ${TOAST_ICONS[type] || TOAST_ICONS.success}"></i>
+      </span>
+      <span class="toast__msg">${message}</span>
+    `;
+    container.appendChild(toast);
+
+    /* Auto-dismiss */
+    window.setTimeout(() => {
+      toast.classList.add('is-leaving');
+      window.setTimeout(() => toast.remove(), 320);
+    }, duration);
+  }
+
+  window.CT_TOAST = { show: showToast };
+
+  /* ================================================================== */
+  /*  MOBILE NAVIGATION                                                 */
+  /* ================================================================== */
   function initMobileNav() {
     const btn  = document.getElementById('mobile-menu-btn');
     const menu = document.getElementById('mobile-menu');
@@ -35,7 +82,9 @@
     });
   }
 
-  /* ---------------- Header elevation on scroll ---------------------- */
+  /* ================================================================== */
+  /*  HEADER SCROLL ELEVATION                                           */
+  /* ================================================================== */
   function initHeaderScroll() {
     const header = document.getElementById('site-header');
     if (!header) return;
@@ -48,7 +97,9 @@
     onScroll();
   }
 
-  /* ---------------- Active nav link --------------------------------- */
+  /* ================================================================== */
+  /*  ACTIVE NAV LINK                                                   */
+  /* ================================================================== */
   function initActiveNav() {
     const path = window.location.pathname.split('/').pop() || 'index.html';
 
@@ -63,27 +114,31 @@
     });
   }
 
-  /* ---------------- Quick Demo handoff ------------------------------ */
+  /* ================================================================== */
+  /*  QUICK DEMO HANDOFF                                                */
+  /* ================================================================== */
   function initQuickDemo() {
     document.querySelectorAll('[data-action="quick-demo"]').forEach(btn => {
       btn.addEventListener('click', () => {
 
-        /* Case 1 — already on the calculator page: fill it in-place. */
+        /* Case 1 — already on the calculator page: run animated demo. */
         if (window.CT_CALCULATOR && document.getElementById('footprint-form')) {
-          window.CT_CALCULATOR.fillDemo();
+          window.CT_CALCULATOR.runAnimatedDemo();
           return;
         }
 
-        /* Case 2 — any other page: redirect with a URL param.
-           URL params survive file://, http://, https://, private mode,
-           and every browser — unlike localStorage on file://.           */
+        /* Case 2 — any other page: redirect with URL param.
+           URL params survive file://, http://, https:// and every browser,
+           unlike localStorage on file://. */
         try { window.CT_STORAGE.setPendingDemo(true); } catch (e) { /* ignore */ }
         window.location.href = 'calculator.html?demo=1';
       });
     });
   }
 
-  /* ---------------- Smooth-scroll for in-page anchors --------------- */
+  /* ================================================================== */
+  /*  SMOOTH ANCHORS                                                    */
+  /* ================================================================== */
   function initSmoothAnchors() {
     document.querySelectorAll('a[href^="#"]').forEach(link => {
       link.addEventListener('click', (e) => {
@@ -97,14 +152,18 @@
     });
   }
 
-  /* ---------------- Footer year ------------------------------------- */
+  /* ================================================================== */
+  /*  FOOTER YEAR                                                       */
+  /* ================================================================== */
   function initFooterYear() {
     document.querySelectorAll('[data-current-year]').forEach(el => {
       el.textContent = new Date().getFullYear();
     });
   }
 
-  /* ---------------- Boot -------------------------------------------- */
+  /* ================================================================== */
+  /*  BOOT                                                              */
+  /* ================================================================== */
   document.addEventListener('DOMContentLoaded', () => {
     initMobileNav();
     initHeaderScroll();
