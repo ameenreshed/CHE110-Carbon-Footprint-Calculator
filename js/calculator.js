@@ -1,7 +1,7 @@
 /* ==========================================================================
    Carbotrack — calculator.js
-   Multi-step form controller + animated demo walkthrough
-   Exposed globally as window.CT_CALCULATOR
+   Multi-step form controller.
+   Fixes: composting round-trip, Enter-key trap, hash re-hydration.
    ========================================================================== */
 window.CT_CALCULATOR = (function () {
   'use strict';
@@ -14,17 +14,13 @@ window.CT_CALCULATOR = (function () {
     'Domestic Water', 'Waste & Recycling', 'Shopping & Lifestyle'
   ];
 
-  /* ------------------------------------------------------------------ */
-  /*  DOM helpers                                                       */
-  /* ------------------------------------------------------------------ */
-  const $   = (id) => document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
   const val = (id) => ($(id) ? $(id).value : '');
   const num = (id) => parseFloat(val(id)) || 0;
   const chk = (id) => !!($(id) && $(id).checked);
-  const sleep = (ms) => new Promise(r => window.setTimeout(r, ms));
 
   /* ================================================================== */
-  /*  STEP NAVIGATION                                                   */
+  /*  NAVIGATION                                                        */
   /* ================================================================== */
   function navigate(direction) {
     if (direction === 1 && !validateStep()) return;
@@ -161,53 +157,86 @@ window.CT_CALCULATOR = (function () {
     };
   }
 
+  /* ================================================================== */
+  /*  APPLY INPUTS — fixes composting + enum snapping                   */
+  /* ================================================================== */
+  function setText(id, v) {
+    const el = $(id);
+    if (el && v !== undefined && v !== null && v !== '') el.value = v;
+  }
+
+  function setCheck(id, v) {
+    const el = $(id);
+    if (el && typeof v === 'boolean') el.checked = v;
+  }
+
+  function setSelect(id, v) {
+    const el = $(id);
+    if (!el) return;
+
+    const asString = String(v);
+    if (Array.from(el.options).some(o => o.value === asString)) {
+      el.value = asString;
+      return;
+    }
+
+    const n = parseFloat(v);
+    if (Number.isFinite(n)) {
+      let best = null, bestDelta = Infinity;
+      Array.from(el.options).forEach(o => {
+        const on = parseFloat(o.value);
+        if (!Number.isFinite(on)) return;
+        const d = Math.abs(on - n);
+        if (d < bestDelta) { bestDelta = d; best = o.value; }
+      });
+      if (best !== null) el.value = best;
+    }
+  }
+
+  function setYesNo(id, v) {
+    const el = $(id);
+    if (!el) return;
+    el.value = (v === true || v === 'yes') ? 'yes' : 'no';
+  }
+
   function applyInputs(inputs) {
     if (!inputs) return;
 
-    const set = (id, v) => {
-      const el = $(id);
-      if (el && v !== undefined && v !== null) el.value = v;
-    };
-    const setChk = (id, v) => {
-      const el = $(id);
-      if (el && typeof v === 'boolean') el.checked = v;
-    };
+    setSelect('vehicle-type', inputs.vehicleType);
+    setText('personal-km', inputs.personalKm);
+    setText('commute-days', inputs.commuteDays);
+    setText('public-km', inputs.publicKm);
+    setSelect('carpool-freq', inputs.carpoolFactor);
+    setText('flights-domestic', inputs.domesticFlights);
+    setText('flights-intl', inputs.intlFlights);
 
-    set('vehicle-type', inputs.vehicleType);
-    set('personal-km', inputs.personalKm);
-    set('commute-days', inputs.commuteDays);
-    set('public-km', inputs.publicKm);
-    set('carpool-freq', inputs.carpoolFactor);
-    set('flights-domestic', inputs.domesticFlights);
-    set('flights-intl', inputs.intlFlights);
+    setText('household-size', inputs.householdSize);
+    setText('power-kwh', inputs.monthlyKwh);
+    setCheck('appliance-ac', inputs.applianceAC);
+    setCheck('appliance-geyser', inputs.applianceGeyser);
+    setCheck('appliance-ev', inputs.applianceEV);
+    setSelect('cooking-fuel', inputs.cookingFuel);
 
-    set('household-size', inputs.householdSize);
-    set('power-kwh', inputs.monthlyKwh);
-    setChk('appliance-ac', inputs.applianceAC);
-    setChk('appliance-geyser', inputs.applianceGeyser);
-    setChk('appliance-ev', inputs.applianceEV);
-    set('cooking-fuel', inputs.cookingFuel);
+    setSelect('diet-type', inputs.dietType);
+    setSelect('dairy-servings', inputs.dairyServings);
+    setSelect('food-waste-freq', inputs.foodWaste);
 
-    set('diet-type', inputs.dietType);
-    set('dairy-servings', inputs.dairyServings);
-    set('food-waste-freq', inputs.foodWaste);
+    setText('shower-minutes', inputs.showerMinutes);
+    setText('showers-per-day', inputs.showersPerDay);
+    setText('washing-loads', inputs.washingLoads);
+    setSelect('tap-habits', inputs.tapHabits);
 
-    set('shower-minutes', inputs.showerMinutes);
-    set('showers-per-day', inputs.showersPerDay);
-    set('washing-loads', inputs.washingLoads);
-    set('tap-habits', inputs.tapHabits);
+    setText('waste-bags', inputs.wasteBags);
+    setSelect('recycling-rate', inputs.recyclingRate);
+    setYesNo('composting-status', inputs.composting);
 
-    set('waste-bags', inputs.wasteBags);
-    set('recycling-rate', inputs.recyclingRate);
-    set('composting-status', inputs.composting);
-
-    set('clothing-items', inputs.clothingItems);
-    set('online-orders', inputs.onlineOrders);
-    set('plastic-habits', inputs.plasticHabits);
+    setText('clothing-items', inputs.clothingItems);
+    setText('online-orders', inputs.onlineOrders);
+    setSelect('plastic-habits', inputs.plasticHabits);
   }
 
   /* ================================================================== */
-  /*  EXECUTE — compute, store, and redirect with URL-hash payload      */
+  /*  EXECUTE                                                           */
   /* ================================================================== */
   function execute() {
     if (!validateStep()) return;
@@ -216,20 +245,16 @@ window.CT_CALCULATOR = (function () {
     const normalized = window.CT_ENGINE.normalize(rawInputs);
     const results    = window.CT_ENGINE.calculate(normalized);
 
-    /* Persist (best-effort — may fail on file://) */
     window.CT_STORAGE.saveInputs(normalized);
     window.CT_STORAGE.saveResults(results);
 
-    /* Bulletproof transport: encode the normalized inputs into the hash.
-       results.html decodes it, re-computes, and re-saves to storage.     */
     const payload = window.CT_STORAGE.encodeInputs(normalized);
     const hash = payload ? ('#d=' + payload) : '';
 
     if (window.CT_TOAST) {
       window.CT_TOAST.show(
         `Footprint computed: ${results.totalTons.toFixed(2)} t CO₂e / year`,
-        'success',
-        2400
+        'success', 2400
       );
     }
 
@@ -245,178 +270,6 @@ window.CT_CALCULATOR = (function () {
   }
 
   /* ================================================================== */
-  /*  DEMO DATA                                                         */
-  /* ================================================================== */
-  const DEMO_PROFILE = {
-    vehicleType: 'petrol_car', personalKm: 15, commuteDays: 5, publicKm: 6,
-    carpoolFactor: 0.75, domesticFlights: 2, intlFlights: 0,
-    householdSize: 4, monthlyKwh: 280,
-    applianceAC: true, applianceGeyser: true, applianceEV: false,
-    cookingFuel: 'lpg',
-    dietType: 'mixed_low', dairyServings: 2, foodWaste: 'medium',
-    showerMinutes: 10, showersPerDay: 1, washingLoads: 4, tapHabits: 'average',
-    wasteBags: 3, recyclingRate: 0.5, composting: 'no',
-    clothingItems: 2, onlineOrders: 5, plasticHabits: 'moderate'
-  };
-
-  const DEMO_SEQUENCE = [
-    { step: 1, icon: 'fa-car', title: 'Transportation',
-      message: '15 km daily petrol commute · 2 domestic flights detected',
-      inputs: { vehicleType: 'petrol_car', personalKm: 15, commuteDays: 5, publicKm: 6,
-                carpoolFactor: 0.75, domesticFlights: 2, intlFlights: 0 },
-      duration: 950 },
-    { step: 2, icon: 'fa-bolt', title: 'Home Energy',
-      message: '280 kWh household ÷ 4 members · AC + geyser in use',
-      inputs: { householdSize: 4, monthlyKwh: 280,
-                applianceAC: true, applianceGeyser: true, applianceEV: false,
-                cookingFuel: 'lpg' },
-      duration: 950 },
-    { step: 3, icon: 'fa-utensils', title: 'Food & Diet',
-      message: 'Mixed diet · 2 dairy servings · occasional food waste',
-      inputs: { dietType: 'mixed_low', dairyServings: 2, foodWaste: 'medium' },
-      duration: 950 },
-    { step: 4, icon: 'fa-droplet', title: 'Domestic Water',
-      message: '10-minute showers · 4 weekly laundry loads',
-      inputs: { showerMinutes: 10, showersPerDay: 1, washingLoads: 4, tapHabits: 'average' },
-      duration: 950 },
-    { step: 5, icon: 'fa-recycle', title: 'Waste & Recycling',
-      message: '3 bags weekly · 50% segregation · no composting yet',
-      inputs: { wasteBags: 3, recyclingRate: 0.5, composting: 'no' },
-      duration: 950 },
-    { step: 6, icon: 'fa-bag-shopping', title: 'Lifestyle & Goods',
-      message: '2 apparel items · 5 monthly e-commerce deliveries',
-      inputs: { clothingItems: 2, onlineOrders: 5, plasticHabits: 'moderate' },
-      duration: 950 }
-  ];
-
-  /* ================================================================== */
-  /*  ANIMATED DEMO OVERLAY                                             */
-  /* ================================================================== */
-  let demoOverlayEl = null;
-  let demoRunning = false;
-
-  function buildDemoOverlay() {
-    if (demoOverlayEl) return demoOverlayEl;
-
-    const overlay = document.createElement('div');
-    overlay.className = 'demo-overlay';
-    overlay.id = 'demo-overlay';
-    overlay.setAttribute('role', 'dialog');
-    overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-label', 'Running demo profile');
-
-    overlay.innerHTML = `
-      <div class="demo-overlay__card">
-        <div class="demo-overlay__head">
-          <div class="demo-overlay__glyph"><i class="fa-solid fa-leaf"></i></div>
-          <h3 class="demo-overlay__title">Running Demo Profile</h3>
-          <p class="demo-overlay__sub">Auto-filling a sample assessment in real time…</p>
-        </div>
-
-        <div class="demo-steps" id="demo-steps-list"></div>
-
-        <div class="demo-overlay__progress" aria-hidden="true">
-          <div class="demo-overlay__progress-fill" id="demo-progress"></div>
-        </div>
-
-        <p class="demo-overlay__foot" id="demo-foot" aria-live="polite">
-          <i class="fa-solid fa-spinner fa-spin"></i> Initializing engine…
-        </p>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-    demoOverlayEl = overlay;
-    return overlay;
-  }
-
-  function renderDemoSteps(overlay) {
-    const list = overlay.querySelector('#demo-steps-list');
-    if (!list) return;
-
-    list.innerHTML = DEMO_SEQUENCE.map((s, i) => `
-      <div class="demo-step" data-demo-index="${i}">
-        <span class="demo-step__icon">
-          <i class="fa-solid ${s.icon}"></i>
-        </span>
-        <span class="demo-step__text">
-          <span class="demo-step__title">${s.title}</span>
-          <span class="demo-step__msg">${s.message}</span>
-        </span>
-      </div>
-    `).join('');
-  }
-
-  async function runAnimatedDemo() {
-    if (demoRunning) return;
-    demoRunning = true;
-
-    const prefersReducedMotion =
-      window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (prefersReducedMotion) {
-      applyInputs(DEMO_PROFILE);
-      goTo(TOTAL_STEPS, true);
-      execute();
-      demoRunning = false;
-      return;
-    }
-
-    const calcSection = $('calculator-section') || $('footprint-form');
-    if (calcSection && calcSection.scrollIntoView) {
-      calcSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    const overlay = buildDemoOverlay();
-    renderDemoSteps(overlay);
-
-    const progressFill = overlay.querySelector('#demo-progress');
-    const foot         = overlay.querySelector('#demo-foot');
-    const stepEls      = overlay.querySelectorAll('[data-demo-index]');
-
-    requestAnimationFrame(() => overlay.classList.add('is-open'));
-    await sleep(420);
-
-    for (let i = 0; i < DEMO_SEQUENCE.length; i++) {
-      const seq = DEMO_SEQUENCE[i];
-      const el  = stepEls[i];
-
-      if (el) el.classList.add('is-active');
-      if (foot) foot.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${seq.message}`;
-
-      applyInputs(seq.inputs);
-      goTo(seq.step, true);
-
-      const pct = Math.round(((i + 1) / DEMO_SEQUENCE.length) * 100);
-      if (progressFill) progressFill.style.width = pct + '%';
-
-      await sleep(seq.duration || 950);
-
-      if (el) {
-        el.classList.remove('is-active');
-        el.classList.add('is-done');
-        const iconWrap = el.querySelector('.demo-step__icon');
-        if (iconWrap) iconWrap.innerHTML = '<i class="fa-solid fa-check"></i>';
-      }
-    }
-
-    if (foot) foot.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Compiling your carbon report…';
-    await sleep(850);
-
-    overlay.classList.remove('is-open');
-    await sleep(360);
-
-    execute();
-    demoRunning = false;
-  }
-
-  function fillDemo() {
-    applyInputs(DEMO_PROFILE);
-    goTo(TOTAL_STEPS, true);
-    execute();
-  }
-
-  /* ================================================================== */
   /*  RESET                                                             */
   /* ================================================================== */
   function reset() {
@@ -426,9 +279,7 @@ window.CT_CALCULATOR = (function () {
     window.CT_STORAGE.clearResults();
     goTo(1);
     hideError();
-    if (window.CT_TOAST) {
-      window.CT_TOAST.show('Calculator reset to defaults.', 'info', 2200);
-    }
+    if (window.CT_TOAST) window.CT_TOAST.show('Calculator reset to defaults.', 'info', 2200);
   }
 
   /* ================================================================== */
@@ -438,8 +289,18 @@ window.CT_CALCULATOR = (function () {
     const root = $('footprint-form');
     if (!root) return;
 
-    const saved = window.CT_STORAGE.getInputs();
-    if (saved) applyInputs(saved);
+    /* Priority 1: #d= hash payload — survives file:// */
+    const hashInputs = window.CT_STORAGE.readHashPayload();
+    if (hashInputs) {
+      applyInputs(hashInputs);
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } else {
+      /* Priority 2: last-saved inputs */
+      const saved = window.CT_STORAGE.getInputs();
+      if (saved) applyInputs(saved);
+    }
 
     const prevBtn  = $('prev-step-btn');
     const nextBtn  = $('next-step-btn');
@@ -451,37 +312,23 @@ window.CT_CALCULATOR = (function () {
     if (calcBtn)  calcBtn.addEventListener('click', execute);
     if (resetBtn) resetBtn.addEventListener('click', reset);
 
+    /* Enter intercepts only on plain text/number inputs. */
     root.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-        e.preventDefault();
-        if (currentStep < TOTAL_STEPS) navigate(1);
-        else execute();
-      }
+      if (e.key !== 'Enter') return;
+      const tag = e.target.tagName;
+      if (tag !== 'INPUT') return;
+      const type = (e.target.getAttribute('type') || 'text').toLowerCase();
+      if (type === 'checkbox' || type === 'radio' || type === 'button' || type === 'submit') return;
+
+      e.preventDefault();
+      if (currentStep < TOTAL_STEPS) navigate(1);
+      else execute();
     });
 
     updateUI(1, 1, true);
-
-    const urlDemo    = new URLSearchParams(window.location.search).get('demo') === '1';
-    const storedDemo = window.CT_STORAGE.consumePendingDemo();
-
-    if (urlDemo || storedDemo) {
-      if (urlDemo && window.history && window.history.replaceState) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-      window.setTimeout(() => {
-        try { runAnimatedDemo(); }
-        catch (err) {
-          console.error('[Carbotrack] Animated demo failed, falling back:', err);
-          fillDemo();
-        }
-      }, 260);
-    }
   }
 
   document.addEventListener('DOMContentLoaded', init);
 
-  return {
-    fillDemo, runAnimatedDemo, reset, goTo,
-    getCurrentStep: () => currentStep
-  };
+  return { reset, goTo, getCurrentStep: () => currentStep };
 })();

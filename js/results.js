@@ -1,8 +1,6 @@
 /* ==========================================================================
    Carbotrack — results.js
-   Renders the results dashboard. Reads inputs from URL hash (preferred),
-   then storage; re-computes results on the fly for full cross-protocol
-   durability (works on file:// and incognito).
+   Renders the results dashboard. Re-renders charts on theme toggle.
    ========================================================================== */
 (function () {
   'use strict';
@@ -10,15 +8,12 @@
   const $ = (id) => document.getElementById(id);
 
   const RATING_ICONS = {
-    low:          'fa-circle-check',
-    moderate:     'fa-circle-exclamation',
-    high:         'fa-triangle-exclamation',
-    'very-high':  'fa-circle-xmark'
+    low:         'fa-circle-check',
+    moderate:    'fa-circle-exclamation',
+    high:        'fa-triangle-exclamation',
+    'very-high': 'fa-circle-xmark'
   };
 
-  /* ------------------------------------------------------------------ */
-  /*  Recommendation library                                            */
-  /* ------------------------------------------------------------------ */
   const RECOMMENDATION_LIBRARY = {
     transport: {
       name: 'Transportation', icon: 'fa-car',
@@ -85,11 +80,7 @@
     }
   };
 
-  /* ================================================================== */
-  /*  RESOLVE — hash → storage → recompute from inputs → null           */
-  /* ================================================================== */
-  function resolveResults() {
-    /* 1. URL-hash payload (bulletproof cross-protocol) */
+  function resolve() {
     const hashInputs = window.CT_STORAGE.readHashPayload();
     if (hashInputs) {
       try {
@@ -97,24 +88,24 @@
         const results    = window.CT_ENGINE.calculate(normalized);
         window.CT_STORAGE.saveInputs(normalized);
         window.CT_STORAGE.saveResults(results);
-        return results;
+        return { results, inputs: normalized };
       } catch (e) {
         console.warn('[Carbotrack] Hash payload invalid, falling through.', e);
       }
     }
 
-    /* 2. Stored results object */
     const stored = window.CT_STORAGE.getResults();
-    if (stored && typeof stored.totalKg === 'number') return stored;
+    if (stored && typeof stored.totalKg === 'number') {
+      return { results: stored, inputs: window.CT_STORAGE.getInputs() };
+    }
 
-    /* 3. Recompute from stored inputs */
     const inputs = window.CT_STORAGE.getInputs();
     if (inputs) {
       try {
         const normalized = window.CT_ENGINE.normalize(inputs);
         const results    = window.CT_ENGINE.calculate(normalized);
         window.CT_STORAGE.saveResults(results);
-        return results;
+        return { results, inputs: normalized };
       } catch (e) {
         console.warn('[Carbotrack] Recompute failed.', e);
       }
@@ -123,15 +114,12 @@
     return null;
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  KPI rendering                                                     */
-  /* ------------------------------------------------------------------ */
   function renderKPIs(r) {
     const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
 
-    set('res-total-tons',     r.totalTons.toFixed(2));
-    set('res-monthly-kg',     r.monthlyKg.toLocaleString());
-    set('res-daily-kg',       r.dailyKg);
+    set('res-total-tons', r.totalTons.toFixed(2));
+    set('res-monthly-kg', r.monthlyKg.toLocaleString());
+    set('res-daily-kg',   r.dailyKg);
     set('res-eco-score-pill', `${r.ecoScore}/100`);
 
     const bar = $('res-eco-score-bar');
@@ -164,9 +152,6 @@
     }
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Charts                                                            */
-  /* ------------------------------------------------------------------ */
   function renderCharts(r) {
     if (typeof Chart === 'undefined') {
       console.warn('[Carbotrack] Chart.js not loaded — skipping charts.');
@@ -181,18 +166,13 @@
     window.CT_CHARTS.renderBar('categoryBarChart', labels, values, window.CT_CONFIG.palette);
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Recommendations                                                   */
-  /* ------------------------------------------------------------------ */
   function renderRecommendations(r) {
     const container = $('dynamic-recommendations-list');
     if (!container) return;
     container.innerHTML = '';
 
     const entries = Object.keys(r.breakdown).map(key => ({
-      key,
-      amount: r.breakdown[key],
-      meta: RECOMMENDATION_LIBRARY[key]
+      key, amount: r.breakdown[key], meta: RECOMMENDATION_LIBRARY[key]
     })).filter(e => e.meta);
 
     entries.sort((a, b) => b.amount - a.amount);
@@ -223,9 +203,29 @@
     });
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Empty state                                                       */
-  /* ------------------------------------------------------------------ */
+  function injectCertificateButton() {
+    const actions = document.querySelector('.toolbar-actions');
+    if (!actions || document.getElementById('results-cert-btn')) return;
+
+    const btn = document.createElement('a');
+    btn.id = 'results-cert-btn';
+    btn.className = 'btn btn-leaf btn-sm';
+    btn.href = 'certificate.html';
+    btn.dataset.authBound = '1';
+    btn.innerHTML = '<i class="fa-solid fa-certificate"></i> Get Certificate';
+
+    btn.addEventListener('click', (e) => {
+      if (!window.CT_AUTH || window.CT_AUTH.isLoggedIn()) return;
+      e.preventDefault();
+      window.CT_AUTH.request({
+        feature: 'your printable certificate',
+        redirect: 'certificate.html'
+      });
+    });
+
+    actions.prepend(btn);
+  }
+
   function showEmptyState() {
     const empty = $('results-empty');
     const main  = $('results-section');
@@ -240,40 +240,46 @@
     if (main)  main.classList.remove('hidden');
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Init                                                              */
-  /* ------------------------------------------------------------------ */
   function init() {
-    if (!$('results-section')) return; // not the results page
+    if (!$('results-section')) return;
 
-    const results = resolveResults();
+    const resolved = resolve();
+    if (!resolved) { showEmptyState(); return; }
 
-    if (!results) {
-      showEmptyState();
-      return;
-    }
+    const results = resolved.results;
+    const inputs  = resolved.inputs;
 
     showResults();
     renderKPIs(results);
     renderCharts(results);
     renderRecommendations(results);
+    injectCertificateButton();
 
-    /* Re-render on resize (charts are responsive but legend can clip) */
+    if (inputs) {
+      const payload = window.CT_STORAGE.encodeInputs(inputs);
+      if (payload) {
+        const editLink = document.querySelector('.toolbar-actions a[href="calculator.html"]');
+        if (editLink) editLink.href = 'calculator.html#d=' + payload;
+      }
+    }
+
+    let resizeTimer = null;
     window.addEventListener('resize', () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        window.CT_CHARTS.destroyAll();
+        renderCharts(results);
+      }, 180);
+    });
+
+    document.addEventListener('ct:themechange', () => {
       window.CT_CHARTS.destroyAll();
       renderCharts(results);
     });
 
-    /* Print */
     const printBtn = $('results-print-btn');
     if (printBtn) printBtn.addEventListener('click', () => window.print());
 
-    /* Edit inputs — go back to calculator with same hash payload so it
-       re-hydrates the form */
-    const editBtn = document.querySelector('a[href="calculator.html"]');
-    /* (existing link already navigates; no override needed) */
-
-    /* Reset */
     const resetBtn = $('results-reset-btn');
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {

@@ -6,6 +6,8 @@
   <title>Carbon Footprint Calculator — Carbotrack</title>
   <meta name="description" content="Step through six modules — transport, energy, diet, water, waste and lifestyle — to calculate your annual carbon footprint.">
 
+  <script>try{var t=localStorage.getItem('carbotrack:theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,11 +22,12 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/theme.css">
 </head>
 
 <body class="font-sans bg-earth text-slate-800">
 
-  <!-- ===================== HEADER ===================== -->
   <header class="site-header" id="site-header">
     <div class="container">
       <div class="header-inner">
@@ -41,14 +44,12 @@
           <a href="index.html#problem-section">Why It Matters</a>
           <a href="calculator.html" data-nav-link>Calculator</a>
           <a href="results.html" data-nav-link>Results</a>
-          <a href="simulator.html" data-nav-link>Simulator</a>
           <a href="challenge.html" data-nav-link>Challenge</a>
           <a href="methodology.html" data-nav-link>Methodology</a>
           <a href="about.html" data-nav-link>Academic</a>
         </nav>
 
         <div class="header-actions">
-          <button type="button" class="btn btn-ghost btn-sm" data-action="quick-demo">⚡ Quick Demo</button>
           <a href="results.html" class="btn btn-primary btn-sm">
             <span>View Results</span>
             <i class="fa-solid fa-chart-simple text-[10px]"></i>
@@ -66,18 +67,15 @@
       <a href="index.html#problem-section">Why It Matters</a>
       <a href="calculator.html">Calculator</a>
       <a href="results.html">Results</a>
-      <a href="simulator.html">Simulator</a>
       <a href="challenge.html">7-Day Challenge</a>
       <a href="methodology.html">Methodology</a>
       <a href="about.html">Academic Info</a>
       <div class="mobile-menu__actions">
-        <button type="button" class="btn btn-ghost btn-block" data-action="quick-demo">⚡ Try Demo Calculation</button>
         <a href="results.html" class="btn btn-primary btn-block">View Results Dashboard</a>
       </div>
     </div>
   </header>
 
-  <!-- ===================== CALCULATOR ===================== -->
   <main id="calculator-section" class="section section--alt section--border">
     <div class="container" style="max-width:56rem;">
 
@@ -92,7 +90,6 @@
 
       <div class="calc-shell">
 
-        <!-- Stepper header -->
         <div class="calc-head">
           <div class="calc-head__row">
             <span id="step-indicator-text" class="calc-head__step">Step 1 of 6: Transportation</span>
@@ -125,10 +122,8 @@
           </div>
         </div>
 
-        <!-- Form body -->
         <form id="footprint-form" class="calc-body" novalidate>
 
-          <!-- ---------- STEP 1 : TRANSPORT ---------- -->
           <section id="step-1" class="step-content">
             <div class="step-content__head">
               <h3 class="step-content__title">
@@ -190,7 +185,6 @@
             </div>
           </section>
 
-          <!-- ---------- STEP 2 : ENERGY ---------- -->
           <section id="step-2" class="step-content hidden">
             <div class="step-content__head">
               <h3 class="step-content__title">
@@ -241,7 +235,6 @@
             </div>
           </section>
 
-          <!-- ---------- STEP 3 : DIET ---------- -->
           <section id="step-3" class="step-content hidden">
             <div class="step-content__head">
               <h3 class="step-content__title">
@@ -285,7 +278,6 @@
             </div>
           </section>
 
-          <!-- ---------- STEP 4 : WATER ---------- -->
           <section id="step-4" class="step-content hidden">
             <div class="step-content__head">
               <h3 class="step-content__title">
@@ -323,7 +315,6 @@
             </div>
           </section>
 
-          <!-- ---------- STEP 5 : WASTE ---------- -->
           <section id="step-5" class="step-content hidden">
             <div class="step-content__head">
               <h3 class="step-content__title">
@@ -361,7 +352,6 @@
             </div>
           </section>
 
-          <!-- ---------- STEP 6 : LIFESTYLE ---------- -->
           <section id="step-6" class="step-content hidden">
             <div class="step-content__head">
               <h3 class="step-content__title">
@@ -396,13 +386,11 @@
             </div>
           </section>
 
-          <!-- Error banner -->
           <div id="calculator-error-banner" class="alert alert--error hidden">
             <i class="fa-solid fa-triangle-exclamation"></i>
             <span id="calculator-error-msg">Please check your inputs for invalid values.</span>
           </div>
 
-          <!-- Navigation -->
           <div class="calc-nav">
             <button type="button" id="prev-step-btn" class="btn btn-neutral" disabled>
               <i class="fa-solid fa-chevron-left text-[10px]"></i> Previous
@@ -428,7 +416,6 @@
     </div>
   </main>
 
-  <!-- ===================== FOOTER ===================== -->
   <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
@@ -447,7 +434,7 @@
             <li><a href="index.html">Home Overview</a></li>
             <li><a href="calculator.html">Carbon Calculator</a></li>
             <li><a href="results.html">Results Dashboard</a></li>
-            <li><a href="simulator.html">Reduction Simulator</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
           </ul>
         </div>
         <div>
@@ -475,11 +462,12 @@
     </div>
   </footer>
 
-  <!-- ===================== SCRIPTS ===================== -->
   <script src="js/config.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/theme.js"></script>
   <script src="js/calculator.js"></script>
 </body>
 </html>

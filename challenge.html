@@ -6,6 +6,8 @@
   <title>7-Day Campus Eco Challenge — Carbotrack</title>
   <meta name="description" content="Take one concrete climate action every day for a week and earn your campus eco badge.">
 
+  <script>try{var t=localStorage.getItem('carbotrack:theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,11 +22,12 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/theme.css">
 </head>
 
 <body class="font-sans bg-earth text-slate-800">
 
-  <!-- ===================== HEADER ===================== -->
   <header class="site-header" id="site-header">
     <div class="container">
       <div class="header-inner">
@@ -41,14 +44,12 @@
           <a href="index.html#problem-section">Why It Matters</a>
           <a href="calculator.html" data-nav-link>Calculator</a>
           <a href="results.html" data-nav-link>Results</a>
-          <a href="simulator.html" data-nav-link>Simulator</a>
           <a href="challenge.html" data-nav-link>Challenge</a>
           <a href="methodology.html" data-nav-link>Methodology</a>
           <a href="about.html" data-nav-link>Academic</a>
         </nav>
 
         <div class="header-actions">
-          <button type="button" class="btn btn-ghost btn-sm" data-action="quick-demo">⚡ Quick Demo</button>
           <a href="calculator.html" class="btn btn-primary btn-sm">
             <span>Calculator</span>
             <i class="fa-solid fa-calculator text-[10px]"></i>
@@ -65,14 +66,12 @@
       <a href="index.html">Home</a>
       <a href="calculator.html">Calculator</a>
       <a href="results.html">Results</a>
-      <a href="simulator.html">Simulator</a>
       <a href="challenge.html">7-Day Challenge</a>
       <a href="methodology.html">Methodology</a>
       <a href="about.html">Academic Info</a>
     </div>
   </header>
 
-  <!-- ===================== CHALLENGE ===================== -->
   <main class="section section--white section--border">
     <div class="container" style="max-width:64rem;">
 
@@ -177,7 +176,6 @@
 
       </div>
 
-      <!-- Completion badge -->
       <div id="challenge-badge-banner" class="challenge-badge hidden">
         <i class="fa-solid fa-award"></i>
         <h4>Congratulations! 7-Day Challenge Completed</h4>
@@ -192,16 +190,15 @@
           <i class="fa-solid fa-calculator"></i>
           <span>Recalculate My Footprint</span>
         </a>
-        <a href="simulator.html" class="btn btn-outline btn-lg">
-          <i class="fa-solid fa-sliders"></i>
-          <span>Simulate More Savings</span>
+        <a href="certificate.html" class="btn btn-outline btn-lg">
+          <i class="fa-solid fa-certificate"></i>
+          <span>Get My Certificate</span>
         </a>
       </div>
 
     </div>
   </main>
 
-  <!-- ===================== FOOTER ===================== -->
   <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
@@ -220,7 +217,7 @@
             <li><a href="index.html">Home Overview</a></li>
             <li><a href="calculator.html">Carbon Calculator</a></li>
             <li><a href="results.html">Results Dashboard</a></li>
-            <li><a href="simulator.html">Reduction Simulator</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
           </ul>
         </div>
         <div>
@@ -248,10 +245,11 @@
     </div>
   </footer>
 
-  <!-- ===================== SCRIPTS ===================== -->
   <script src="js/config.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/theme.js"></script>
   <script src="js/challenge.js"></script>
 </body>
 </html>

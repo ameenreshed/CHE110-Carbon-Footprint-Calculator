@@ -1,7 +1,6 @@
 /* ==========================================================================
    Carbotrack — storage.js
-   Safe persistence layer + URL-hash transport (works on file://, incognito).
-   Exposed globally as window.CT_STORAGE
+   Safe persistence + URL-hash transport + account/session storage.
    ========================================================================== */
 window.CT_STORAGE = (function () {
   'use strict';
@@ -10,7 +9,24 @@ window.CT_STORAGE = (function () {
   const memory = {};
   let useMemory = false;
 
-  /* Feature-detect localStorage once */
+  const BRIDGE = 'CTv1:';
+
+  function readBridge() {
+    try {
+      const raw = window.name || '';
+      if (raw.indexOf(BRIDGE) === 0) {
+        const obj = JSON.parse(raw.slice(BRIDGE.length));
+        return obj && typeof obj === 'object' ? obj : {};
+      }
+    } catch (e) { /* ignore */ }
+    return {};
+  }
+
+  function writeBridge() {
+    try { window.name = BRIDGE + JSON.stringify(memory); }
+    catch (e) { /* ignore */ }
+  }
+
   try {
     const probe = '__ct_probe__';
     window.localStorage.setItem(probe, '1');
@@ -19,23 +35,29 @@ window.CT_STORAGE = (function () {
     useMemory = true;
   }
 
-  /* ---- raw get/set/remove ----------------------------------------- */
+  if (useMemory) {
+    Object.assign(memory, readBridge());
+    writeBridge();
+  }
+
   function rawSet(key, value) {
-    if (useMemory) { memory[key] = value; return; }
+    if (useMemory) { memory[key] = value; writeBridge(); return; }
     try { window.localStorage.setItem(key, value); }
-    catch (e) { useMemory = true; memory[key] = value; }
+    catch (e) { useMemory = true; memory[key] = value; writeBridge(); }
   }
 
   function rawGet(key) {
     if (useMemory) {
-      return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
+      if (Object.prototype.hasOwnProperty.call(memory, key)) return memory[key];
+      const bridged = readBridge();
+      return Object.prototype.hasOwnProperty.call(bridged, key) ? bridged[key] : null;
     }
     try { return window.localStorage.getItem(key); }
     catch (e) { useMemory = true; return memory[key] ?? null; }
   }
 
   function rawRemove(key) {
-    if (useMemory) { delete memory[key]; return; }
+    if (useMemory) { delete memory[key]; writeBridge(); return; }
     try { window.localStorage.removeItem(key); }
     catch (e) { delete memory[key]; }
   }
@@ -51,16 +73,10 @@ window.CT_STORAGE = (function () {
     catch (e) { return fallback; }
   }
 
-  /* ================================================================== */
-  /*  URL-HASH TRANSPORT                                                */
-  /*  Base64url-encoded JSON — survives file://, incognito, cross-tab.  */
-  /* ================================================================== */
   function encodeInputs(obj) {
     try {
       const json = JSON.stringify(obj);
-      /* UTF-8 safe base64 */
       const b64 = btoa(unescape(encodeURIComponent(json)));
-      /* Convert to base64url so '+' '/' '=' don't confuse URL parsers */
       return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     } catch (e) { return ''; }
   }
@@ -70,59 +86,55 @@ window.CT_STORAGE = (function () {
     try {
       let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
       while (b64.length % 4) b64 += '=';
-      const json = decodeURIComponent(escape(atob(b64)));
-      return JSON.parse(json);
+      return JSON.parse(decodeURIComponent(escape(atob(b64))));
     } catch (e) { return null; }
   }
 
-  /* Read the "d=..." fragment from a URL hash string */
   function readHashPayload() {
     const hash = window.location.hash || '';
     const m = hash.match(/[#&]d=([^&]+)/);
     return m ? decodeInputs(m[1]) : null;
   }
 
+  function readSharePayload() {
+    const hash = window.location.hash || '';
+    const m = hash.match(/[#&]s=([^&]+)/);
+    return m ? decodeInputs(m[1]) : null;
+  }
+
   return {
-    /* ---- Results ----------------------------------------------------- */
     saveResults(r)  { setJSON(K.results, r); },
     getResults()    { return getJSON(K.results, null); },
     hasResults()    { return !!getJSON(K.results, null); },
     clearResults()  { rawRemove(K.results); },
 
-    /* ---- Inputs ------------------------------------------------------ */
     saveInputs(i)   { setJSON(K.inputs, i); },
     getInputs()     { return getJSON(K.inputs, null); },
     clearInputs()   { rawRemove(K.inputs); },
 
-    /* ---- 7-Day challenge --------------------------------------------- */
     saveChallenge(s){ setJSON(K.challenge, s); },
     getChallenge()  { return getJSON(K.challenge, null); },
     clearChallenge(){ rawRemove(K.challenge); },
 
-    /* ---- Simulator sliders ------------------------------------------- */
-    saveSimulator(s){ setJSON(K.simulator, s); },
-    getSimulator()  { return getJSON(K.simulator, null); },
+    saveUsers(u)    { setJSON(K.users, u); },
+    getUsers()      { return getJSON(K.users, null); },
+    saveSession(s)  { setJSON(K.session, s); },
+    getSession()    { return getJSON(K.session, null); },
+    clearSession()  { rawRemove(K.session); },
 
-    /* ---- Cross-page demo flag ---------------------------------------- */
-    setPendingDemo(flag)  { rawSet(K.pendingDemo, flag ? '1' : '0'); },
-    consumePendingDemo() {
-      const v = rawGet(K.pendingDemo) === '1';
-      if (v) rawRemove(K.pendingDemo);
-      return v;
-    },
+    getRaw: rawGet,
+    setRaw: rawSet,
+    removeRaw: rawRemove,
 
-    /* ---- URL-hash helpers -------------------------------------------- */
     encodeInputs,
     decodeInputs,
     readHashPayload,
+    readSharePayload,
 
-    /* ---- Wipe everything --------------------------------------------- */
+    isPersistent() { return !useMemory; },
+
     clearAll() {
-      rawRemove(K.results);
-      rawRemove(K.inputs);
-      rawRemove(K.challenge);
-      rawRemove(K.simulator);
-      rawRemove(K.pendingDemo);
+      [K.results, K.inputs, K.challenge].forEach(rawRemove);
     }
   };
 })();

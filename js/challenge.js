@@ -8,9 +8,6 @@
   const $ = (id) => document.getElementById(id);
   const TOTAL_DAYS = 7;
 
-  /* ------------------------------------------------------------------ */
-  /*  Save / Restore                                                    */
-  /* ------------------------------------------------------------------ */
   function saveState() {
     const boxes = document.querySelectorAll('.challenge-checkbox');
     const state = Array.from(boxes).map(cb => !!cb.checked);
@@ -27,9 +24,6 @@
     });
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Progress                                                          */
-  /* ------------------------------------------------------------------ */
   function updateProgress() {
     const boxes = document.querySelectorAll('.challenge-checkbox');
     const total = boxes.length || TOTAL_DAYS;
@@ -45,16 +39,11 @@
 
     if (fill)  fill.style.width = `${pct}%`;
     if (label) label.textContent = `${done} / ${total} Completed`;
-
     if (badge) badge.classList.toggle('hidden', done !== total);
 
-    /* Persist */
     saveState();
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Reset                                                             */
-  /* ------------------------------------------------------------------ */
   function resetChallenge() {
     if (!window.confirm('Reset all 7-day challenge progress?')) return;
     document.querySelectorAll('.challenge-checkbox').forEach(cb => { cb.checked = false; });
@@ -62,9 +51,6 @@
     updateProgress();
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Init                                                              */
-  /* ------------------------------------------------------------------ */
   function init() {
     const boxes = document.querySelectorAll('.challenge-checkbox');
     if (!boxes.length) return;

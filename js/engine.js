@@ -1,7 +1,6 @@
 /* ==========================================================================
    Carbotrack — engine.js
    Pure, side-effect-free carbon calculation engine.
-   Exposed globally as window.CT_ENGINE
    ========================================================================== */
 window.CT_ENGINE = (function () {
   'use strict';
@@ -10,28 +9,23 @@ window.CT_ENGINE = (function () {
   const F = C.factors;
   const K = C.constants;
 
-  /**
-   * Calculate the full annual footprint from a normalized input object.
-   * @param {Object} i - normalized inputs (see normalize() below)
-   * @returns {Object} results
-   */
   function calculate(i) {
     /* ---------- 1. TRANSPORTATION ---------------------------------- */
-    const vehicleFactor      = C.vehicleFactors[i.vehicleType] ?? 0;
-    const annualPersonalKm   = i.personalKm * i.commuteDays * K.commuteWeeks;
-    const vehicleEmission    = annualPersonalKm * vehicleFactor * i.carpoolFactor;
+    const vehicleFactor = C.vehicleFactors[i.vehicleType] ?? 0;
+    const annualPersonalKm = i.personalKm * i.commuteDays * K.commuteWeeks;
+    const vehicleEmission = annualPersonalKm * vehicleFactor * i.carpoolFactor;
 
-    const annualTransitKm    = i.publicKm * K.transitDays;
-    const transitEmission    = annualTransitKm * F.publicTransit;
+    const annualTransitKm = i.publicKm * K.transitDays;
+    const transitEmission = annualTransitKm * F.publicTransit;
 
-    const commute            = vehicleEmission + transitEmission;
+    const commute = vehicleEmission + transitEmission;
 
-    const flights            = (i.domesticFlights * F.flightDomestic) +
-                               (i.intlFlights * F.flightIntl);
+    const flights = (i.domesticFlights * F.flightDomestic) +
+                    (i.intlFlights * F.flightIntl);
 
     /* ---------- 2. HOME ENERGY ------------------------------------- */
     const personalMonthlyKwh = i.monthlyKwh / Math.max(1, i.householdSize);
-    let energy               = personalMonthlyKwh * 12 * F.electricity;
+    let energy = personalMonthlyKwh * 12 * F.electricity;
 
     if (i.applianceAC)     energy += C.applianceAddons.ac;
     if (i.applianceGeyser) energy += C.applianceAddons.geyser;
@@ -67,23 +61,19 @@ window.CT_ENGINE = (function () {
     shopping = Math.max(0, shopping);
 
     /* ---------- TOTALS --------------------------------------------- */
-    const totalKg =
-      commute + flights + energy + food + water + waste + shopping;
-
+    const totalKg = commute + flights + energy + food + water + waste + shopping;
     const totalTons = totalKg / 1000;
 
-    /* ---------- ECO SCORE (higher = better) ------------------------ */
     const ecoScore = Math.max(20, Math.min(96, Math.round(100 - (totalTons * 8.5))));
 
-    /* ---------- BREAKDOWN ------------------------------------------ */
     const breakdown = {
-      commute:     Math.round(commute),
-      flights:     Math.round(flights),
-      energy:      Math.round(energy),
-      food:        Math.round(food),
-      water:       Math.round(water),
-      waste:       Math.round(waste),
-      shopping:    Math.round(shopping)
+      commute:  Math.round(commute),
+      flights:  Math.round(flights),
+      energy:   Math.round(energy),
+      food:     Math.round(food),
+      water:    Math.round(water),
+      waste:    Math.round(waste),
+      shopping: Math.round(shopping)
     };
 
     const series = C.categoryLabels.map((label, idx) => ({
@@ -96,14 +86,13 @@ window.CT_ENGINE = (function () {
       pct: totalKg > 0 ? +((s.value / totalKg) * 100).toFixed(1) : 0
     }));
 
-    /* ---------- CLASSIFICATION ------------------------------------- */
+    /* ---------- CLASSIFICATION (no emoji — Font Awesome used in UI) - */
     let rating;
-    if (totalTons <= 2.2)      rating = { key: 'low',       label: '🟢 Lower Impact (Target Compliant)' };
-    else if (totalTons <= 4.5) rating = { key: 'moderate',  label: '🟡 Moderate Impact' };
-    else if (totalTons <= 7.5) rating = { key: 'high',      label: '🟠 High Impact' };
-    else                       rating = { key: 'very-high', label: '🔴 Very High Impact' };
+    if (totalTons <= 2.2)      rating = { key: 'low',       label: 'Lower Impact — Target Compliant' };
+    else if (totalTons <= 4.5) rating = { key: 'moderate',  label: 'Moderate Impact' };
+    else if (totalTons <= 7.5) rating = { key: 'high',      label: 'High Impact' };
+    else                       rating = { key: 'very-high', label: 'Very High Impact' };
 
-    /* ---------- COMPARISON vs BENCHMARKS --------------------------- */
     const vsParis = totalTons > 0
       ? +((totalTons / C.benchmarks.parisTarget) * 100).toFixed(0)
       : 0;
@@ -126,10 +115,6 @@ window.CT_ENGINE = (function () {
     };
   }
 
-  /**
-   * Normalize a raw DOM-derived input object, applying safe defaults
-   * and clamping to valid ranges.
-   */
   function normalize(raw) {
     const num = (v, d) => {
       const n = parseFloat(v);
@@ -138,7 +123,6 @@ window.CT_ENGINE = (function () {
     const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
 
     return {
-      /* Transport */
       vehicleType:     raw.vehicleType     || 'petrol_car',
       personalKm:      clamp(num(raw.personalKm, 0),   0, 500),
       commuteDays:     clamp(num(raw.commuteDays, 0),  0, 7),
@@ -147,7 +131,6 @@ window.CT_ENGINE = (function () {
       domesticFlights: clamp(num(raw.domesticFlights, 0), 0, 100),
       intlFlights:     clamp(num(raw.intlFlights, 0),     0, 50),
 
-      /* Energy */
       householdSize:   clamp(num(raw.householdSize, 1), 1, 30),
       monthlyKwh:      clamp(num(raw.monthlyKwh, 0),    0, 10000),
       applianceAC:     !!raw.applianceAC,
@@ -155,32 +138,25 @@ window.CT_ENGINE = (function () {
       applianceEV:     !!raw.applianceEV,
       cookingFuel:     raw.cookingFuel || 'lpg',
 
-      /* Food */
       dietType:        raw.dietType || 'vegetarian',
       dairyServings:   clamp(num(raw.dairyServings, 0), 0, 6),
       foodWaste:       raw.foodWaste || 'low',
 
-      /* Water */
       showerMinutes:   clamp(num(raw.showerMinutes, 8),  1, 60),
       showersPerDay:   clamp(num(raw.showersPerDay, 1),  0, 5),
       washingLoads:    clamp(num(raw.washingLoads, 3),   0, 30),
       tapHabits:       raw.tapHabits || 'average',
 
-      /* Waste */
       wasteBags:       clamp(num(raw.wasteBags, 3),      1, 25),
       recyclingRate:   clamp(num(raw.recyclingRate, 0.25), 0, 0.95),
       composting:      raw.composting === 'yes' || raw.composting === true,
 
-      /* Shopping */
       clothingItems:   clamp(num(raw.clothingItems, 2), 0, 30),
       onlineOrders:    clamp(num(raw.onlineOrders, 4),  0, 60),
       plasticHabits:   raw.plasticHabits || 'moderate'
     };
   }
 
-  /**
-   * A representative demo profile — used as a fallback baseline.
-   */
   function demoBaseline() {
     return calculate(normalize({
       vehicleType: 'petrol_car', personalKm: 15, commuteDays: 5, publicKm: 6,

@@ -1,24 +1,16 @@
 /* ==========================================================================
    Carbotrack — app.js
-   Shared behaviour loaded on EVERY page:
-     • mobile navigation
-     • header scroll elevation
-     • active nav link highlighting
-     • toast notification system
-     • "Quick Demo" handoff (URL-param based — works on file://)
-     • footer year stamp
+   Shared behaviour. Robust mobile drawer with focus trap.
    ========================================================================== */
 (function () {
   'use strict';
 
   /* ================================================================== */
-  /*  TOAST SYSTEM                                                      */
+  /*  TOAST                                                             */
   /* ================================================================== */
   const TOAST_ICONS = {
-    info:    'fa-circle-info',
-    success: 'fa-check',
-    warning: 'fa-triangle-exclamation',
-    error:   'fa-xmark'
+    info: 'fa-circle-info', success: 'fa-check',
+    warning: 'fa-triangle-exclamation', error: 'fa-xmark'
   };
 
   let toastContainer = null;
@@ -28,7 +20,6 @@
     toastContainer = document.createElement('div');
     toastContainer.className = 'toast-container';
     toastContainer.setAttribute('aria-live', 'polite');
-    toastContainer.setAttribute('aria-atomic', 'false');
     document.body.appendChild(toastContainer);
     return toastContainer;
   }
@@ -38,15 +29,10 @@
     const toast = document.createElement('div');
     toast.className = `toast toast--${type}`;
     toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
-    toast.innerHTML = `
-      <span class="toast__icon">
-        <i class="fa-solid ${TOAST_ICONS[type] || TOAST_ICONS.success}"></i>
-      </span>
-      <span class="toast__msg">${message}</span>
-    `;
+    toast.innerHTML =
+      `<span class="toast__icon"><i class="fa-solid ${TOAST_ICONS[type] || TOAST_ICONS.success}"></i></span>
+       <span class="toast__msg">${message}</span>`;
     container.appendChild(toast);
-
-    /* Auto-dismiss */
     window.setTimeout(() => {
       toast.classList.add('is-leaving');
       window.setTimeout(() => toast.remove(), 320);
@@ -56,40 +42,256 @@
   window.CT_TOAST = { show: showToast };
 
   /* ================================================================== */
-  /*  MOBILE NAVIGATION                                                 */
+  /*  MOBILE DRAWER                                                     */
   /* ================================================================== */
-  function initMobileNav() {
-    const btn  = document.getElementById('mobile-menu-btn');
-    const menu = document.getElementById('mobile-menu');
-    if (!btn || !menu) return;
+  const MOBILE_ICON_MAP = {
+    'index.html':                 'fa-house',
+    'index.html#problem-section': 'fa-circle-info',
+    'calculator.html':            'fa-calculator',
+    'results.html':               'fa-chart-pie',
+    'challenge.html':             'fa-list-check',
+    'methodology.html':           'fa-flask',
+    'about.html':                 'fa-graduation-cap'
+  };
 
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      menu.classList.toggle('hidden');
-      const expanded = !menu.classList.contains('hidden');
-      btn.setAttribute('aria-expanded', String(expanded));
-      btn.innerHTML = expanded
-        ? '<i class="fa-solid fa-xmark text-xl"></i>'
-        : '<i class="fa-solid fa-bars text-xl"></i>';
-    });
+  let toggleEl    = null;
+  let menuEl      = null;
+  let backdropEl  = null;
+  let lastFocused = null;
 
-    menu.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        menu.classList.add('hidden');
-        btn.setAttribute('aria-expanded', 'false');
-        btn.innerHTML = '<i class="fa-solid fa-bars text-xl"></i>';
-      });
+  function log() {
+    if (window.location.search.indexOf('debug=1') !== -1) {
+      console.log('[CT_NAV]', ...arguments);
+    }
+  }
+
+  function isOpen() {
+    return !!(menuEl && menuEl.classList.contains('is-open'));
+  }
+
+  function getFocusable() {
+    if (!menuEl) return [];
+    return Array.from(menuEl.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter(el => el.offsetParent !== null || el === document.activeElement);
+  }
+
+  function trapFocus(e) {
+    if (e.key !== 'Tab' || !isOpen()) return;
+    const items = getFocusable();
+    if (!items.length) return;
+    const first = items[0];
+    const last  = items[items.length - 1];
+
+    if (e.shiftKey && (document.activeElement === first || !menuEl.contains(document.activeElement))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (document.activeElement === last || !menuEl.contains(document.activeElement))) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  function openMenu() {
+    if (!menuEl) return;
+
+    lastFocused = document.activeElement;
+    menuEl.classList.remove('hidden');
+    menuEl.classList.add('is-open');
+    menuEl.removeAttribute('aria-hidden');
+
+    if (backdropEl) backdropEl.classList.add('is-open');
+    document.body.classList.add('is-menu-open');
+
+    if (toggleEl) {
+      toggleEl.setAttribute('aria-expanded', 'true');
+      toggleEl.innerHTML = '<i class="fa-solid fa-xmark text-xl"></i>';
+    }
+
+    window.setTimeout(() => {
+      const items = getFocusable();
+      if (items.length) items[0].focus();
+    }, 80);
+
+    log('opened');
+  }
+
+  function closeMenu() {
+    if (!menuEl) return;
+
+    menuEl.classList.remove('is-open');
+    menuEl.setAttribute('aria-hidden', 'true');
+
+    if (backdropEl) backdropEl.classList.remove('is-open');
+    document.body.classList.remove('is-menu-open');
+
+    if (toggleEl) {
+      toggleEl.setAttribute('aria-expanded', 'false');
+      toggleEl.innerHTML = '<i class="fa-solid fa-bars text-xl"></i>';
+    }
+
+    if (lastFocused && typeof lastFocused.focus === 'function') {
+      lastFocused.focus();
+    }
+    lastFocused = null;
+
+    log('closed');
+  }
+
+  function toggleMenu() {
+    if (isOpen()) closeMenu();
+    else openMenu();
+  }
+
+  function injectHead() {
+    if (!menuEl || menuEl.querySelector('.mobile-menu__head')) return;
+
+    const head = document.createElement('div');
+    head.className = 'mobile-menu__head';
+    head.innerHTML =
+      `<a href="index.html" class="brand">
+         <span class="brand__mark"><i class="fa-solid fa-leaf"></i></span>
+         <span>
+           <span class="brand__name">Carbotrack</span>
+           <span class="brand__tag">Understand Your Impact</span>
+         </span>
+       </a>
+       <button type="button" class="mobile-menu__close" aria-label="Close menu">
+         <i class="fa-solid fa-xmark"></i>
+       </button>`;
+
+    menuEl.insertBefore(head, menuEl.firstChild);
+
+    head.querySelector('.mobile-menu__close').addEventListener('click', function (e) {
+      e.preventDefault();
+      closeMenu();
     });
   }
 
+  function decorateLinks() {
+    if (!menuEl) return;
+
+    const links = menuEl.querySelectorAll(':scope > a');
+    for (let i = 0; i < links.length; i++) {
+      const link = links[i];
+      if (link.dataset.ctDecorated) continue;
+      link.dataset.ctDecorated = '1';
+
+      if (link.querySelector('i')) continue;
+
+      const href = link.getAttribute('href') || '';
+      const raw  = (link.textContent || '').trim();
+      const icon = MOBILE_ICON_MAP[href] || 'fa-angle-right';
+
+      link.innerHTML =
+        `<i class="fa-solid ${icon} mobile-menu__link-icon"></i>
+         <span class="mobile-menu__link-text">${raw}</span>`;
+    }
+  }
+
+  function highlightActiveLink() {
+    if (!menuEl) return;
+
+    const path = window.location.pathname.split('/').pop() || 'index.html';
+    const links = menuEl.querySelectorAll(':scope > a');
+
+    for (let i = 0; i < links.length; i++) {
+      const link = links[i];
+      const href = link.getAttribute('href') || '';
+      if (href.indexOf('#') !== -1) continue;
+
+      const target = href.split('?')[0].split('/').pop();
+      if (target === path) {
+        link.classList.add('is-active');
+        link.setAttribute('aria-current', 'page');
+      }
+    }
+  }
+
+  function initMobileNav() {
+    toggleEl = document.getElementById('mobile-menu-btn');
+    menuEl   = document.getElementById('mobile-menu');
+
+    if (!toggleEl || !menuEl) return;
+
+    /* ------------------------------------------------------------------
+       ★★★ THE CRITICAL FIX ★★★
+       Move the drawer OUT of <header class="site-header"> and append it
+       directly to <body>.
+
+       Why:
+         1. The header has `z-index: 50` + `position: sticky`, creating a
+            stacking context. The drawer inside it is capped at level 50
+            from the page root, so the backdrop (appended to body with
+            z-index 90) paints ABOVE the drawer → whole UI dims and taps
+            never reach the drawer's buttons.
+
+         2. The header has `backdrop-filter: blur(14px)`, which also makes
+            it a *containing block* for `position: fixed` descendants.
+            That anchored the drawer to the 5rem-tall header instead of the
+            viewport, breaking full-height + internal scroll.
+
+       Once the drawer is a sibling of the backdrop on <body>, its own
+       z-index (95) wins over the backdrop (90), fixed positioning anchors
+       to the viewport, and every interaction works as expected.
+       ------------------------------------------------------------------ */
+    if (menuEl.parentNode !== document.body) {
+      document.body.appendChild(menuEl);
+    }
+
+    /* Remove stale `hidden` class — the drawer is controlled by .is-open */
+    menuEl.classList.remove('hidden');
+    menuEl.setAttribute('aria-hidden', 'true');
+
+    /* Backdrop */
+    if (!backdropEl) {
+      backdropEl = document.createElement('div');
+      backdropEl.className = 'nav-backdrop';
+      backdropEl.id = 'nav-backdrop';
+      backdropEl.setAttribute('aria-hidden', 'true');
+      backdropEl.addEventListener('click', closeMenu);
+      document.body.appendChild(backdropEl);
+    }
+
+    injectHead();
+    decorateLinks();
+    highlightActiveLink();
+
+    /* Toggle button */
+    toggleEl.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleMenu();
+    });
+
+    /* Close on any link click inside the drawer */
+    menuEl.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () {
+        closeMenu();
+      });
+    });
+
+    /* Escape closes */
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && isOpen()) {
+        e.preventDefault();
+        closeMenu();
+      }
+    });
+
+    /* Focus trap on Tab */
+    menuEl.addEventListener('keydown', trapFocus);
+
+    window.CT_NAV = { open: openMenu, close: closeMenu, toggle: toggleMenu, isOpen };
+  }
+
   /* ================================================================== */
-  /*  HEADER SCROLL ELEVATION                                           */
+  /*  HEADER SCROLL                                                     */
   /* ================================================================== */
   function initHeaderScroll() {
     const header = document.getElementById('site-header');
     if (!header) return;
-
-    const onScroll = () => {
+    const onScroll = function () {
       if (window.scrollY > 12) header.classList.add('is-scrolled');
       else header.classList.remove('is-scrolled');
     };
@@ -98,50 +300,28 @@
   }
 
   /* ================================================================== */
-  /*  ACTIVE NAV LINK                                                   */
+  /*  DESKTOP ACTIVE NAV                                                */
   /* ================================================================== */
   function initActiveNav() {
     const path = window.location.pathname.split('/').pop() || 'index.html';
-
-    document.querySelectorAll('[data-nav-link]').forEach(link => {
+    const links = document.querySelectorAll('[data-nav-link]');
+    for (let i = 0; i < links.length; i++) {
+      const link = links[i];
       const href = link.getAttribute('href') || '';
       const target = href.split('#')[0] || 'index.html';
-
       if (target === path) {
         link.classList.add('is-active');
         link.setAttribute('aria-current', 'page');
       }
-    });
-  }
-
-  /* ================================================================== */
-  /*  QUICK DEMO HANDOFF                                                */
-  /* ================================================================== */
-  function initQuickDemo() {
-    document.querySelectorAll('[data-action="quick-demo"]').forEach(btn => {
-      btn.addEventListener('click', () => {
-
-        /* Case 1 — already on the calculator page: run animated demo. */
-        if (window.CT_CALCULATOR && document.getElementById('footprint-form')) {
-          window.CT_CALCULATOR.runAnimatedDemo();
-          return;
-        }
-
-        /* Case 2 — any other page: redirect with URL param.
-           URL params survive file://, http://, https:// and every browser,
-           unlike localStorage on file://. */
-        try { window.CT_STORAGE.setPendingDemo(true); } catch (e) { /* ignore */ }
-        window.location.href = 'calculator.html?demo=1';
-      });
-    });
+    }
   }
 
   /* ================================================================== */
   /*  SMOOTH ANCHORS                                                    */
   /* ================================================================== */
   function initSmoothAnchors() {
-    document.querySelectorAll('a[href^="#"]').forEach(link => {
-      link.addEventListener('click', (e) => {
+    document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+      link.addEventListener('click', function (e) {
         const id = link.getAttribute('href');
         if (!id || id === '#') return;
         const target = document.querySelector(id);
@@ -156,7 +336,7 @@
   /*  FOOTER YEAR                                                       */
   /* ================================================================== */
   function initFooterYear() {
-    document.querySelectorAll('[data-current-year]').forEach(el => {
+    document.querySelectorAll('[data-current-year]').forEach(function (el) {
       el.textContent = new Date().getFullYear();
     });
   }
@@ -164,11 +344,10 @@
   /* ================================================================== */
   /*  BOOT                                                              */
   /* ================================================================== */
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', function () {
     initMobileNav();
     initHeaderScroll();
     initActiveNav();
-    initQuickDemo();
     initSmoothAnchors();
     initFooterYear();
   });

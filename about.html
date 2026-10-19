@@ -6,6 +6,8 @@
   <title>Academic Project Info — Carbotrack | CHE110</title>
   <meta name="description" content="CHE110 Environmental Studies continuous assessment project — Carbon Footprint Calculator web application by B.Tech CSE students.">
 
+  <script>try{var t=localStorage.getItem('carbotrack:theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,11 +22,12 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/theme.css">
 </head>
 
 <body class="font-sans bg-earth text-slate-800">
 
-  <!-- ===================== HEADER ===================== -->
   <header class="site-header" id="site-header">
     <div class="container">
       <div class="header-inner">
@@ -41,14 +44,12 @@
           <a href="index.html#problem-section">Why It Matters</a>
           <a href="calculator.html" data-nav-link>Calculator</a>
           <a href="results.html" data-nav-link>Results</a>
-          <a href="simulator.html" data-nav-link>Simulator</a>
           <a href="challenge.html" data-nav-link>Challenge</a>
           <a href="methodology.html" data-nav-link>Methodology</a>
           <a href="about.html" data-nav-link>Academic</a>
         </nav>
 
         <div class="header-actions">
-          <button type="button" class="btn btn-ghost btn-sm" data-action="quick-demo">⚡ Quick Demo</button>
           <a href="calculator.html" class="btn btn-primary btn-sm">
             <span>Calculator</span>
             <i class="fa-solid fa-calculator text-[10px]"></i>
@@ -65,14 +66,12 @@
       <a href="index.html">Home</a>
       <a href="calculator.html">Calculator</a>
       <a href="results.html">Results</a>
-      <a href="simulator.html">Simulator</a>
       <a href="challenge.html">7-Day Challenge</a>
       <a href="methodology.html">Methodology</a>
       <a href="about.html">Academic Info</a>
     </div>
   </header>
 
-  <!-- ===================== ABOUT ===================== -->
   <main id="about-project" class="section section--white section--border">
     <div class="container" style="max-width:72rem;">
 
@@ -85,7 +84,6 @@
         </p>
       </div>
 
-      <!-- Main panel -->
       <div class="about-panel">
         <div>
           <span class="badge badge--soft" style="background:rgba(47,87,71,.6);color:var(--leaf-300);border-color:rgba(47,87,71,.8);">
@@ -126,7 +124,6 @@
         </div>
       </div>
 
-      <!-- Deliverables grid -->
       <div class="method-grid" style="margin-top:3rem;">
 
         <div class="method-card">
@@ -143,6 +140,8 @@
             <li>• <strong>engine.js</strong> — pure calculation functions</li>
             <li>• <strong>storage.js</strong> — safe persistence with memory fallback</li>
             <li>• <strong>charts.js</strong> — Chart.js donut &amp; bar wrappers</li>
+            <li>• <strong>auth.js</strong> — local-only account system</li>
+            <li>• <strong>theme.js</strong> — dark/light mode controller</li>
           </ul>
         </div>
 
@@ -151,33 +150,32 @@
             <i class="fa-solid fa-list-check"></i> Assessment Deliverables
           </h3>
           <ul style="display:grid;gap:.75rem;font-size:.78rem;color:var(--text-muted);">
-            <li>✅ <strong style="color:var(--forest-900);">Web Prototype</strong> — this application</li>
-            <li>✅ <strong style="color:var(--forest-900);">Demo Video</strong> — recorded walkthrough</li>
-            <li>✅ <strong style="color:var(--forest-900);">Social Dissemination</strong> — shared across student networks</li>
-            <li>✅ <strong style="color:var(--forest-900);">Handwritten Report</strong> — methodology &amp; findings</li>
+            <li><i class="fa-solid fa-circle-check" style="color:var(--leaf-600);"></i> <strong style="color:var(--forest-900);">Web Prototype</strong> — this application</li>
+            <li><i class="fa-solid fa-circle-check" style="color:var(--leaf-600);"></i> <strong style="color:var(--forest-900);">Demo Video</strong> — recorded walkthrough</li>
+            <li><i class="fa-solid fa-circle-check" style="color:var(--leaf-600);"></i> <strong style="color:var(--forest-900);">Social Dissemination</strong> — shared across student networks</li>
+            <li><i class="fa-solid fa-circle-check" style="color:var(--leaf-600);"></i> <strong style="color:var(--forest-900);">Handwritten Report</strong> — methodology &amp; findings</li>
           </ul>
         </div>
 
       </div>
 
-      <!-- Feature checklist -->
       <div class="method-card" style="margin-top:2rem;">
         <h3 class="method-card__title">
           <i class="fa-solid fa-star"></i> Feature Summary
         </h3>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.75rem;margin-top:.5rem;">
-          <span style="font-size:.78rem;color:var(--text-muted);">✅ 6-module guided calculator</span>
-          <span style="font-size:.78rem;color:var(--text-muted);">✅ Real-time input validation</span>
-          <span style="font-size:.78rem;color:var(--text-muted);">✅ Annual / monthly / daily breakdowns</span>
-          <span style="font-size:.78rem;color:var(--text-muted);">✅ Eco-score &amp; impact classification</span>
-          <span style="font-size:.78rem;color:var(--text-muted);">✅ Donut + bar category charts</span>
-          <span style="font-size:.78rem;color:var(--text-muted);">✅ Dynamic priority recommendations</span>
-          <span style="font-size:.78rem;color:var(--text-muted);">✅ What-If habit simulator</span>
-          <span style="font-size:.78rem;color:var(--text-muted);">✅ 7-Day challenge tracker</span>
-          <span style="font-size:.78rem;color:var(--text-muted);">✅ Printable PDF report</span>
-          <span style="font-size:.78rem;color:var(--text-muted);">✅ Persistent localStorage state</span>
-          <span style="font-size:.78rem;color:var(--text-muted);">✅ Fully responsive mobile UI</span>
-          <span style="font-size:.78rem;color:var(--text-muted);">✅ Accessibility-conscious markup</span>
+          <span style="font-size:.78rem;color:var(--text-muted);"><i class="fa-solid fa-check" style="color:var(--leaf-600);"></i> 6-module guided calculator</span>
+          <span style="font-size:.78rem;color:var(--text-muted);"><i class="fa-solid fa-check" style="color:var(--leaf-600);"></i> Real-time input validation</span>
+          <span style="font-size:.78rem;color:var(--text-muted);"><i class="fa-solid fa-check" style="color:var(--leaf-600);"></i> Annual / monthly / daily breakdowns</span>
+          <span style="font-size:.78rem;color:var(--text-muted);"><i class="fa-solid fa-check" style="color:var(--leaf-600);"></i> Eco-score &amp; impact classification</span>
+          <span style="font-size:.78rem;color:var(--text-muted);"><i class="fa-solid fa-check" style="color:var(--leaf-600);"></i> Donut + bar category charts</span>
+          <span style="font-size:.78rem;color:var(--text-muted);"><i class="fa-solid fa-check" style="color:var(--leaf-600);"></i> Dynamic priority recommendations</span>
+          <span style="font-size:.78rem;color:var(--text-muted);"><i class="fa-solid fa-check" style="color:var(--leaf-600);"></i> 7-Day challenge tracker</span>
+          <span style="font-size:.78rem;color:var(--text-muted);"><i class="fa-solid fa-check" style="color:var(--leaf-600);"></i> Printable PDF report</span>
+          <span style="font-size:.78rem;color:var(--text-muted);"><i class="fa-solid fa-check" style="color:var(--leaf-600);"></i> Local account system</span>
+          <span style="font-size:.78rem;color:var(--text-muted);"><i class="fa-solid fa-check" style="color:var(--leaf-600);"></i> Printable shareable certificates</span>
+          <span style="font-size:.78rem;color:var(--text-muted);"><i class="fa-solid fa-check" style="color:var(--leaf-600);"></i> Dark mode support</span>
+          <span style="font-size:.78rem;color:var(--text-muted);"><i class="fa-solid fa-check" style="color:var(--leaf-600);"></i> Fully responsive mobile UI</span>
         </div>
       </div>
 
@@ -195,7 +193,6 @@
     </div>
   </main>
 
-  <!-- ===================== FOOTER ===================== -->
   <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
@@ -214,7 +211,7 @@
             <li><a href="index.html">Home Overview</a></li>
             <li><a href="calculator.html">Carbon Calculator</a></li>
             <li><a href="results.html">Results Dashboard</a></li>
-            <li><a href="simulator.html">Reduction Simulator</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
           </ul>
         </div>
         <div>
@@ -242,9 +239,10 @@
     </div>
   </footer>
 
-  <!-- ===================== SCRIPTS ===================== -->
   <script src="js/config.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/theme.js"></script>
 </body>
 </html>
