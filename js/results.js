@@ -1,6 +1,5 @@
 /* ==========================================================================
    Carbotrack — results.js
-   Renders the results dashboard. Re-renders charts on theme toggle.
    ========================================================================== */
 (function () {
   'use strict';
@@ -8,9 +7,9 @@
   const $ = (id) => document.getElementById(id);
 
   const RATING_ICONS = {
-    low:         'fa-circle-check',
-    moderate:    'fa-circle-exclamation',
-    high:        'fa-triangle-exclamation',
+    low: 'fa-circle-check',
+    moderate: 'fa-circle-exclamation',
+    high: 'fa-triangle-exclamation',
     'very-high': 'fa-circle-xmark'
   };
 
@@ -88,7 +87,7 @@
         const results    = window.CT_ENGINE.calculate(normalized);
         window.CT_STORAGE.saveInputs(normalized);
         window.CT_STORAGE.saveResults(results);
-        return { results, inputs: normalized };
+        return { results: results, inputs: normalized };
       } catch (e) {
         console.warn('[Carbotrack] Hash payload invalid, falling through.', e);
       }
@@ -105,7 +104,7 @@
         const normalized = window.CT_ENGINE.normalize(inputs);
         const results    = window.CT_ENGINE.calculate(normalized);
         window.CT_STORAGE.saveResults(results);
-        return { results, inputs: normalized };
+        return { results: results, inputs: normalized };
       } catch (e) {
         console.warn('[Carbotrack] Recompute failed.', e);
       }
@@ -120,22 +119,22 @@
     set('res-total-tons', r.totalTons.toFixed(2));
     set('res-monthly-kg', r.monthlyKg.toLocaleString());
     set('res-daily-kg',   r.dailyKg);
-    set('res-eco-score-pill', `${r.ecoScore}/100`);
+    set('res-eco-score-pill', r.ecoScore + '/100');
 
     const bar = $('res-eco-score-bar');
-    if (bar) bar.style.width = `${r.ecoScore}%`;
+    if (bar) bar.style.width = r.ecoScore + '%';
 
     const badge = $('res-rating-badge');
     if (badge) {
       const iconCls = RATING_ICONS[r.rating.key] || RATING_ICONS.moderate;
-      badge.innerHTML = `<i class="fa-solid ${iconCls}"></i> <span>${r.rating.label}</span>`;
-      badge.className = `rating-badge rating-${r.rating.key}`;
+      badge.innerHTML = '<i class="fa-solid ' + iconCls + '"></i> <span>' + r.rating.label + '</span>';
+      badge.className = 'rating-badge rating-' + r.rating.key;
     }
 
     const cmp = $('res-comparison-note');
     if (cmp) {
       if (r.vsParis > 100) {
-        cmp.innerHTML = `Your footprint is <strong>${r.vsParis}%</strong> of the Paris Agreement 2.0 t personal target — about <strong>${(r.totalTons - 2).toFixed(2)} t</strong> above it.`;
+        cmp.innerHTML = 'Your footprint is <strong>' + r.vsParis + '%</strong> of the Paris Agreement 2.0 t personal target — about <strong>' + (r.totalTons - 2).toFixed(2) + ' t</strong> above it.';
       } else {
         cmp.innerHTML = 'Excellent — you are within the Paris Agreement 2.0 t personal target.';
       }
@@ -143,20 +142,18 @@
 
     const trees = $('res-trees-note');
     if (trees) {
-      trees.textContent = `Equivalent to the annual carbon sequestered by ${r.treesEquivalent} mature urban trees.`;
+      trees.textContent = 'Equivalent to the annual carbon sequestered by ' + r.treesEquivalent + ' mature urban trees.';
     }
 
     const ts = $('res-timestamp');
     if (ts && r.generatedAt) {
-      ts.textContent = `Generated ${new Date(r.generatedAt).toLocaleString()}`;
+      ts.textContent = 'Generated ' + new Date(r.generatedAt).toLocaleString();
     }
   }
 
   function renderCharts(r) {
-    if (typeof Chart === 'undefined') {
-      console.warn('[Carbotrack] Chart.js not loaded — skipping charts.');
-      return;
-    }
+    if (typeof Chart === 'undefined') return;
+
     const labels = window.CT_CONFIG.categoryLabels;
     const values = [
       r.breakdown.commute, r.breakdown.flights, r.breakdown.energy,
@@ -171,36 +168,56 @@
     if (!container) return;
     container.innerHTML = '';
 
-    const entries = Object.keys(r.breakdown).map(key => ({
-      key, amount: r.breakdown[key], meta: RECOMMENDATION_LIBRARY[key]
-    })).filter(e => e.meta);
+    const entries = Object.keys(r.breakdown).map(function (key) {
+      return { key: key, amount: r.breakdown[key], meta: RECOMMENDATION_LIBRARY[key] };
+    }).filter(function (e) { return e.meta; });
 
-    entries.sort((a, b) => b.amount - a.amount);
+    entries.sort(function (a, b) { return b.amount - a.amount; });
 
-    entries.slice(0, 3).forEach((entry, index) => {
+    entries.slice(0, 3).forEach(function (entry, index) {
       const isTop = index === 0;
       const card = document.createElement('article');
-      card.className = `rec-card${isTop ? ' rec-card--top' : ''}`;
+      card.className = 'rec-card' + (isTop ? ' rec-card--top' : '');
 
-      const tips = entry.meta.tips
-        .map(t => `<li><i class="fa-solid fa-check"></i><span>${t}</span></li>`)
-        .join('');
+      const tips = entry.meta.tips.map(function (t) {
+        return '<li><i class="fa-solid fa-check"></i><span>' + t + '</span></li>';
+      }).join('');
 
-      card.innerHTML = `
-        <div class="rec-card__head">
-          <span class="rec-card__icon"><i class="fa-solid ${entry.meta.icon}"></i></span>
-          ${isTop ? '<span class="rec-card__flag">Highest Contributor</span>' : ''}
-        </div>
-        <h4 class="rec-card__title">${entry.meta.name} Optimisation</h4>
-        <p class="rec-card__load">${entry.amount.toLocaleString()} kg CO₂e / year</p>
-        <ul class="rec-card__tips">${tips}</ul>
-        <div class="rec-card__foot">
-          <span>Potential Reduction:</span>
-          <strong>${entry.meta.potential}</strong>
-        </div>
-      `;
+      card.innerHTML =
+        '<div class="rec-card__head">' +
+          '<span class="rec-card__icon"><i class="fa-solid ' + entry.meta.icon + '"></i></span>' +
+          (isTop ? '<span class="rec-card__flag">Highest Contributor</span>' : '') +
+        '</div>' +
+        '<h4 class="rec-card__title">' + entry.meta.name + ' Optimisation</h4>' +
+        '<p class="rec-card__load">' + entry.amount.toLocaleString() + ' kg CO₂e / year</p>' +
+        '<ul class="rec-card__tips">' + tips + '</ul>' +
+        '<div class="rec-card__foot">' +
+          '<span>Potential Reduction:</span>' +
+          '<strong>' + entry.meta.potential + '</strong>' +
+        '</div>';
+
       container.appendChild(card);
     });
+  }
+
+  async function submitScoreToSupabase(results) {
+    if (!window.CT_SB_LEADERBOARD) return;
+    if (!window.CT_SB_AUTH || !window.CT_SB_AUTH.isLoggedIn()) return;
+
+    const payload = {
+      totalTons: results.totalTons,
+      ecoScore: results.ecoScore,
+      ratingKey: results.rating.key,
+      ratingLabel: results.rating.label,
+      breakdown: results.breakdown
+    };
+
+    const res = await window.CT_SB_LEADERBOARD.submitScore(payload);
+    if (res.ok) {
+      if (window.CT_TOAST) window.CT_TOAST.show('Score saved to leaderboard!', 'success', 2800);
+    } else {
+      console.warn('[Carbotrack] leaderboard submit failed', res.error);
+    }
   }
 
   function injectCertificateButton() {
@@ -214,7 +231,7 @@
     btn.dataset.authBound = '1';
     btn.innerHTML = '<i class="fa-solid fa-certificate"></i> Get Certificate';
 
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', function (e) {
       if (!window.CT_AUTH || window.CT_AUTH.isLoggedIn()) return;
       e.preventDefault();
       window.CT_AUTH.request({
@@ -255,6 +272,8 @@
     renderRecommendations(results);
     injectCertificateButton();
 
+    submitScoreToSupabase(results);
+
     if (inputs) {
       const payload = window.CT_STORAGE.encodeInputs(inputs);
       if (payload) {
@@ -264,25 +283,25 @@
     }
 
     let resizeTimer = null;
-    window.addEventListener('resize', () => {
+    window.addEventListener('resize', function () {
       window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(() => {
+      resizeTimer = window.setTimeout(function () {
         window.CT_CHARTS.destroyAll();
         renderCharts(results);
       }, 180);
     });
 
-    document.addEventListener('ct:themechange', () => {
+    document.addEventListener('ct:themechange', function () {
       window.CT_CHARTS.destroyAll();
       renderCharts(results);
     });
 
     const printBtn = $('results-print-btn');
-    if (printBtn) printBtn.addEventListener('click', () => window.print());
+    if (printBtn) printBtn.addEventListener('click', function () { window.print(); });
 
     const resetBtn = $('results-reset-btn');
     if (resetBtn) {
-      resetBtn.addEventListener('click', () => {
+      resetBtn.addEventListener('click', function () {
         if (!window.confirm('Clear all saved results and start over?')) return;
         window.CT_STORAGE.clearResults();
         window.CT_STORAGE.clearInputs();

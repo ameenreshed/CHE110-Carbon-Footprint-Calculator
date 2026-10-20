@@ -1,12 +1,12 @@
 /* ==========================================================================
    Carbotrack — auth.js
-   Local accounts. Simple collapsible account menu + mobile accordion.
+   Username + password UI. No email field anywhere.
    ========================================================================== */
 window.CT_AUTH = (function () {
   'use strict';
 
-  const S = window.CT_STORAGE;
   const $ = (id) => document.getElementById(id);
+  const sb = window.CT_SB_AUTH;
 
   let modalEl = null;
   let mode = 'login';
@@ -14,159 +14,23 @@ window.CT_AUTH = (function () {
   let busy = false;
 
   /* ================================================================== */
-  /*  CRYPTO                                                            */
+  /*  HELPERS                                                           */
   /* ================================================================== */
-  function randomSalt() {
-    const a = new Uint8Array(16);
-    if (window.crypto && window.crypto.getRandomValues) {
-      window.crypto.getRandomValues(a);
-    } else {
-      for (let i = 0; i < 16; i++) a[i] = Math.floor(Math.random() * 256);
-    }
-    return Array.from(a, b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  function fnv1a(str) {
-    let h = 0x811c9dc5;
-    for (let i = 0; i < str.length; i++) {
-      h ^= str.charCodeAt(i);
-      h = Math.imul(h, 0x01000193);
-    }
-    return (h >>> 0).toString(16).padStart(8, '0');
-  }
-
-  async function hashPassword(password, salt) {
-    const data = salt + '|carbotrack|' + password;
-
-    if (window.crypto && window.crypto.subtle && window.isSecureContext) {
-      try {
-        const buf = new TextEncoder().encode(data);
-        const dig = await window.crypto.subtle.digest('SHA-256', buf);
-        return 'sha256$' + Array.from(new Uint8Array(dig), b =>
-          b.toString(16).padStart(2, '0')).join('');
-      } catch (e) { /* ignore */ }
-    }
-
-    let out = '';
-    let seed = data;
-    for (let i = 0; i < 4; i++) {
-      seed = fnv1a(seed + '|' + i + '|' + data);
-      out += seed;
-    }
-    return 'fnv$' + out;
-  }
-
-  const NAME_RE = /^[A-Za-z][A-Za-z .'\-]{1,39}$/;
-  const USER_RE = /^[a-z0-9_]{3,20}$/;
-
-  function validate(f) {
-    if (!f.name || !NAME_RE.test(f.name.trim())) {
-      return { ok: false, error: 'Full name must be 2–40 letters (spaces, dots and hyphens allowed).' };
-    }
-    if (!f.username || !USER_RE.test(f.username)) {
-      return { ok: false, error: 'Username must be 3–20 characters — lowercase letters, numbers or underscore.' };
-    }
-    if (!f.password || f.password.length < 6) {
-      return { ok: false, error: 'Password must be at least 6 characters.' };
-    }
-    if (f.password.length > 64) {
-      return { ok: false, error: 'Password is too long (max 64 characters).' };
-    }
-    return { ok: true };
-  }
-
-  /* ================================================================== */
-  /*  USER STORE                                                        */
-  /* ================================================================== */
-  function allUsers() { return S.getUsers() || {}; }
-  function persist(u) { S.saveUsers(u); }
-
-  function publicUser(u) {
-    if (!u) return null;
+  function publicUser() {
+    if (!sb || !sb.isLoggedIn()) return null;
+    const u = sb.getUser();
+    const p = sb.getProfile();
     return {
-      name: u.name,
-      username: u.username,
-      createdAt: u.createdAt,
-      initials: (u.name || '?')
-        .split(/\s+/).filter(Boolean).slice(0, 2)
-        .map(w => w[0].toUpperCase()).join('')
+      id: u.id,
+      email: u.email,
+      name: (p && p.full_name) || u.email.split('@')[0],
+      username: (p && p.username) || u.email.split('@')[0],
+      initials: (p && p.avatar_initials) || (u.email[0] || '?').toUpperCase()
     };
   }
 
-  async function register(raw) {
-    const name = (raw.name || '').trim().replace(/\s+/g, ' ');
-    const username = (raw.username || '').trim().toLowerCase();
-    const password = raw.password || '';
-
-    const v = validate({ name, username, password });
-    if (!v.ok) return v;
-
-    const users = allUsers();
-    if (users[username]) {
-      return { ok: false, error: 'That username is already taken. Try another.' };
-    }
-
-    const salt = randomSalt();
-    const passHash = await hashPassword(password, salt);
-
-    const user = {
-      name, username, salt, passHash,
-      createdAt: new Date().toISOString()
-    };
-
-    users[username] = user;
-    persist(users);
-    S.saveSession({ username, loginAt: new Date().toISOString() });
-
-    return { ok: true, user: publicUser(user) };
-  }
-
-  async function login(username, password) {
-    username = (username || '').trim().toLowerCase();
-
-    if (!username || !password) {
-      return { ok: false, error: 'Enter your username and password.' };
-    }
-
-    const user = allUsers()[username];
-    if (!user) {
-      return { ok: false, error: 'No account found with that username.' };
-    }
-
-    const hash = await hashPassword(password, user.salt);
-    if (hash !== user.passHash) {
-      return { ok: false, error: 'Incorrect password. Please try again.' };
-    }
-
-    S.saveSession({ username, loginAt: new Date().toISOString() });
-    return { ok: true, user: publicUser(user) };
-  }
-
-  function logout() {
-    S.clearSession();
-    renderHeaderButton();
-    renderMobileLinks();
-    if (window.CT_TOAST) window.CT_TOAST.show('Signed out.', 'info', 2000);
-  }
-
-  function currentUser() {
-    const session = S.getSession();
-    if (!session || !session.username) return null;
-    return publicUser(allUsers()[session.username]);
-  }
-
-  function isLoggedIn() { return !!currentUser(); }
-
-  function request(opts) {
-    opts = opts || {};
-    if (isLoggedIn()) {
-      if (opts.redirect) window.location.href = opts.redirect;
-      else if (opts.onSuccess) opts.onSuccess(currentUser());
-      return true;
-    }
-    openModal('login', opts);
-    return false;
-  }
+  function currentUser() { return publicUser(); }
+  function isLoggedIn()  { return !!(sb && sb.isLoggedIn()); }
 
   /* ================================================================== */
   /*  MODAL                                                             */
@@ -191,7 +55,7 @@ window.CT_AUTH = (function () {
         </div>
 
         <h3 class="auth-title" id="auth-title">Welcome back</h3>
-        <p class="auth-intent" id="auth-intent">Members unlock the challenge tracker and certificate.</p>
+        <p class="auth-intent" id="auth-intent">Sign in to save scores and unlock the leaderboard.</p>
 
         <div class="auth-tabs" role="tablist">
           <button type="button" class="auth-tab is-active" data-tab="login" role="tab">
@@ -216,7 +80,7 @@ window.CT_AUTH = (function () {
             <div class="auth-input-wrap">
               <i class="fa-solid fa-at"></i>
               <input id="auth-username" type="text" autocomplete="username"
-                     placeholder="lowercase, no spaces" spellcheck="false">
+                     placeholder="lowercase, 3–20 chars" spellcheck="false" autocapitalize="none">
             </div>
           </label>
 
@@ -241,21 +105,21 @@ window.CT_AUTH = (function () {
 
         <p class="auth-note">
           <i class="fa-solid fa-shield-halved"></i>
-          Accounts are stored <strong>only in this browser</strong>. No email, no phone, no tracking.
+          No email needed — just username &amp; password. Accounts secured by Supabase.
         </p>
       </div>
     `;
 
     document.body.appendChild(modalEl);
 
-    modalEl.addEventListener('click', (e) => { if (e.target === modalEl) closeModal(); });
+    modalEl.addEventListener('click', function (e) { if (e.target === modalEl) closeModal(); });
     $('auth-close').addEventListener('click', closeModal);
 
-    modalEl.querySelectorAll('.auth-tab').forEach(tab => {
-      tab.addEventListener('click', () => setMode(tab.dataset.tab));
+    modalEl.querySelectorAll('.auth-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () { setMode(tab.dataset.tab); });
     });
 
-    $('auth-eye').addEventListener('click', () => {
+    $('auth-eye').addEventListener('click', function () {
       const input = $('auth-password');
       const icon = $('auth-eye').querySelector('i');
       const show = input.type === 'password';
@@ -264,9 +128,17 @@ window.CT_AUTH = (function () {
       $('auth-eye').setAttribute('aria-label', show ? 'Hide password' : 'Show password');
     });
 
+    /* Force username to lowercase as the user types */
+    $('auth-username').addEventListener('input', function (e) {
+      const start = e.target.selectionStart;
+      const end = e.target.selectionEnd;
+      e.target.value = e.target.value.toLowerCase().replace(/\s+/g, '');
+      try { e.target.setSelectionRange(start, end); } catch (err) { /* ignore */ }
+    });
+
     $('auth-form').addEventListener('submit', onSubmit);
 
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && modalEl && !modalEl.hidden) closeModal();
     });
 
@@ -276,7 +148,7 @@ window.CT_AUTH = (function () {
   function setMode(next) {
     mode = next === 'register' ? 'register' : 'login';
 
-    modalEl.querySelectorAll('.auth-tab').forEach(t => {
+    modalEl.querySelectorAll('.auth-tab').forEach(function (t) {
       t.classList.toggle('is-active', t.dataset.tab === mode);
     });
 
@@ -308,15 +180,15 @@ window.CT_AUTH = (function () {
     const intent = $('auth-intent');
     if (intent) {
       intent.textContent = pending && pending.feature
-        ? `Sign in to unlock ${pending.feature}. The calculator and results dashboard stay free.`
-        : 'Members unlock the challenge tracker and certificate.';
+        ? 'Sign in to unlock ' + pending.feature + '.'
+        : 'Sign in to save scores and unlock the leaderboard.';
     }
 
     modalEl.hidden = false;
-    requestAnimationFrame(() => modalEl.classList.add('is-open'));
+    requestAnimationFrame(function () { modalEl.classList.add('is-open'); });
     document.body.style.overflow = 'hidden';
 
-    window.setTimeout(() => {
+    window.setTimeout(function () {
       const focusId = mode === 'register' ? 'auth-name' : 'auth-username';
       const el = $(focusId);
       if (el) el.focus();
@@ -327,7 +199,7 @@ window.CT_AUTH = (function () {
     if (!modalEl) return;
     modalEl.classList.remove('is-open');
     document.body.style.overflow = '';
-    window.setTimeout(() => { modalEl.hidden = true; }, 260);
+    window.setTimeout(function () { modalEl.hidden = true; }, 260);
     pending = null;
   }
 
@@ -347,8 +219,8 @@ window.CT_AUTH = (function () {
     e.preventDefault();
     if (busy) return;
 
-    const name     = $('auth-name') ? $('auth-name').value : '';
-    const username = $('auth-username').value;
+    const name     = $('auth-name') ? $('auth-name').value.trim() : '';
+    const username = $('auth-username').value.trim().toLowerCase();
     const password = $('auth-password').value;
 
     busy = true;
@@ -361,9 +233,11 @@ window.CT_AUTH = (function () {
 
     let result;
     try {
-      result = mode === 'register'
-        ? await register({ name, username, password })
-        : await login(username, password);
+      if (mode === 'register') {
+        result = await sb.signUp(username, password, name);
+      } else {
+        result = await sb.signIn(username, password);
+      }
     } catch (err) {
       result = { ok: false, error: 'Something went wrong. Please try again.' };
       console.error('[Carbotrack auth]', err);
@@ -380,24 +254,27 @@ window.CT_AUTH = (function () {
     const wasRegister = mode === 'register';
 
     closeModal();
-    renderHeaderButton();
-    renderMobileLinks();
+
+    /* Wait for the profile trigger to complete and session to hydrate */
+    await new Promise(function (r) { setTimeout(r, 350); });
+
+    const user = publicUser();
 
     if (window.CT_TOAST) {
       window.CT_TOAST.show(
         wasRegister
-          ? `Welcome, ${result.user.name.split(' ')[0]}!`
-          : `Signed in as ${result.user.name.split(' ')[0]}.`,
+          ? 'Welcome, ' + (user ? user.name.split(' ')[0] : 'friend') + '!'
+          : 'Signed in successfully.',
         'success', 2600
       );
     }
 
     if (redirect) {
-      window.setTimeout(() => { window.location.href = redirect; }, 550);
+      window.setTimeout(function () { window.location.href = redirect; }, 400);
     } else if (onSuccess) {
-      onSuccess(result.user);
+      onSuccess(publicUser());
     } else {
-      window.setTimeout(() => window.location.reload(), 500);
+      window.setTimeout(function () { window.location.reload(); }, 400);
     }
   }
 
@@ -431,6 +308,7 @@ window.CT_AUTH = (function () {
               <small>@${user.username}</small>
             </div>
           </div>
+          <a href="leaderboard.html"><i class="fa-solid fa-ranking-star"></i> Leaderboard</a>
           <a href="certificate.html"><i class="fa-solid fa-certificate"></i> My Certificate</a>
           <a href="challenge.html"><i class="fa-solid fa-list-check"></i> 7-Day Challenge</a>
           <a href="results.html"><i class="fa-solid fa-chart-pie"></i> My Results</a>
@@ -445,7 +323,7 @@ window.CT_AUTH = (function () {
       const menu   = wrap.querySelector('#account-menu');
       const caret  = toggle.querySelector('.account-caret');
 
-      toggle.addEventListener('click', (e) => {
+      toggle.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
         const opening = !menu.classList.contains('is-open');
@@ -454,8 +332,7 @@ window.CT_AUTH = (function () {
         caret.style.transform = opening ? 'rotate(180deg)' : '';
       });
 
-      /* Outside click */
-      document.addEventListener('click', (e) => {
+      document.addEventListener('click', function (e) {
         if (!menu.classList.contains('is-open')) return;
         if (wrap.contains(e.target)) return;
         menu.classList.remove('is-open');
@@ -463,8 +340,7 @@ window.CT_AUTH = (function () {
         caret.style.transform = '';
       });
 
-      /* ESC */
-      document.addEventListener('keydown', (e) => {
+      document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
         if (!menu.classList.contains('is-open')) return;
         menu.classList.remove('is-open');
@@ -473,23 +349,24 @@ window.CT_AUTH = (function () {
         toggle.focus();
       });
 
-      /* Links close menu */
-      menu.querySelectorAll('a').forEach(a => {
-        a.addEventListener('click', () => {
+      menu.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () {
           menu.classList.remove('is-open');
           toggle.setAttribute('aria-expanded', 'false');
           caret.style.transform = '';
         });
       });
 
-      /* Logout */
-      wrap.querySelector('#account-logout').addEventListener('click', (e) => {
+      wrap.querySelector('#account-logout').addEventListener('click', async function (e) {
         e.preventDefault();
         e.stopPropagation();
         menu.classList.remove('is-open');
         toggle.setAttribute('aria-expanded', 'false');
         caret.style.transform = '';
-        logout();
+        await sb.signOut();
+        if (window.CT_TOAST) window.CT_TOAST.show('Signed out.', 'info', 2000);
+        renderHeaderButton();
+        renderMobileLinks();
       });
 
     } else {
@@ -501,7 +378,7 @@ window.CT_AUTH = (function () {
       `;
       host.appendChild(wrap);
       wrap.querySelector('#account-signin')
-        .addEventListener('click', () => openModal('login'));
+        .addEventListener('click', function () { openModal('login'); });
     }
   }
 
@@ -530,6 +407,7 @@ window.CT_AUTH = (function () {
           <i class="fa-solid fa-chevron-down mobile-account__chevron"></i>
         </button>
         <div class="mobile-account__body">
+          <a href="leaderboard.html"><i class="fa-solid fa-ranking-star"></i> Leaderboard</a>
           <a href="certificate.html"><i class="fa-solid fa-certificate"></i> My Certificate</a>
           <a href="challenge.html"><i class="fa-solid fa-list-check"></i> 7-Day Challenge</a>
           <a href="results.html"><i class="fa-solid fa-chart-pie"></i> My Results</a>
@@ -541,16 +419,18 @@ window.CT_AUTH = (function () {
       insertBeforeActions(menu, block);
 
       const head = block.querySelector('.mobile-account__head');
-
-      head.addEventListener('click', () => {
+      head.addEventListener('click', function () {
         const opening = !block.classList.contains('is-open');
         block.classList.toggle('is-open', opening);
         head.setAttribute('aria-expanded', String(opening));
       });
 
-      block.querySelector('#mobile-logout').addEventListener('click', () => {
-        logout();
+      block.querySelector('#mobile-logout').addEventListener('click', async function () {
+        await sb.signOut();
         if (window.CT_NAV) window.CT_NAV.close();
+        if (window.CT_TOAST) window.CT_TOAST.show('Signed out.', 'info', 2000);
+        renderHeaderButton();
+        renderMobileLinks();
       });
 
     } else {
@@ -561,15 +441,14 @@ window.CT_AUTH = (function () {
       `;
       insertBeforeActions(menu, block);
 
-      block.querySelector('#mobile-signin').addEventListener('click', () => {
+      block.querySelector('#mobile-signin').addEventListener('click', function () {
         if (window.CT_NAV) window.CT_NAV.close();
         openModal('login');
       });
     }
 
-    /* Every link inside the account block closes the drawer */
-    block.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', () => {
+    block.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () {
         if (window.CT_NAV) window.CT_NAV.close();
       });
     });
@@ -586,25 +465,37 @@ window.CT_AUTH = (function () {
   /* ================================================================== */
   const GATED_PAGES = {
     'challenge.html':   { feature: 'the 7-Day Eco Challenge', icon: 'fa-list-check' },
-    'certificate.html': { feature: 'your certificate',        icon: 'fa-certificate' }
+    'certificate.html': { feature: 'your certificate',        icon: 'fa-certificate' },
+    'leaderboard.html': { feature: 'the leaderboard',         icon: 'fa-ranking-star' }
   };
 
   function bindGatedLinks() {
     const here = window.location.pathname.split('/').pop() || 'index.html';
 
-    document.querySelectorAll('a[href]').forEach(link => {
+    document.querySelectorAll('a[href]').forEach(function (link) {
       const raw = link.getAttribute('href') || '';
       const target = raw.split('#')[0].split('?')[0];
       if (!GATED_PAGES[target] || target === here) return;
       if (link.dataset.authBound) return;
       link.dataset.authBound = '1';
 
-      link.addEventListener('click', (e) => {
+      link.addEventListener('click', function (e) {
         if (isLoggedIn()) return;
         e.preventDefault();
         request({ feature: GATED_PAGES[target].feature, redirect: target });
       });
     });
+  }
+
+  function request(opts) {
+    opts = opts || {};
+    if (isLoggedIn()) {
+      if (opts.redirect) window.location.href = opts.redirect;
+      else if (opts.onSuccess) opts.onSuccess(currentUser());
+      return true;
+    }
+    openModal('login', opts);
+    return false;
   }
 
   function gateCurrentPage() {
@@ -626,8 +517,8 @@ window.CT_AUTH = (function () {
             <h2 class="lock-panel__title">Sign in to open ${config.feature}</h2>
             <p class="lock-panel__text">
               The <strong>calculator</strong> and <strong>results dashboard</strong> are completely
-              free — no account needed. The challenge tracker and printable certificate are part
-              of the member area.
+              free — no account needed. The leaderboard, challenge tracker and printable certificate
+              are part of the member area.
             </p>
 
             <div class="lock-panel__actions">
@@ -642,22 +533,18 @@ window.CT_AUTH = (function () {
             </div>
 
             <ul class="lock-perks">
-              <li><i class="fa-solid fa-check"></i> Save your name on the certificate</li>
+              <li><i class="fa-solid fa-check"></i> No email needed — username &amp; password only</li>
+              <li><i class="fa-solid fa-check"></i> Save your scores to the global leaderboard</li>
               <li><i class="fa-solid fa-check"></i> Track your 7-day challenge streaks</li>
-              <li><i class="fa-solid fa-check"></i> Share your result with a unique link</li>
+              <li><i class="fa-solid fa-check"></i> Generate a printable certificate</li>
             </ul>
-
-            <p class="lock-panel__note">
-              <i class="fa-solid fa-shield-halved"></i>
-              Only a name, username and password — stored in this browser.
-            </p>
           </div>
         </div>
       </div>
     `;
 
     const btn = document.getElementById('lock-signin');
-    if (btn) btn.addEventListener('click', () => openModal('register'));
+    if (btn) btn.addEventListener('click', function () { openModal('register'); });
 
     if (window.CT_TOAST) {
       window.CT_TOAST.show('Please sign in to continue.', 'info', 2600);
@@ -669,8 +556,16 @@ window.CT_AUTH = (function () {
   /* ================================================================== */
   /*  BOOT                                                              */
   /* ================================================================== */
-  function init() {
-    ensureModal();
+  async function init() {
+    if (!sb || !sb.init) return;
+
+    await sb.init();
+
+    sb.onChange(function () {
+      renderHeaderButton();
+      renderMobileLinks();
+    });
+
     renderHeaderButton();
     renderMobileLinks();
     bindGatedLinks();
@@ -680,9 +575,11 @@ window.CT_AUTH = (function () {
   document.addEventListener('DOMContentLoaded', init);
 
   return {
-    register, login, logout,
-    currentUser, isLoggedIn,
-    request, openModal, closeModal,
-    gateCurrentPage
+    currentUser: currentUser,
+    isLoggedIn: isLoggedIn,
+    request: request,
+    openModal: openModal,
+    closeModal: closeModal,
+    gateCurrentPage: gateCurrentPage
   };
 })();

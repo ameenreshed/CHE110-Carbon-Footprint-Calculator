@@ -26,9 +26,9 @@
   <link rel="stylesheet" href="css/certificate.css">
   <link rel="stylesheet" href="css/theme.css">
 
-  <!-- Direct download libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 
 <body class="font-sans bg-earth text-slate-800">
@@ -50,6 +50,7 @@
           <a href="calculator.html" data-nav-link>Calculator</a>
           <a href="results.html" data-nav-link>Results</a>
           <a href="challenge.html" data-nav-link>Challenge</a>
+          <a href="leaderboard.html" data-nav-link>Leaderboard</a>
           <a href="methodology.html" data-nav-link>Methodology</a>
           <a href="about.html" data-nav-link>Academic</a>
         </nav>
@@ -72,6 +73,7 @@
       <a href="calculator.html">Calculator</a>
       <a href="results.html">Results</a>
       <a href="challenge.html">7-Day Challenge</a>
+      <a href="leaderboard.html">Leaderboard</a>
       <a href="methodology.html">Methodology</a>
       <a href="about.html">Academic Info</a>
     </div>
@@ -91,11 +93,7 @@
         </button>
         <button type="button" id="cert-share-btn" class="btn btn-leaf btn-lg">
           <i class="fa-solid fa-share-nodes"></i>
-          <span>Copy Share Link</span>
-        </button>
-        <button type="button" id="cert-print-btn" class="btn btn-ghost btn-lg">
-          <i class="fa-solid fa-print"></i>
-          <span>Print</span>
+          <span>Share Certificate</span>
         </button>
       </div>
 
@@ -104,19 +102,19 @@
         <span>Shared Certificate — viewing from a verification link</span>
       </div>
 
-      <div class="cert-shell">
-        <article class="cert-sheet" id="cert-sheet">
+      <!-- ============================================================
+           CARBON FOOTPRINT CERTIFICATE (tier-adaptive)
+           ============================================================ -->
+      <div class="cert-shell" id="cert-shell-carbon">
+        <article class="cert-sheet cert-sheet--carbon" id="cert-sheet-carbon">
 
-          <!-- Corner leaves -->
           <div class="cert-corner cert-corner--tl" aria-hidden="true"><i class="fa-solid fa-leaf"></i></div>
           <div class="cert-corner cert-corner--tr" aria-hidden="true"><i class="fa-solid fa-leaf"></i></div>
           <div class="cert-corner cert-corner--bl" aria-hidden="true"><i class="fa-solid fa-leaf"></i></div>
           <div class="cert-corner cert-corner--br" aria-hidden="true"><i class="fa-solid fa-leaf"></i></div>
 
-          <!-- Double border -->
           <div class="cert-frame" aria-hidden="true"></div>
 
-          <!-- Content -->
           <div class="cert-content">
 
             <header class="cert-header">
@@ -127,6 +125,11 @@
               <p class="cert-header__sub">CHE110 · Environmental Studies</p>
             </header>
 
+            <div class="cert-tier-pill" id="cert-tier-pill">
+              <i class="fa-solid fa-award" id="cert-tier-icon"></i>
+              <span id="cert-tier-badge">PARIS COMPLIANT</span>
+            </div>
+
             <div class="cert-divider" aria-hidden="true">
               <span class="cert-divider__line"></span>
               <span class="cert-divider__diamond"></span>
@@ -134,8 +137,8 @@
             </div>
 
             <h1 class="cert-title">
-              Certificate
-              <span class="cert-title__sub">of Environmental Achievement</span>
+              <span id="cert-tier-title">Certificate</span>
+              <span class="cert-title__sub" id="cert-tier-subtitle">of Environmental Achievement</span>
             </h1>
 
             <p class="cert-preamble">Proudly presented to</p>
@@ -143,7 +146,7 @@
             <h2 class="cert-name" id="cert-name">—</h2>
             <div class="cert-name-underline" aria-hidden="true"></div>
 
-            <p class="cert-body">
+            <p class="cert-body" id="cert-tier-message">
               in recognition of successfully completing a comprehensive personal carbon
               footprint assessment, demonstrating a commendable commitment to environmental
               awareness and measurable climate action.
@@ -161,10 +164,10 @@
               </div>
               <div class="cert-metric__sep" aria-hidden="true"></div>
               <div class="cert-metric">
-                <span class="cert-metric__label">Impact Rating</span>
+                <span class="cert-metric__label">Tier Range</span>
                 <strong class="cert-metric__value">
-                  <i id="cert-rating-icon" class="fa-solid fa-award"></i>
-                  <span id="cert-rating">—</span>
+                  <i id="cert-tier-range-icon" class="fa-solid fa-layer-group"></i>
+                  <span id="cert-tier-range">0 – 2 t</span>
                 </strong>
               </div>
             </div>
@@ -192,8 +195,196 @@
         </article>
       </div>
 
+      <!-- ============================================================
+           CHALLENGE COMPLETION CERTIFICATE
+           ============================================================ -->
+      <div class="cert-shell cert-shell--challenge hidden" id="cert-shell-challenge">
+        <article class="cert-sheet cert-sheet--challenge" id="cert-sheet-challenge">
+
+          <div class="cert-corner cert-corner--tl" aria-hidden="true"><i class="fa-solid fa-star"></i></div>
+          <div class="cert-corner cert-corner--tr" aria-hidden="true"><i class="fa-solid fa-star"></i></div>
+          <div class="cert-corner cert-corner--bl" aria-hidden="true"><i class="fa-solid fa-star"></i></div>
+          <div class="cert-corner cert-corner--br" aria-hidden="true"><i class="fa-solid fa-star"></i></div>
+
+          <div class="cert-frame" aria-hidden="true"></div>
+
+          <div class="cert-content">
+
+            <header class="cert-header">
+              <div class="cert-brand">
+                <i class="fa-solid fa-leaf"></i>
+                <span>Carbotrack</span>
+              </div>
+              <p class="cert-header__sub">7-Day Campus Eco Challenge</p>
+            </header>
+
+            <div class="cert-tier-pill cert-tier-pill--challenge">
+              <i class="fa-solid fa-trophy"></i>
+              <span>CHALLENGE CHAMPION</span>
+            </div>
+
+            <div class="cert-divider" aria-hidden="true">
+              <span class="cert-divider__line"></span>
+              <span class="cert-divider__diamond"></span>
+              <span class="cert-divider__line"></span>
+            </div>
+
+            <h1 class="cert-title cert-title--challenge">
+              Achievement Unlocked
+              <span class="cert-title__sub">7-Day Eco Warrior</span>
+            </h1>
+
+            <p class="cert-preamble">Proudly awarded to</p>
+
+            <h2 class="cert-name" id="chal-cert-name">—</h2>
+            <div class="cert-name-underline" aria-hidden="true"></div>
+
+            <p class="cert-body" id="chal-cert-message">
+              for successfully completing all seven days of the Carbotrack Campus Eco Challenge —
+              demonstrating exceptional commitment to measurable climate action and inspiring
+              peers toward a sustainable future.
+            </p>
+
+            <div class="challenge-achievements">
+              <div class="challenge-achievement">
+                <i class="fa-solid fa-bottle-water"></i>
+                <span>Zero Single-Use</span>
+              </div>
+              <div class="challenge-achievement">
+                <i class="fa-solid fa-plug-circle-xmark"></i>
+                <span>Vampire Power Audit</span>
+              </div>
+              <div class="challenge-achievement">
+                <i class="fa-solid fa-bus"></i>
+                <span>Green Commute</span>
+              </div>
+              <div class="challenge-achievement">
+                <i class="fa-solid fa-utensils"></i>
+                <span>Zero Food Waste</span>
+              </div>
+              <div class="challenge-achievement">
+                <i class="fa-solid fa-shower"></i>
+                <span>5-Min Shower</span>
+              </div>
+              <div class="challenge-achievement">
+                <i class="fa-solid fa-recycle"></i>
+                <span>Segregation Master</span>
+              </div>
+              <div class="challenge-achievement challenge-achievement--wide">
+                <i class="fa-solid fa-seedling"></i>
+                <span>Plant &amp; Spread the Word</span>
+              </div>
+            </div>
+
+            <footer class="cert-footer">
+              <div class="cert-footer__col">
+                <span class="cert-footer__label">Completed On</span>
+                <strong class="cert-footer__value" id="chal-cert-date">—</strong>
+              </div>
+
+              <div class="cert-seal cert-seal--challenge">
+                <div class="cert-seal__inner">
+                  <i class="fa-solid fa-trophy"></i>
+                  <span>CHAMPION</span>
+                </div>
+              </div>
+
+              <div class="cert-footer__col cert-footer__col--right">
+                <span class="cert-footer__label">Certificate ID</span>
+                <strong class="cert-footer__value" id="chal-cert-id">—</strong>
+              </div>
+            </footer>
+
+          </div>
+        </article>
+      </div>
+
     </div>
   </main>
+
+  <!-- SHARE MODAL -->
+  <div id="share-modal" class="share-modal" hidden aria-hidden="true">
+    <div class="share-modal__backdrop" data-share-close></div>
+
+    <div class="share-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
+
+      <button type="button" class="share-modal__close" data-share-close aria-label="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="share-modal__head">
+        <div class="share-modal__eyebrow">
+          <i class="fa-solid fa-share-nodes"></i>
+          Share Your Achievement
+        </div>
+        <h3 class="share-modal__title" id="share-modal-title">Spread Climate Awareness</h3>
+        <p class="share-modal__sub">Invite friends to measure their footprint too</p>
+      </div>
+
+      <div class="share-modal__preview">
+        <div class="share-preview">
+          <div class="share-preview__avatar" id="share-preview-avatar">CT</div>
+          <div class="share-preview__meta">
+            <strong id="share-preview-name">—</strong>
+            <span id="share-preview-sub">Carbotrack Certified</span>
+          </div>
+          <div class="share-preview__stats">
+            <div class="share-preview__stat">
+              <span id="share-preview-stat1-label">Score</span>
+              <strong id="share-preview-score">—</strong>
+            </div>
+            <div class="share-preview__stat">
+              <span id="share-preview-stat2-label">Footprint</span>
+              <strong id="share-preview-tons">—</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" id="share-native-btn" class="share-native hidden">
+        <span class="share-native__icon"><i class="fa-solid fa-arrow-up-from-bracket"></i></span>
+        <span class="share-native__label">
+          <strong>Share via Device</strong>
+          <small>Opens your phone's native share sheet</small>
+        </span>
+        <i class="fa-solid fa-chevron-right share-native__arrow"></i>
+      </button>
+
+      <div class="share-modal__divider"><span>or share to</span></div>
+
+      <div class="share-targets" id="share-targets"></div>
+
+      <div class="share-modal__qr-block">
+        <div class="share-qr">
+          <div id="share-qr-canvas" class="share-qr__canvas"></div>
+          <span class="share-qr__hint">
+            <i class="fa-solid fa-mobile-screen"></i>
+            Scan to open
+          </span>
+        </div>
+
+        <div class="share-copy">
+          <label class="share-copy__label" for="share-url-input">Share Link</label>
+          <div class="share-copy__row">
+            <input id="share-url-input" class="share-copy__input" type="text" readonly>
+            <button type="button" id="share-copy-url-btn" class="share-copy__btn" title="Copy link">
+              <i class="fa-solid fa-link"></i>
+            </button>
+          </div>
+
+          <div class="share-copy__actions">
+            <button type="button" id="share-copy-text-btn" class="btn btn-ghost btn-sm">
+              <i class="fa-solid fa-quote-left"></i> Copy Text
+            </button>
+            <button type="button" id="share-download-card-btn" class="btn btn-leaf btn-sm">
+              <i class="fa-solid fa-image"></i> Download Card
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <footer class="site-footer no-print">
     <div class="container">
@@ -214,6 +405,7 @@
             <li><a href="calculator.html">Carbon Calculator</a></li>
             <li><a href="results.html">Results Dashboard</a></li>
             <li><a href="challenge.html">7-Day Eco Challenge</a></li>
+            <li><a href="leaderboard.html">Global Leaderboard</a></li>
           </ul>
         </div>
         <div>
@@ -240,6 +432,12 @@
       </div>
     </div>
   </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/supabase-auth.js"></script>
+  <script src="js/supabase-leaderboard.js"></script>
 
   <script src="js/config.js"></script>
   <script src="js/storage.js"></script>
