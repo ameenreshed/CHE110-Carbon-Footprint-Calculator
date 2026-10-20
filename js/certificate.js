@@ -1,6 +1,6 @@
 /* ==========================================================================
    Carbotrack — certificate.js
-   Dual certificates + full-name resolution + Supabase challenge loading.
+   Dual certificates + full-name resolution + platform stats tracking.
    ========================================================================== */
 (function () {
   'use strict';
@@ -176,7 +176,7 @@
   }
 
   /* ================================================================== */
-  /*  CHALLENGE LOADER (Supabase first)                                 */
+  /*  CHALLENGE LOADER                                                  */
   /* ================================================================== */
   async function loadChallengeDays() {
     const sb = window.CT_SB_AUTH;
@@ -195,7 +195,6 @@
       }
     }
 
-    /* Fallback to localStorage */
     const local = S.getChallenge();
     if (local && Array.isArray(local.days)) {
       const out = [false, false, false, false, false, false, false];
@@ -312,13 +311,9 @@
     const name = resolveUserFullName();
     const username = resolveUsername();
     return {
-      type: 'carbon',
-      name: name,
-      username: username,
-      totalTons: results.totalTons,
-      ecoScore: results.ecoScore,
-      issuedAt: issuedAt,
-      certId: makeCertId('C', username, issuedAt)
+      type: 'carbon', name: name, username: username,
+      totalTons: results.totalTons, ecoScore: results.ecoScore,
+      issuedAt: issuedAt, certId: makeCertId('C', username, issuedAt)
     };
   }
 
@@ -327,11 +322,8 @@
     const name = resolveUserFullName();
     const username = resolveUsername();
     return {
-      type: 'challenge',
-      name: name,
-      username: username,
-      issuedAt: issuedAt,
-      certId: makeCertId('H', username, issuedAt)
+      type: 'challenge', name: name, username: username,
+      issuedAt: issuedAt, certId: makeCertId('H', username, issuedAt)
     };
   }
 
@@ -341,10 +333,7 @@
   function encodeShare(data) {
     const payload = {
       typ: data.type === 'challenge' ? 'h' : 'c',
-      n: data.name,
-      u: data.username,
-      d: data.issuedAt,
-      i: data.certId
+      n: data.name, u: data.username, d: data.issuedAt, i: data.certId
     };
     if (data.type === 'carbon') {
       payload.t = data.totalTons;
@@ -443,8 +432,7 @@
     clone.id = 'cert-capture';
 
     Object.assign(clone.style, {
-      width: CAPTURE_W + 'px',
-      height: CAPTURE_H + 'px',
+      width: CAPTURE_W + 'px', height: CAPTURE_H + 'px',
       maxWidth: 'none', maxHeight: 'none',
       aspectRatio: 'auto', borderRadius: '0',
       boxShadow: 'none', margin: '0', transform: 'none'
@@ -492,6 +480,14 @@
       const prefix = currentCert.mode === 'challenge' ? 'Challenge' : 'Certificate';
       pdf.save('Carbotrack-' + prefix + '-' + currentCert.data.certId + '.pdf');
 
+      /* Record certificate_issued event */
+      if (window.CT_STATS) {
+        window.CT_STATS.recordEvent('certificate_issued', {
+          mode: currentCert.mode,
+          certId: currentCert.data.certId
+        });
+      }
+
       if (window.CT_TOAST) window.CT_TOAST.show('PDF downloaded successfully!', 'success', 2800);
     } catch (err) {
       console.error('[Carbotrack] PDF failed', err);
@@ -524,6 +520,14 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      /* Record certificate_issued event */
+      if (window.CT_STATS) {
+        window.CT_STATS.recordEvent('certificate_issued', {
+          mode: currentCert.mode,
+          certId: currentCert.data.certId
+        });
+      }
 
       if (window.CT_TOAST) window.CT_TOAST.show('PNG downloaded!', 'success', 2800);
     } catch (err) {
@@ -625,6 +629,15 @@
         if (!target) return;
         const dest = target.build(buildShareText(), getShareUrl());
         window.open(dest, '_blank', 'noopener,noreferrer,width=620,height=680');
+
+        /* Record share event */
+        if (window.CT_STATS) {
+          window.CT_STATS.recordEvent('share', {
+            channel: target.key,
+            mode: currentCert.mode
+          });
+        }
+
         if (window.CT_TOAST) window.CT_TOAST.show('Opening ' + target.label + '…', 'info', 2200);
       });
     });
@@ -648,6 +661,15 @@
           text: buildShareText(),
           url: getShareUrl()
         });
+
+        /* Record share event */
+        if (window.CT_STATS) {
+          window.CT_STATS.recordEvent('share', {
+            channel: 'native',
+            mode: currentCert.mode
+          });
+        }
+
         if (window.CT_TOAST) window.CT_TOAST.show('Shared!', 'success', 2200);
       } catch (err) {
         if (err && err.name !== 'AbortError') {
@@ -679,6 +701,15 @@
       copyUrlBtn.addEventListener('click', async function () {
         try {
           await copyText(getShareUrl());
+
+          /* Record share event */
+          if (window.CT_STATS) {
+            window.CT_STATS.recordEvent('share', {
+              channel: 'clipboard',
+              mode: currentCert.mode
+            });
+          }
+
           if (window.CT_TOAST) window.CT_TOAST.show('Share link copied!', 'success', 2200);
         } catch (e) {
           if (urlInput) { urlInput.select(); urlInput.setSelectionRange(0, 99999); }
@@ -691,6 +722,15 @@
       copyTextBtn.addEventListener('click', async function () {
         try {
           await copyText(buildShareText() + '\n\n' + getShareUrl());
+
+          /* Record share event */
+          if (window.CT_STATS) {
+            window.CT_STATS.recordEvent('share', {
+              channel: 'copy_text',
+              mode: currentCert.mode
+            });
+          }
+
           if (window.CT_TOAST) window.CT_TOAST.show('Share text copied!', 'success', 2200);
         } catch (e) {
           if (window.CT_TOAST) window.CT_TOAST.show('Copy failed.', 'error', 2600);
@@ -864,6 +904,14 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+
+        if (window.CT_STATS) {
+          window.CT_STATS.recordEvent('share', {
+            channel: 'share_card',
+            mode: currentCert.mode
+          });
+        }
+
         if (window.CT_TOAST) window.CT_TOAST.show('Share card downloaded!', 'success', 2800);
       } finally {
         if (card.parentNode) card.parentNode.removeChild(card);

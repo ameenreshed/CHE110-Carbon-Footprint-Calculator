@@ -1,6 +1,6 @@
 /* ==========================================================================
    Carbotrack — challenge.js
-   7-Day Challenge tracker with Supabase cross-device persistence.
+   7-Day Challenge tracker with Supabase persistence + platform stats.
    ========================================================================== */
 (function () {
   'use strict';
@@ -43,7 +43,7 @@
   }
 
   /* ================================================================== */
-  /*  LOCALSTORAGE HELPERS                                              */
+  /*  LOCALSTORAGE                                                      */
   /* ================================================================== */
   function saveLocal(days) {
     try {
@@ -67,7 +67,7 @@
   }
 
   /* ================================================================== */
-  /*  APPLY / READ STATE                                                */
+  /*  APPLY / READ                                                      */
   /* ================================================================== */
   function applyDays(days) {
     const boxes = document.querySelectorAll('.challenge-checkbox');
@@ -88,20 +88,17 @@
     const user = getCurrentUser();
     const localDays = getLocal();
 
-    /* Logged-in user → Supabase is source of truth */
     if (user && window.CT_SB_CHALLENGE) {
       try {
         const remote = await window.CT_SB_CHALLENGE.load(user.id);
 
         if (remote.ok && remote.exists) {
-          /* Remote has data → use it */
           applyDays(remote.days);
           saveLocal(remote.days);
           lastSavedKey = JSON.stringify(remote.days);
           return;
         }
 
-        /* Remote empty, but local has data → migrate to Supabase */
         if (localDays.some(Boolean)) {
           const migrated = await window.CT_SB_CHALLENGE.save(user.id, localDays);
           if (migrated.ok) {
@@ -112,7 +109,6 @@
           }
         }
 
-        /* Both empty */
         applyDays([false, false, false, false, false, false, false]);
         saveLocal([false, false, false, false, false, false, false]);
         lastSavedKey = JSON.stringify([false, false, false, false, false, false, false]);
@@ -122,7 +118,6 @@
       }
     }
 
-    /* Guest → localStorage only */
     applyDays(localDays);
     lastSavedKey = JSON.stringify(localDays);
   }
@@ -133,10 +128,8 @@
   function saveState() {
     const days = readDaysFromCheckboxes();
 
-    /* Always save to localStorage immediately (fast + cache) */
     saveLocal(days);
 
-    /* Debounced save to Supabase (only if logged in) */
     if (saveTimer) clearTimeout(saveTimer);
 
     saveTimer = setTimeout(async function () {
@@ -144,15 +137,11 @@
       if (!user || !window.CT_SB_CHALLENGE) return;
 
       const key = JSON.stringify(days);
-      if (key === lastSavedKey) return; /* No change */
+      if (key === lastSavedKey) return;
 
       const result = await window.CT_SB_CHALLENGE.save(user.id, days);
       if (result.ok) {
         lastSavedKey = key;
-      } else {
-        if (window.CT_TOAST) {
-          window.CT_TOAST.show('Saved locally — will retry when connection improves.', 'warning', 2600);
-        }
       }
     }, 250);
   }
@@ -272,6 +261,12 @@
 
     if (done === TOTAL_DAYS && prevDone < TOTAL_DAYS) {
       window.setTimeout(openCelebration, 220);
+
+      /* Record challenge_completed event */
+      if (window.CT_STATS) {
+        window.CT_STATS.recordEvent('challenge_completed');
+      }
+
       if (window.CT_TOAST) {
         window.CT_TOAST.show('Challenge complete — you are a Champion!', 'success', 3200);
       }
@@ -283,12 +278,10 @@
   async function resetChallenge() {
     if (!window.confirm('Reset all 7-day challenge progress?')) return;
 
-    /* Clear checkboxes */
     document.querySelectorAll('.challenge-checkbox').forEach(function (cb) {
       cb.checked = false;
     });
 
-    /* Clear storage */
     try { window.CT_STORAGE.clearChallenge(); } catch (e) { /* ignore */ }
 
     const user = getCurrentUser();
@@ -296,7 +289,6 @@
       try { await window.CT_SB_CHALLENGE.reset(user.id); } catch (e) { /* ignore */ }
     }
 
-    /* Re-run progress (which re-saves empty state) */
     updateProgress();
     window.__ctPrevDone = 0;
     lastSavedKey = JSON.stringify([false, false, false, false, false, false, false]);
@@ -313,35 +305,26 @@
     const boxes = document.querySelectorAll('.challenge-checkbox');
     if (!boxes.length) return;
 
-    /* Wait for auth to settle so we know if user is logged in */
     await waitForAuthReady(3000);
 
-    /* Load from Supabase (logged in) or localStorage (guest) */
     await loadAndRestore();
 
-    /* Bind checkbox events */
     boxes.forEach(function (cb) {
       cb.addEventListener('change', handleChange);
     });
 
-    /* Reset button */
     const resetBtn = $('challenge-reset-btn');
     if (resetBtn) resetBtn.addEventListener('click', resetChallenge);
 
-    /* Initial progress display */
     const done = updateProgress();
     window.__ctPrevDone = done;
 
-    /* Show banner if already complete on load (no celebration spam) */
     const badge = $('challenge-badge-banner');
     if (badge && done === TOTAL_DAYS) badge.classList.remove('hidden');
 
-    /* Flush any pending save when user leaves the page */
     window.addEventListener('beforeunload', function () {
       const days = readDaysFromCheckboxes();
       saveLocal(days);
-      /* Note: Supabase save will complete async if possible, but localStorage
-         is always synchronous and acts as the reliable fallback. */
     });
   }
 

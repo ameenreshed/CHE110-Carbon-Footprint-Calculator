@@ -1,7 +1,6 @@
 /* ==========================================================================
    Carbotrack — calculator.js
-   Multi-step form controller.
-   Fixes: composting round-trip, Enter-key trap, hash re-hydration.
+   Multi-step form controller with platform stats tracking.
    ========================================================================== */
 window.CT_CALCULATOR = (function () {
   'use strict';
@@ -158,7 +157,7 @@ window.CT_CALCULATOR = (function () {
   }
 
   /* ================================================================== */
-  /*  APPLY INPUTS — fixes composting + enum snapping                   */
+  /*  APPLY INPUTS                                                      */
   /* ================================================================== */
   function setText(id, v) {
     const el = $(id);
@@ -248,6 +247,14 @@ window.CT_CALCULATOR = (function () {
     window.CT_STORAGE.saveInputs(normalized);
     window.CT_STORAGE.saveResults(results);
 
+    /* Record footprint_computed event for platform stats */
+    if (window.CT_STATS) {
+      window.CT_STATS.recordEvent('footprint_computed', {
+        totalTons: results.totalTons,
+        rating: results.rating.key
+      });
+    }
+
     const payload = window.CT_STORAGE.encodeInputs(normalized);
     const hash = payload ? ('#d=' + payload) : '';
 
@@ -289,7 +296,7 @@ window.CT_CALCULATOR = (function () {
     const root = $('footprint-form');
     if (!root) return;
 
-    /* Priority 1: #d= hash payload — survives file:// */
+    /* Priority 1: #d= hash payload */
     const hashInputs = window.CT_STORAGE.readHashPayload();
     if (hashInputs) {
       applyInputs(hashInputs);
@@ -312,7 +319,6 @@ window.CT_CALCULATOR = (function () {
     if (calcBtn)  calcBtn.addEventListener('click', execute);
     if (resetBtn) resetBtn.addEventListener('click', reset);
 
-    /* Enter intercepts only on plain text/number inputs. */
     root.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter') return;
       const tag = e.target.tagName;

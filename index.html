@@ -8,7 +8,7 @@
 
   <script>try{var t=localStorage.getItem('carbotrack:theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%231b3027'/><path d='M 32 54 L 32 36 M 32 36 C 22 36 12 30 12 18 C 24 18 30 24 32 32 C 32 24 38 14 52 14 C 52 28 42 36 32 36 Z' stroke='%2334d399' stroke-width='3' stroke-linejoin='round' stroke-linecap='round' fill='%2334d399' fill-opacity='0.15'/></svg>">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%231b3027'/><path d='M 52 12 C 24 12 12 30 12 46 C 12 50 16 54 20 52 C 44 46 52 24 52 12 Z' fill='%2334d399'/></svg>">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,6 +24,7 @@
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
   <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/stats.css">
   <link rel="stylesheet" href="css/theme.css">
 </head>
 
@@ -192,6 +193,44 @@
     </div>
   </section>
 
+  <!-- ============================================================
+       PLATFORM STATS STRIP
+       ============================================================ -->
+  <section class="stats-strip-wrap no-print" aria-label="Platform statistics">
+    <div class="container">
+      <div class="stats-strip" id="platform-stats-strip" data-stats-strip>
+        <div class="stat-card">
+          <div class="stat-card__icon"><i class="fa-solid fa-eye"></i></div>
+          <div class="stat-card__body">
+            <div class="stat-card__value">—</div>
+            <div class="stat-card__label">Visitors</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon"><i class="fa-solid fa-chart-simple"></i></div>
+          <div class="stat-card__body">
+            <div class="stat-card__value">—</div>
+            <div class="stat-card__label">Footprints Measured</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon"><i class="fa-solid fa-certificate"></i></div>
+          <div class="stat-card__body">
+            <div class="stat-card__value">—</div>
+            <div class="stat-card__label">Certificates Issued</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon"><i class="fa-solid fa-share-nodes"></i></div>
+          <div class="stat-card__body">
+            <div class="stat-card__value">—</div>
+            <div class="stat-card__label">Shares</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="problem-section" class="section section--white section--border">
     <div class="container">
 
@@ -330,7 +369,7 @@
           <div class="footer-social">
             <a href="https://linkedin.com" target="_blank" rel="noopener" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
             <a href="https://youtube.com" target="_blank" rel="noopener" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
-            <a href="https://instagram.com" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a>
+            <a href="https://instagram.com" target="_blank" rel="noopener" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
             <a href="https://github.com" target="_blank" rel="noopener" title="GitHub"><i class="fa-brands fa-github"></i></a>
           </div>
         </div>
@@ -339,7 +378,7 @@
 
       <div class="footer-bottom">
         <span>© <span data-current-year>2026</span> Carbotrack Environmental Platform. B.Tech 1st Year CSE CHE110 Initiative.</span>
-        
+        <span>Built with HTML5, Tailwind CSS &amp; Chart.js</span>
       </div>
     </div>
   </footer>
@@ -349,6 +388,7 @@
   <script src="js/supabase-client.js"></script>
   <script src="js/supabase-auth.js"></script>
   <script src="js/supabase-leaderboard.js"></script>
+  <script src="js/supabase-challenge.js"></script>
 
   <script src="js/config.js"></script>
   <script src="js/storage.js"></script>
@@ -356,6 +396,7 @@
   <script src="js/app.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/theme.js"></script>
+  <script src="js/stats.js"></script>
   <script src="js/challenge-notifications.js"></script>
 </body>
 </html>
