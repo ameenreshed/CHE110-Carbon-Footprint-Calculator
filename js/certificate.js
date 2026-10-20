@@ -1,8 +1,7 @@
 /* ==========================================================================
    Carbotrack — certificate.js
-   Dual certificate system:
-     • Carbon Footprint Certificate (4 tier themes)
-     • Challenge Completion Certificate
+   Dual certificate system with full-name resolution.
+   Waits for the profile to load before building data.
    ========================================================================== */
 (function () {
   'use strict';
@@ -72,7 +71,7 @@
   const CAPTURE_SCALE = 2.5;
 
   let currentCert = {
-    mode: 'carbon',      // 'carbon' | 'challenge'
+    mode: 'carbon',
     data: null,
     tier: null
   };
@@ -107,9 +106,81 @@
   }
 
   function initialsOf(name) {
-    return (name || '?')
-      .split(/\s+/).filter(Boolean).slice(0, 2)
-      .map(w => w[0].toUpperCase()).join('');
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    return parts.slice(0, 2).map(function (w) { return w[0].toUpperCase(); }).join('');
+  }
+
+  /* ================================================================== */
+  /*  NAME RESOLUTION — 3-tier fallback                                 */
+  /* ================================================================== */
+  function resolveUserFullName() {
+    const sb = window.CT_SB_AUTH;
+    if (!sb) return 'Friend';
+
+    const u    = sb.getUser     ? sb.getUser()     : null;
+    const p    = sb.getProfile  ? sb.getProfile()  : null;
+    const meta = (u && u.user_metadata) || {};
+
+    /* Tier 1: profile row */
+    if (p && p.full_name && String(p.full_name).trim()) {
+      return String(p.full_name).trim();
+    }
+
+    /* Tier 2: auth metadata */
+    const mName = meta.full_name || meta.name || meta.display_name;
+    if (mName && String(mName).trim()) {
+      return String(mName).trim();
+    }
+
+    /* Tier 3: username */
+    if (p && p.username) return String(p.username).trim();
+    if (meta.username)   return String(meta.username).trim();
+    if (u && u.email)    return u.email.split('@')[0];
+
+    return 'Friend';
+  }
+
+  function resolveUsername() {
+    const sb = window.CT_SB_AUTH;
+    if (!sb) return 'user';
+    const u = sb.getUser ? sb.getUser() : null;
+    const p = sb.getProfile ? sb.getProfile() : null;
+    const meta = (u && u.user_metadata) || {};
+    return (p && p.username) || meta.username || (u && u.email ? u.email.split('@')[0] : 'user');
+  }
+
+  /* ================================================================== */
+  /*  WAIT FOR PROFILE                                                  */
+  /* ================================================================== */
+  async function waitForProfile(maxWaitMs) {
+    maxWaitMs = maxWaitMs || 4000;
+
+    /* Already loaded? */
+    if (window.CT_SB_AUTH && window.CT_SB_AUTH.getProfile && window.CT_SB_AUTH.getProfile()) {
+      return true;
+    }
+
+    /* Delegate to the auth module's wait helper if available */
+    if (window.CT_SB_AUTH && window.CT_SB_AUTH.waitForProfile) {
+      try {
+        return await window.CT_SB_AUTH.waitForProfile(maxWaitMs);
+      } catch (e) { /* fall through */ }
+    }
+
+    /* Manual polling fallback */
+    return new Promise(function (resolve) {
+      const start = Date.now();
+      const iv = setInterval(function () {
+        if (window.CT_SB_AUTH && window.CT_SB_AUTH.getProfile && window.CT_SB_AUTH.getProfile()) {
+          clearInterval(iv);
+          resolve(true);
+        } else if (Date.now() - start >= maxWaitMs) {
+          clearInterval(iv);
+          resolve(false);
+        }
+      }, 120);
+    });
   }
 
   /* ================================================================== */
@@ -163,11 +234,9 @@
     currentCert.data = data;
     currentCert.tier = tier;
 
-    // Show carbon, hide challenge
     $('cert-shell-carbon').classList.remove('hidden');
     $('cert-shell-challenge').classList.add('hidden');
 
-    // Apply tier theme class
     const sheet = $('cert-sheet-carbon');
     sheet.className = 'cert-sheet cert-sheet--carbon cert-sheet--' + tier.key;
 
@@ -191,7 +260,7 @@
     const rangeIcon = $('cert-tier-range-icon');
     if (rangeIcon) rangeIcon.className = 'fa-solid ' + tier.rangeIcon;
 
-    document.title = `${data.name} · ${tier.title} Certificate — Carbotrack`;
+    document.title = data.name + ' · ' + tier.title + ' Certificate — Carbotrack';
   }
 
   /* ================================================================== */
@@ -202,7 +271,6 @@
     currentCert.data = data;
     currentCert.tier = null;
 
-    // Show challenge, hide carbon
     $('cert-shell-carbon').classList.add('hidden');
     $('cert-shell-challenge').classList.remove('hidden');
 
@@ -212,33 +280,37 @@
     set('chal-cert-date', formatDate(data.issuedAt));
     set('chal-cert-id', data.certId);
 
-    document.title = `${data.name} · Challenge Champion — Carbotrack`;
+    document.title = data.name + ' · Challenge Champion — Carbotrack';
   }
 
   /* ================================================================== */
   /*  BUILD DATA                                                        */
   /* ================================================================== */
-  function buildCarbonData(user, results) {
+  function buildCarbonData(results) {
     const issuedAt = new Date().toISOString();
+    const name = resolveUserFullName();
+    const username = resolveUsername();
     return {
       type: 'carbon',
-      name: user.name,
-      username: user.username,
+      name: name,
+      username: username,
       totalTons: results.totalTons,
       ecoScore: results.ecoScore,
-      issuedAt,
-      certId: makeCertId('C', user.username, issuedAt)
+      issuedAt: issuedAt,
+      certId: makeCertId('C', username, issuedAt)
     };
   }
 
-  function buildChallengeData(user) {
+  function buildChallengeData() {
     const issuedAt = new Date().toISOString();
+    const name = resolveUserFullName();
+    const username = resolveUsername();
     return {
       type: 'challenge',
-      name: user.name,
-      username: user.username,
-      issuedAt,
-      certId: makeCertId('H', user.username, issuedAt)
+      name: name,
+      username: username,
+      issuedAt: issuedAt,
+      certId: makeCertId('H', username, issuedAt)
     };
   }
 
@@ -291,8 +363,7 @@
   function getShareUrl() {
     if (!currentCert.data) return '';
     const base = window.location.href.split('#')[0];
-    const hash = '#s=' + encodeShare(currentCert.data);
-    return base + hash;
+    return base + '#s=' + encodeShare(currentCert.data);
   }
 
   function buildShareText() {
@@ -312,16 +383,16 @@
     return [
       '🌿 I just measured my carbon footprint with Carbotrack!',
       '',
-      `🏅 Tier: ${tier.title} (${tier.range})`,
-      `📊 Eco Score: ${currentCert.data.ecoScore}/100`,
-      `🌍 Annual Footprint: ${currentCert.data.totalTons.toFixed(2)} t CO₂e`,
+      '🏅 Tier: ' + tier.title + ' (' + tier.range + ')',
+      '📊 Eco Score: ' + currentCert.data.ecoScore + '/100',
+      '🌍 Annual Footprint: ' + currentCert.data.totalTons.toFixed(2) + ' t CO₂e',
       '',
       'Find out yours 👇'
     ].join('\n');
   }
 
   /* ================================================================== */
-  /*  ACTIVE SHEET / CAPTURE                                            */
+  /*  CAPTURE                                                           */
   /* ================================================================== */
   function activeSheet() {
     if (currentCert.mode === 'challenge') return $('cert-sheet-challenge');
@@ -411,7 +482,7 @@
 
       pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
       const prefix = currentCert.mode === 'challenge' ? 'Challenge' : 'Certificate';
-      pdf.save(`Carbotrack-${prefix}-${currentCert.data.certId}.pdf`);
+      pdf.save('Carbotrack-' + prefix + '-' + currentCert.data.certId + '.pdf');
 
       if (window.CT_TOAST) window.CT_TOAST.show('PDF downloaded successfully!', 'success', 2800);
     } catch (err) {
@@ -440,7 +511,7 @@
 
       const link = document.createElement('a');
       const prefix = currentCert.mode === 'challenge' ? 'Challenge' : 'Certificate';
-      link.download = `Carbotrack-${prefix}-${currentCert.data.certId}.png`;
+      link.download = 'Carbotrack-' + prefix + '-' + currentCert.data.certId + '.png';
       link.href = imgData;
       document.body.appendChild(link);
       link.click();
@@ -742,7 +813,7 @@
   }
 
   /* ================================================================== */
-  /*  SHARE CARD (1080×1080 PNG)                                        */
+  /*  SHARE CARD                                                        */
   /* ================================================================== */
   async function downloadShareCard() {
     if (!currentCert.data) return;
@@ -927,14 +998,10 @@
       '</div>';
   }
 
-  function hideForShared() {
-    /* Shared visitors can still download and reshare */
-  }
-
   /* ================================================================== */
   /*  INIT                                                              */
   /* ================================================================== */
-  function init() {
+  async function init() {
     if (!$('cert-sheet-carbon')) return;
 
     waitForFonts();
@@ -942,7 +1009,7 @@
     const hash = window.location.hash || '';
     const isChallengeMode = /(?:^|#|&)type=challenge(?:&|$)/.test(hash);
 
-    /* 1. Share payload */
+    /* 1. Share payload — no login needed */
     const sharePayload = S.readSharePayload();
     if (sharePayload) {
       const data = decodeShare(sharePayload);
@@ -954,7 +1021,6 @@
         renderCarbonCert(data);
       }
 
-      hideForShared();
       const banner = $('cert-shared-banner');
       if (banner) banner.style.display = 'flex';
       wireActions();
@@ -964,9 +1030,10 @@
     /* 2. Login required for personal views */
     if (!window.CT_AUTH || !window.CT_AUTH.isLoggedIn()) return;
 
-    const user = window.CT_AUTH.currentUser();
+    /* 3. Wait for the profile to load so full_name is available */
+    await waitForProfile(4000);
 
-    /* 3. Challenge mode */
+    /* 4. Challenge mode */
     if (isChallengeMode) {
       const chal = S.getChallenge();
       const done = chal && Array.isArray(chal.days)
@@ -975,17 +1042,17 @@
 
       if (done < 7) return showChallengeEmpty();
 
-      const data = buildChallengeData(user);
+      const data = buildChallengeData();
       renderChallengeCert(data);
       wireActions();
       return;
     }
 
-    /* 4. Carbon mode (default) */
+    /* 5. Carbon mode (default) */
     const results = S.getResults();
     if (!results) return showEmpty();
 
-    const data = buildCarbonData(user, results);
+    const data = buildCarbonData(results);
     renderCarbonCert(data);
     wireActions();
   }

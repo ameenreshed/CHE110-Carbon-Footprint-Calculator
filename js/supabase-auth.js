@@ -1,8 +1,7 @@
 /* ==========================================================================
    Carbotrack — supabase-auth.js
    Username + password authentication.
-   A synthetic email ({username}@carbotrack.local) is used internally
-   because Supabase Auth requires an email field.
+   Includes profile self-heal from user_metadata if the trigger missed.
    ========================================================================== */
 window.CT_SB_AUTH = (function () {
   'use strict';
@@ -31,6 +30,34 @@ window.CT_SB_AUTH = (function () {
     });
   }
 
+  /* ================================================================== */
+  /*  METADATA HELPERS                                                  */
+  /* ================================================================== */
+  function getMeta(user) {
+    return (user && user.user_metadata) || {};
+  }
+
+  function metaFullName(user) {
+    const m = getMeta(user);
+    return (m.full_name || m.name || m.display_name || '').trim();
+  }
+
+  function metaUsername(user) {
+    const m = getMeta(user);
+    if (m.username) return String(m.username).toLowerCase().trim();
+    if (user && user.email) return user.email.split('@')[0].toLowerCase();
+    return '';
+  }
+
+  function initialsOf(name) {
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    return parts.slice(0, 2).map(function (w) { return w[0].toUpperCase(); }).join('');
+  }
+
+  /* ================================================================== */
+  /*  PROFILE — fetch + self-heal                                       */
+  /* ================================================================== */
   async function fetchProfile(userId) {
     const { data, error } = await client
       .from('profiles')
@@ -42,9 +69,43 @@ window.CT_SB_AUTH = (function () {
       console.warn('[Carbotrack] profile fetch failed', error);
       return null;
     }
-    return data;
+    return data || null;
   }
 
+  async function selfHealProfile(user) {
+    if (!user) return null;
+    const userId = user.id;
+    const fullName = metaFullName(user);
+    const username = metaUsername(user);
+
+    const payload = {
+      id: userId,
+      username: username || null,
+      full_name: fullName || username || null,
+      avatar_initials: initialsOf(fullName || username)
+    };
+
+    try {
+      const { data, error } = await client
+        .from('profiles')
+        .upsert(payload, { onConflict: 'id' })
+        .select()
+        .maybeSingle();
+
+      if (error) {
+        console.warn('[Carbotrack] profile self-heal failed', error);
+        return null;
+      }
+      return data || null;
+    } catch (e) {
+      console.warn('[Carbotrack] profile self-heal threw', e);
+      return null;
+    }
+  }
+
+  /* ================================================================== */
+  /*  SESSION                                                           */
+  /* ================================================================== */
   async function handleSession(session) {
     if (!session || !session.user) {
       currentUser = null;
@@ -54,7 +115,28 @@ window.CT_SB_AUTH = (function () {
     }
 
     currentUser = session.user;
-    currentProfile = await fetchProfile(session.user.id);
+
+    /* Try to fetch the profile row */
+    let profile = await fetchProfile(session.user.id);
+
+    /* Self-heal if it's missing OR full_name is blank */
+    if (!profile || !profile.full_name) {
+      const healed = await selfHealProfile(session.user);
+      if (healed) profile = healed;
+    }
+
+    /* Final safety: if still no profile, synthesize one from metadata
+       so downstream code always has something usable. */
+    if (!profile) {
+      profile = {
+        id: session.user.id,
+        username: metaUsername(session.user),
+        full_name: metaFullName(session.user) || metaUsername(session.user),
+        avatar_initials: initialsOf(metaFullName(session.user) || metaUsername(session.user))
+      };
+    }
+
+    currentProfile = profile;
     notify();
   }
 
@@ -67,7 +149,9 @@ window.CT_SB_AUTH = (function () {
     });
   }
 
-  /* ---------- validation ---------- */
+  /* ================================================================== */
+  /*  VALIDATION                                                        */
+  /* ================================================================== */
   const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 
   function validateUsername(username) {
@@ -85,7 +169,9 @@ window.CT_SB_AUTH = (function () {
     return null;
   }
 
-  /* ---------- auth ---------- */
+  /* ================================================================== */
+  /*  AUTH                                                              */
+  /* ================================================================== */
   async function signUp(username, password, fullName) {
     username = String(username || '').trim().toLowerCase();
     fullName = String(fullName || '').trim();
@@ -117,12 +203,20 @@ window.CT_SB_AUTH = (function () {
       return { ok: false, error: msg };
     }
 
-    /* If email confirmation is enabled in Supabase, session is null. */
     if (!data.session) {
       return {
         ok: false,
         error: 'Sign-up succeeded but the session is not active. Ask the admin to disable "Confirm email" in Supabase.'
       };
+    }
+
+    /* Immediately self-heal in case the trigger is delayed */
+    if (data.user) {
+      const profile = await selfHealProfile(data.user);
+      if (profile) {
+        currentUser = data.user;
+        currentProfile = profile;
+      }
     }
 
     return { ok: true, user: data.user, session: data.session };
@@ -149,6 +243,9 @@ window.CT_SB_AUTH = (function () {
       return { ok: false, error: msg };
     }
 
+    /* Await profile load so callers can immediately read full_name */
+    await handleSession({ user: data.user });
+
     return { ok: true, user: data.user, session: data.session };
   }
 
@@ -162,9 +259,30 @@ window.CT_SB_AUTH = (function () {
     return { ok: true };
   }
 
-  function getUser()    { return currentUser; }
-  function getProfile() { return currentProfile; }
-  function isLoggedIn() { return !!currentUser; }
+  /* ================================================================== */
+  /*  ACCESSORS                                                         */
+  /* ================================================================== */
+  function getUser()       { return currentUser; }
+  function getProfile()    { return currentProfile; }
+  function isLoggedIn()    { return !!currentUser; }
+  function getUserMeta()   { return getMeta(currentUser); }
+
+  function waitForProfile(maxWaitMs) {
+    maxWaitMs = maxWaitMs || 4000;
+    return new Promise(function (resolve) {
+      if (currentProfile) return resolve(true);
+      const start = Date.now();
+      const iv = setInterval(function () {
+        if (currentProfile) {
+          clearInterval(iv);
+          resolve(true);
+        } else if (Date.now() - start >= maxWaitMs) {
+          clearInterval(iv);
+          resolve(false);
+        }
+      }, 120);
+    });
+  }
 
   function onChange(fn) {
     if (typeof fn === 'function') listeners.push(fn);
@@ -177,8 +295,10 @@ window.CT_SB_AUTH = (function () {
     signOut: signOut,
     getUser: getUser,
     getProfile: getProfile,
+    getUserMeta: getUserMeta,
     isLoggedIn: isLoggedIn,
     onChange: onChange,
+    waitForProfile: waitForProfile,
     validateUsername: validateUsername,
     validatePassword: validatePassword
   };

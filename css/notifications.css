@@ -1,0 +1,210 @@
+/* ==========================================================================
+   Carbotrack — notifications.css
+   Daily-reminder card shown on the challenge page.
+   ========================================================================== */
+
+.notif-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem;
+  background: linear-gradient(135deg, rgba(52, 211, 153, .08), rgba(16, 185, 129, .04));
+  border: 1px solid rgba(52, 211, 153, .28);
+  border-radius: var(--r-xl);
+  margin-bottom: 1.75rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .06);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.notif-card:hover {
+  border-color: rgba(52, 211, 153, .45);
+  box-shadow: 0 8px 22px rgba(16, 185, 129, .12);
+}
+
+.notif-card__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--leaf-500), var(--leaf-700));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, .35);
+}
+
+.notif-card__body { flex: 1; min-width: 0; }
+
+.notif-card__title {
+  font-family: 'Poppins', sans-serif;
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--forest-950);
+  margin-bottom: .2rem;
+}
+
+.notif-card__status {
+  font-size: .78rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.notif-card__time-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .75rem;
+  flex-wrap: wrap;
+}
+
+.notif-card__time-label {
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--forest-800);
+}
+
+.notif-card__select {
+  padding: .3rem .55rem;
+  font-size: .78rem;
+  background: #fff;
+  border: 1px solid var(--forest-200);
+  border-radius: var(--r-sm);
+  color: var(--text-body);
+  cursor: pointer;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234d8871' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right .5rem center;
+  background-size: .8rem;
+  padding-right: 1.6rem;
+}
+
+.notif-card__test-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .35rem .75rem;
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--leaf-700);
+  background: rgba(16, 185, 129, .1);
+  border: 1px solid rgba(16, 185, 129, .3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all .2s ease;
+  font-family: inherit;
+}
+.notif-card__test-btn:hover {
+  background: rgba(16, 185, 129, .2);
+}
+
+.notif-card__unsupported {
+  font-size: .72rem;
+  color: #94a3b8;
+  margin-top: .5rem;
+}
+.notif-card__unsupported i {
+  color: #f59e0b;
+  margin-right: .25rem;
+}
+
+.notif-card__toggle-wrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding-top: .15rem;
+}
+
+/* ---------- Toggle switch ---------- */
+.notif-toggle {
+  display: inline-block;
+  position: relative;
+  width: 2.75rem;
+  height: 1.55rem;
+  cursor: pointer;
+}
+.notif-toggle__input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.notif-toggle__slider {
+  position: absolute;
+  inset: 0;
+  background: #cbd5e1;
+  border-radius: 999px;
+  transition: background .25s ease;
+}
+.notif-toggle__slider::before {
+  content: '';
+  position: absolute;
+  height: 1.15rem;
+  width: 1.15rem;
+  left: .2rem;
+  top: .2rem;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform .25s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+}
+.notif-toggle__input:checked + .notif-toggle__slider {
+  background: var(--leaf-600);
+}
+.notif-toggle__input:checked + .notif-toggle__slider::before {
+  transform: translateX(1.2rem);
+}
+.notif-toggle__input:disabled + .notif-toggle__slider {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.notif-toggle__input:focus-visible + .notif-toggle__slider {
+  outline: 2px solid var(--leaf-500);
+  outline-offset: 2px;
+}
+
+/* ---------- Dark theme ---------- */
+[data-theme="dark"] .notif-card {
+  background: linear-gradient(135deg, rgba(52, 211, 153, .12), rgba(16, 185, 129, .06));
+  border-color: rgba(52, 211, 153, .35);
+}
+[data-theme="dark"] .notif-card__title { color: var(--text-strong); }
+[data-theme="dark"] .notif-card__status { color: var(--text-muted); }
+[data-theme="dark"] .notif-card__time-label { color: var(--text-body); }
+[data-theme="dark"] .notif-card__select {
+  background: #0f1814;
+  border-color: var(--forest-300);
+  color: var(--text-body);
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236fa58e' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+}
+[data-theme="dark"] .notif-card__test-btn {
+  background: rgba(16, 185, 129, .18);
+  border-color: rgba(16, 185, 129, .4);
+  color: var(--leaf-400);
+}
+[data-theme="dark"] .notif-toggle__slider { background: var(--forest-300); }
+[data-theme="dark"] .notif-toggle__input:checked + .notif-toggle__slider {
+  background: var(--leaf-600);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .notif-card {
+    flex-wrap: wrap;
+    padding: 1rem;
+  }
+  .notif-card__body { width: 100%; }
+  .notif-card__toggle-wrap {
+    width: 100%;
+    justify-content: flex-end;
+    padding-top: 0;
+  }
+}
+
+/* ---------- Print ---------- */
+@media print {
+  .notif-card { display: none !important; }
+}

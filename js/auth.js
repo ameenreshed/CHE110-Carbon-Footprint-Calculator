@@ -1,6 +1,6 @@
 /* ==========================================================================
    Carbotrack — auth.js
-   Username + password UI. No email field anywhere.
+   Username + password UI. Robust full-name fallback chain.
    ========================================================================== */
 window.CT_AUTH = (function () {
   'use strict';
@@ -16,16 +16,46 @@ window.CT_AUTH = (function () {
   /* ================================================================== */
   /*  HELPERS                                                           */
   /* ================================================================== */
+
+  /* 3-tier name resolution: profile → metadata → username */
+  function resolveDisplayName(profile, meta, username, email) {
+    if (profile && profile.full_name && profile.full_name.trim()) {
+      return profile.full_name.trim();
+    }
+    if (meta && (meta.full_name || meta.name || meta.display_name)) {
+      const m = meta.full_name || meta.name || meta.display_name;
+      if (String(m).trim()) return String(m).trim();
+    }
+    if (username && String(username).trim()) return String(username).trim();
+    if (email) return email.split('@')[0];
+    return 'Friend';
+  }
+
+  function resolveInitials(name, profile) {
+    if (profile && profile.avatar_initials) return profile.avatar_initials;
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    return parts.slice(0, 2).map(function (w) { return w[0].toUpperCase(); }).join('');
+  }
+
   function publicUser() {
     if (!sb || !sb.isLoggedIn()) return null;
-    const u = sb.getUser();
-    const p = sb.getProfile();
+
+    const u    = sb.getUser();
+    const p    = sb.getProfile();
+    const meta = (u && u.user_metadata) || {};
+
+    const username = (p && p.username) ||
+                     meta.username ||
+                     (u.email ? u.email.split('@')[0] : '');
+    const fullName = resolveDisplayName(p, meta, username, u.email ? u.email : '');
+
     return {
       id: u.id,
       email: u.email,
-      name: (p && p.full_name) || u.email.split('@')[0],
-      username: (p && p.username) || u.email.split('@')[0],
-      initials: (p && p.avatar_initials) || (u.email[0] || '?').toUpperCase()
+      name: fullName,
+      username: username,
+      initials: resolveInitials(fullName, p)
     };
   }
 
@@ -128,7 +158,6 @@ window.CT_AUTH = (function () {
       $('auth-eye').setAttribute('aria-label', show ? 'Hide password' : 'Show password');
     });
 
-    /* Force username to lowercase as the user types */
     $('auth-username').addEventListener('input', function (e) {
       const start = e.target.selectionStart;
       const end = e.target.selectionEnd;
@@ -255,8 +284,13 @@ window.CT_AUTH = (function () {
 
     closeModal();
 
-    /* Wait for the profile trigger to complete and session to hydrate */
-    await new Promise(function (r) { setTimeout(r, 350); });
+    /* Give the profile a moment to finish loading */
+    if (sb && sb.waitForProfile) {
+      try { await sb.waitForProfile(2000); } catch (err) { /* ignore */ }
+    }
+
+    renderHeaderButton();
+    renderMobileLinks();
 
     const user = publicUser();
 
@@ -270,11 +304,11 @@ window.CT_AUTH = (function () {
     }
 
     if (redirect) {
-      window.setTimeout(function () { window.location.href = redirect; }, 400);
+      window.setTimeout(function () { window.location.href = redirect; }, 550);
     } else if (onSuccess) {
       onSuccess(publicUser());
     } else {
-      window.setTimeout(function () { window.location.reload(); }, 400);
+      window.setTimeout(function () { window.location.reload(); }, 550);
     }
   }
 
@@ -293,11 +327,12 @@ window.CT_AUTH = (function () {
     wrap.className = 'account-wrap';
 
     if (user) {
+      const first = user.name.split(' ')[0];
       wrap.innerHTML = `
         <button type="button" class="account-btn" id="account-toggle"
                 aria-haspopup="true" aria-expanded="false">
           <span class="account-avatar">${user.initials}</span>
-          <span class="account-name">${user.name.split(' ')[0]}</span>
+          <span class="account-name">${first}</span>
           <i class="fa-solid fa-chevron-down account-caret"></i>
         </button>
         <div class="account-menu" id="account-menu">
@@ -560,6 +595,14 @@ window.CT_AUTH = (function () {
     if (!sb || !sb.init) return;
 
     await sb.init();
+
+    /* If profile is still loading, wait briefly then re-render */
+    if (sb.isLoggedIn() && !sb.getProfile() && sb.waitForProfile) {
+      sb.waitForProfile(3000).then(function () {
+        renderHeaderButton();
+        renderMobileLinks();
+      });
+    }
 
     sb.onChange(function () {
       renderHeaderButton();
