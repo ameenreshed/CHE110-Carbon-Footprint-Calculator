@@ -1,7 +1,6 @@
 /* ==========================================================================
    Carbotrack — supabase-auth.js
-   Username + password authentication.
-   Includes profile self-heal from user_metadata if the trigger missed.
+   Username + password authentication + profile self-heal + auth-ready flag.
    ========================================================================== */
 window.CT_SB_AUTH = (function () {
   'use strict';
@@ -12,14 +11,12 @@ window.CT_SB_AUTH = (function () {
     return {};
   }
 
-  /* ---------- synthetic email ---------- */
   const EMAIL_DOMAIN = '@carbotrack.local';
 
   function usernameToEmail(username) {
     return String(username || '').trim().toLowerCase() + EMAIL_DOMAIN;
   }
 
-  /* ---------- state ---------- */
   let currentUser = null;
   let currentProfile = null;
   const listeners = [];
@@ -56,7 +53,7 @@ window.CT_SB_AUTH = (function () {
   }
 
   /* ================================================================== */
-  /*  PROFILE — fetch + self-heal                                       */
+  /*  PROFILE                                                           */
   /* ================================================================== */
   async function fetchProfile(userId) {
     const { data, error } = await client
@@ -74,12 +71,11 @@ window.CT_SB_AUTH = (function () {
 
   async function selfHealProfile(user) {
     if (!user) return null;
-    const userId = user.id;
     const fullName = metaFullName(user);
     const username = metaUsername(user);
 
     const payload = {
-      id: userId,
+      id: user.id,
       username: username || null,
       full_name: fullName || username || null,
       avatar_initials: initialsOf(fullName || username)
@@ -116,17 +112,13 @@ window.CT_SB_AUTH = (function () {
 
     currentUser = session.user;
 
-    /* Try to fetch the profile row */
     let profile = await fetchProfile(session.user.id);
 
-    /* Self-heal if it's missing OR full_name is blank */
     if (!profile || !profile.full_name) {
       const healed = await selfHealProfile(session.user);
       if (healed) profile = healed;
     }
 
-    /* Final safety: if still no profile, synthesize one from metadata
-       so downstream code always has something usable. */
     if (!profile) {
       profile = {
         id: session.user.id,
@@ -147,6 +139,10 @@ window.CT_SB_AUTH = (function () {
     client.auth.onAuthStateChange(function (_event, session) {
       handleSession(session);
     });
+
+    /* Signal to the rest of the app that auth is fully initialized */
+    window.CT_AUTH_READY = true;
+    document.dispatchEvent(new CustomEvent('ct:auth-ready'));
   }
 
   /* ================================================================== */
@@ -188,10 +184,7 @@ window.CT_SB_AUTH = (function () {
       email: usernameToEmail(username),
       password: password,
       options: {
-        data: {
-          username: username,
-          full_name: fullName
-        }
+        data: { username: username, full_name: fullName }
       }
     });
 
@@ -210,7 +203,6 @@ window.CT_SB_AUTH = (function () {
       };
     }
 
-    /* Immediately self-heal in case the trigger is delayed */
     if (data.user) {
       const profile = await selfHealProfile(data.user);
       if (profile) {
@@ -243,9 +235,7 @@ window.CT_SB_AUTH = (function () {
       return { ok: false, error: msg };
     }
 
-    /* Await profile load so callers can immediately read full_name */
     await handleSession({ user: data.user });
-
     return { ok: true, user: data.user, session: data.session };
   }
 
@@ -259,13 +249,9 @@ window.CT_SB_AUTH = (function () {
     return { ok: true };
   }
 
-  /* ================================================================== */
-  /*  ACCESSORS                                                         */
-  /* ================================================================== */
-  function getUser()       { return currentUser; }
-  function getProfile()    { return currentProfile; }
-  function isLoggedIn()    { return !!currentUser; }
-  function getUserMeta()   { return getMeta(currentUser); }
+  function getUser()     { return currentUser; }
+  function getProfile()  { return currentProfile; }
+  function isLoggedIn()  { return !!currentUser; }
 
   function waitForProfile(maxWaitMs) {
     maxWaitMs = maxWaitMs || 4000;
@@ -295,7 +281,6 @@ window.CT_SB_AUTH = (function () {
     signOut: signOut,
     getUser: getUser,
     getProfile: getProfile,
-    getUserMeta: getUserMeta,
     isLoggedIn: isLoggedIn,
     onChange: onChange,
     waitForProfile: waitForProfile,

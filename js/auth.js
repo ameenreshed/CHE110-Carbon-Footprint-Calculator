@@ -1,6 +1,6 @@
 /* ==========================================================================
    Carbotrack — auth.js
-   Username + password UI. Robust full-name fallback chain.
+   Username + password UI. Full name resolution + logout cleanup.
    ========================================================================== */
 window.CT_AUTH = (function () {
   'use strict';
@@ -16,8 +16,6 @@ window.CT_AUTH = (function () {
   /* ================================================================== */
   /*  HELPERS                                                           */
   /* ================================================================== */
-
-  /* 3-tier name resolution: profile → metadata → username */
   function resolveDisplayName(profile, meta, username, email) {
     if (profile && profile.full_name && profile.full_name.trim()) {
       return profile.full_name.trim();
@@ -40,14 +38,12 @@ window.CT_AUTH = (function () {
 
   function publicUser() {
     if (!sb || !sb.isLoggedIn()) return null;
-
-    const u    = sb.getUser();
-    const p    = sb.getProfile();
+    const u = sb.getUser();
+    const p = sb.getProfile();
     const meta = (u && u.user_metadata) || {};
 
-    const username = (p && p.username) ||
-                     meta.username ||
-                     (u.email ? u.email.split('@')[0] : '');
+    const username = (p && p.username) || meta.username ||
+      (u.email ? u.email.split('@')[0] : '');
     const fullName = resolveDisplayName(p, meta, username, u.email ? u.email : '');
 
     return {
@@ -61,6 +57,17 @@ window.CT_AUTH = (function () {
 
   function currentUser() { return publicUser(); }
   function isLoggedIn()  { return !!(sb && sb.isLoggedIn()); }
+
+  /* ================================================================== */
+  /*  CLEANUP — clear user-specific local data on logout                */
+  /* ================================================================== */
+  function clearUserLocalData() {
+    try {
+      if (window.CT_STORAGE && window.CT_STORAGE.clearChallenge) {
+        window.CT_STORAGE.clearChallenge();
+      }
+    } catch (e) { /* ignore */ }
+  }
 
   /* ================================================================== */
   /*  MODAL                                                             */
@@ -284,7 +291,6 @@ window.CT_AUTH = (function () {
 
     closeModal();
 
-    /* Give the profile a moment to finish loading */
     if (sb && sb.waitForProfile) {
       try { await sb.waitForProfile(2000); } catch (err) { /* ignore */ }
     }
@@ -399,6 +405,7 @@ window.CT_AUTH = (function () {
         toggle.setAttribute('aria-expanded', 'false');
         caret.style.transform = '';
         await sb.signOut();
+        clearUserLocalData();
         if (window.CT_TOAST) window.CT_TOAST.show('Signed out.', 'info', 2000);
         renderHeaderButton();
         renderMobileLinks();
@@ -462,6 +469,7 @@ window.CT_AUTH = (function () {
 
       block.querySelector('#mobile-logout').addEventListener('click', async function () {
         await sb.signOut();
+        clearUserLocalData();
         if (window.CT_NAV) window.CT_NAV.close();
         if (window.CT_TOAST) window.CT_TOAST.show('Signed out.', 'info', 2000);
         renderHeaderButton();
@@ -543,40 +551,7 @@ window.CT_AUTH = (function () {
     const main = document.querySelector('main');
     if (!main) return false;
 
-    main.innerHTML = `
-      <div class="section section--white" style="min-height:70vh;display:grid;place-items:center;">
-        <div class="container" style="max-width:36rem;">
-          <div class="lock-panel">
-            <div class="lock-panel__icon"><i class="fa-solid fa-${config.icon}"></i></div>
-            <span class="eyebrow">Members Only</span>
-            <h2 class="lock-panel__title">Sign in to open ${config.feature}</h2>
-            <p class="lock-panel__text">
-              The <strong>calculator</strong> and <strong>results dashboard</strong> are completely
-              free — no account needed. The leaderboard, challenge tracker and printable certificate
-              are part of the member area.
-            </p>
-
-            <div class="lock-panel__actions">
-              <button type="button" class="btn btn-primary btn-lg" id="lock-signin">
-                <i class="fa-solid fa-right-to-bracket"></i>
-                <span>Sign In / Create Account</span>
-              </button>
-              <a href="calculator.html" class="btn btn-outline btn-lg">
-                <i class="fa-solid fa-calculator"></i>
-                <span>Back to Calculator</span>
-              </a>
-            </div>
-
-            <ul class="lock-perks">
-              <li><i class="fa-solid fa-check"></i> No email needed — username &amp; password only</li>
-              <li><i class="fa-solid fa-check"></i> Save your scores to the global leaderboard</li>
-              <li><i class="fa-solid fa-check"></i> Track your 7-day challenge streaks</li>
-              <li><i class="fa-solid fa-check"></i> Generate a printable certificate</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    `;
+    main.innerHTML = '<div class="section section--white" style="min-height:70vh;display:grid;place-items:center;"><div class="container" style="max-width:36rem;"><div class="lock-panel"><div class="lock-panel__icon"><i class="fa-solid fa-' + config.icon + '"></i></div><span class="eyebrow">Members Only</span><h2 class="lock-panel__title">Sign in to open ' + config.feature + '</h2><p class="lock-panel__text">The <strong>calculator</strong> and <strong>results dashboard</strong> are completely free — no account needed. The leaderboard, challenge tracker and printable certificate are part of the member area.</p><div class="lock-panel__actions"><button type="button" class="btn btn-primary btn-lg" id="lock-signin"><i class="fa-solid fa-right-to-bracket"></i><span>Sign In / Create Account</span></button><a href="calculator.html" class="btn btn-outline btn-lg"><i class="fa-solid fa-calculator"></i><span>Back to Calculator</span></a></div><ul class="lock-perks"><li><i class="fa-solid fa-check"></i> No email needed — username &amp; password only</li><li><i class="fa-solid fa-check"></i> Save your scores to the global leaderboard</li><li><i class="fa-solid fa-check"></i> Sync challenge progress across all devices</li><li><i class="fa-solid fa-check"></i> Generate a printable certificate</li></ul></div></div></div>';
 
     const btn = document.getElementById('lock-signin');
     if (btn) btn.addEventListener('click', function () { openModal('register'); });
@@ -596,7 +571,6 @@ window.CT_AUTH = (function () {
 
     await sb.init();
 
-    /* If profile is still loading, wait briefly then re-render */
     if (sb.isLoggedIn() && !sb.getProfile() && sb.waitForProfile) {
       sb.waitForProfile(3000).then(function () {
         renderHeaderButton();
