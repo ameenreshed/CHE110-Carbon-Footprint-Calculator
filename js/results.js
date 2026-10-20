@@ -1,5 +1,6 @@
 /* ==========================================================================
    Carbotrack — results.js
+   Dashboard render + print-style A4 PDF report download (no print dialog).
    ========================================================================== */
 (function () {
   'use strict';
@@ -79,6 +80,9 @@
     }
   };
 
+  /* ================================================================== */
+  /*  RESOLVE                                                           */
+  /* ================================================================== */
   function resolve() {
     const hashInputs = window.CT_STORAGE.readHashPayload();
     if (hashInputs) {
@@ -109,10 +113,12 @@
         console.warn('[Carbotrack] Recompute failed.', e);
       }
     }
-
     return null;
   }
 
+  /* ================================================================== */
+  /*  RENDER KPIs                                                       */
+  /* ================================================================== */
   function renderKPIs(r) {
     const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
 
@@ -151,9 +157,11 @@
     }
   }
 
+  /* ================================================================== */
+  /*  RENDER CHARTS                                                     */
+  /* ================================================================== */
   function renderCharts(r) {
     if (typeof Chart === 'undefined') return;
-
     const labels = window.CT_CONFIG.categoryLabels;
     const values = [
       r.breakdown.commute, r.breakdown.flights, r.breakdown.energy,
@@ -163,6 +171,9 @@
     window.CT_CHARTS.renderBar('categoryBarChart', labels, values, window.CT_CONFIG.palette);
   }
 
+  /* ================================================================== */
+  /*  RENDER RECOMMENDATIONS                                            */
+  /* ================================================================== */
   function renderRecommendations(r) {
     const container = $('dynamic-recommendations-list');
     if (!container) return;
@@ -200,6 +211,9 @@
     });
   }
 
+  /* ================================================================== */
+  /*  SUBMIT TO SUPABASE                                                */
+  /* ================================================================== */
   async function submitScoreToSupabase(results) {
     if (!window.CT_SB_LEADERBOARD) return;
     if (!window.CT_SB_AUTH || !window.CT_SB_AUTH.isLoggedIn()) return;
@@ -215,11 +229,263 @@
     const res = await window.CT_SB_LEADERBOARD.submitScore(payload);
     if (res.ok) {
       if (window.CT_TOAST) window.CT_TOAST.show('Score saved to leaderboard!', 'success', 2800);
-    } else {
-      console.warn('[Carbotrack] leaderboard submit failed', res.error);
     }
   }
 
+  /* ================================================================== */
+  /*  EXPORT — print-style A4 PDF download                              */
+  /* ================================================================== */
+  function hash6(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 0x01000193);
+    }
+    return (h >>> 0).toString(16).padStart(6, '0').toUpperCase();
+  }
+
+  /* Inject the one-time export stylesheet */
+  function ensureExportStyles() {
+    if (document.getElementById('ct-export-style')) return;
+    const style = document.createElement('style');
+    style.id = 'ct-export-style';
+    style.textContent = `
+      body.ct-exporting {
+        background: #fbf9f5 !important;
+        overflow-x: hidden !important;
+      }
+      body.ct-exporting .site-header,
+      body.ct-exporting .site-footer,
+      body.ct-exporting .toolbar-actions,
+      body.ct-exporting .no-print,
+      body.ct-exporting .about-panel,
+      body.ct-exporting .back-to-top,
+      body.ct-exporting .toast-container,
+      body.ct-exporting .theme-toggle,
+      body.ct-exporting #nav-backdrop,
+      body.ct-exporting #mobile-menu,
+      body.ct-exporting .header-actions {
+        display: none !important;
+      }
+      body.ct-exporting #results-section {
+        display: block !important;
+        width: 1240px !important;
+        max-width: 1240px !important;
+        min-width: 1240px !important;
+        padding: 40px !important;
+        margin: 0 !important;
+        background: #fbf9f5 !important;
+        box-sizing: border-box !important;
+        border: none !important;
+      }
+      body.ct-exporting #results-section > .container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      body.ct-exporting .results-toolbar {
+        margin-bottom: 28px !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  /* Detect natural page-break Y positions (in canvas pixels) */
+  function findBreakPoints(section, scale) {
+    const sectionRect = section.getBoundingClientRect();
+    const candidates = section.querySelectorAll(
+      '.results-toolbar, .kpi-grid, .kpi-hero, .kpi-card, ' +
+      '.chart-grid, .chart-container, .rec-panel, .rec-card'
+    );
+    const points = [];
+    candidates.forEach(function (el) {
+      const r = el.getBoundingClientRect();
+      const top    = Math.max(0, (r.top    - sectionRect.top)    * scale);
+      const bottom = Math.max(0, (r.bottom - sectionRect.top)    * scale);
+      if (bottom > top) points.push({ top: top, bottom: bottom });
+    });
+    points.sort(function (a, b) { return a.bottom - b.bottom; });
+    return points;
+  }
+
+  /* Split canvas into A4-proportioned page slices, respecting break points */
+  function paginateCanvas(canvas, scale, breakables, pdfW, pdfH) {
+    const pxPerMm = canvas.width / pdfW;
+    const pageHeightPx = pdfH * pxPerMm;
+
+    const pages = [];
+    let startY = 0;
+
+    while (startY < canvas.height - 2) {
+      const idealEnd = Math.min(canvas.height, startY + pageHeightPx);
+
+      if (idealEnd >= canvas.height - 2) {
+        pages.push({ startY: startY, endY: canvas.height });
+        break;
+      }
+
+      /* Only consider break points that leave at least 40% of a page filled */
+      const minY = startY + pageHeightPx * 0.4;
+      let bestEnd = idealEnd;
+
+      /* Prefer the highest valid break point that fits on this page */
+      for (let i = breakables.length - 1; i >= 0; i--) {
+        const b = breakables[i];
+        if (b.bottom >= minY && b.bottom <= idealEnd) {
+          bestEnd = b.bottom;
+          break;
+        }
+      }
+
+      /* Fallback: hard slice */
+      if (bestEnd <= startY + 4) bestEnd = idealEnd;
+
+      pages.push({ startY: startY, endY: bestEnd });
+      startY = bestEnd;
+    }
+
+    return pages;
+  }
+
+  async function downloadReport() {
+    const btn = $('results-print-btn');
+    if (!btn) return;
+
+    const results = window.CT_STORAGE.getResults();
+    if (!results) {
+      if (window.CT_TOAST) window.CT_TOAST.show('No results to download. Please calculate first.', 'error', 3000);
+      return;
+    }
+
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparing PDF…';
+
+    const html       = document.documentElement;
+    const origTheme  = html.getAttribute('data-theme');
+    const hadExportClass = document.body.classList.contains('ct-exporting');
+
+    let canvas = null;
+
+    try {
+      if (typeof html2canvas === 'undefined') throw new Error('html2canvas library not loaded');
+      if (typeof window.jspdf === 'undefined') throw new Error('jsPDF library not loaded');
+
+      ensureExportStyles();
+
+      /* 1. Force light theme for a clean PDF */
+      if (origTheme === 'dark') {
+        html.setAttribute('data-theme', 'light');
+        document.dispatchEvent(new CustomEvent('ct:themechange', { detail: { theme: 'light' } }));
+        await new Promise(function (r) { setTimeout(r, 380); });
+      }
+
+      /* 2. Apply export layout */
+      document.body.classList.add('ct-exporting');
+
+      /* 3. Wait for reflow + chart repaint + fonts */
+      await new Promise(function (r) {
+        requestAnimationFrame(function () { requestAnimationFrame(r); });
+      });
+      await new Promise(function (r) { setTimeout(r, 120); });
+      if (document.fonts && document.fonts.ready) {
+        try { await document.fonts.ready; } catch (e) { /* ignore */ }
+      }
+
+      const section = $('results-section');
+      if (!section) throw new Error('Results section not found');
+
+      const scale = 2;
+      canvas = await html2canvas(section, {
+        scale: scale,
+        useCORS: true,
+        backgroundColor: '#fbf9f5',
+        logging: false,
+        width:  section.scrollWidth,
+        height: section.scrollHeight,
+        windowWidth: 1400,
+        windowHeight: section.scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
+        imageTimeout: 30000,
+        allowTaint: false,
+        removeContainer: true
+      });
+
+      /* 4. Compute break points and paginate */
+      const breakables = findBreakPoints(section, scale);
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+
+      const pages = paginateCanvas(canvas, scale, breakables, pdfW, pdfH);
+      const pxPerMm = canvas.width / pdfW;
+
+      pages.forEach(function (page, idx) {
+        if (idx > 0) pdf.addPage();
+
+        const sliceH = page.endY - page.startY;
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width  = canvas.width;
+        sliceCanvas.height = sliceH;
+
+        const ctx = sliceCanvas.getContext('2d');
+        ctx.fillStyle = '#fbf9f5';
+        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+        ctx.drawImage(
+          canvas,
+          0, page.startY, canvas.width, sliceH,
+          0, 0, canvas.width, sliceH
+        );
+
+        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.94);
+        const sliceHmm  = sliceH / pxPerMm;
+
+        pdf.addImage(sliceData, 'JPEG', 0, 0, pdfW, sliceHmm, undefined, 'FAST');
+      });
+
+      /* 5. Filename + save */
+      const user = (window.CT_AUTH && window.CT_AUTH.currentUser)
+        ? window.CT_AUTH.currentUser()
+        : null;
+      const username = user ? user.username : 'guest';
+      const year = new Date().getFullYear();
+      const id = 'RPT-' + year + '-' + hash6(username + (results.generatedAt || ''));
+
+      pdf.save('Carbotrack-Report-' + id + '.pdf');
+
+      if (window.CT_TOAST) {
+        window.CT_TOAST.show('Report downloaded successfully!', 'success', 2800);
+      }
+    } catch (err) {
+      console.error('[Carbotrack] Report download failed:', err);
+      if (window.CT_TOAST) {
+        window.CT_TOAST.show('Report download failed. Please try again.', 'error', 3400);
+      }
+    } finally {
+      /* Restore theme + class + button */
+      if (!hadExportClass) document.body.classList.remove('ct-exporting');
+      if (origTheme === 'dark') {
+        html.setAttribute('data-theme', 'dark');
+        document.dispatchEvent(new CustomEvent('ct:themechange', { detail: { theme: 'dark' } }));
+      }
+      btn.disabled = false;
+      btn.innerHTML = original;
+      canvas = null;
+    }
+  }
+
+  /* ================================================================== */
+  /*  CERTIFICATE BUTTON                                                */
+  /* ================================================================== */
   function injectCertificateButton() {
     const actions = document.querySelector('.toolbar-actions');
     if (!actions || document.getElementById('results-cert-btn')) return;
@@ -243,6 +509,9 @@
     actions.prepend(btn);
   }
 
+  /* ================================================================== */
+  /*  STATES                                                            */
+  /* ================================================================== */
   function showEmptyState() {
     const empty = $('results-empty');
     const main  = $('results-section');
@@ -257,6 +526,9 @@
     if (main)  main.classList.remove('hidden');
   }
 
+  /* ================================================================== */
+  /*  INIT                                                              */
+  /* ================================================================== */
   function init() {
     if (!$('results-section')) return;
 
@@ -296,8 +568,8 @@
       renderCharts(results);
     });
 
-    const printBtn = $('results-print-btn');
-    if (printBtn) printBtn.addEventListener('click', function () { window.print(); });
+    const downloadBtn = $('results-print-btn');
+    if (downloadBtn) downloadBtn.addEventListener('click', downloadReport);
 
     const resetBtn = $('results-reset-btn');
     if (resetBtn) {
