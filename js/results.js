@@ -5,6 +5,7 @@
    - PDF export no longer triggers 4 chart re-renders (2 theme-change events
      + 1 resize event). Export now suppresses the change listeners and
      re-renders charts explicitly.
+   - Leaderboard submit now surfaces errors and reports deduplication.
    ========================================================================== */
 (function () {
   'use strict';
@@ -151,6 +152,10 @@
     });
   }
 
+  /* ================================================================== */
+  /*  SUBMIT SCORE TO LEADERBOARD                                       */
+  /*  FIX: surfaces errors and reports deduplication.                   */
+  /* ================================================================== */
   async function submitScoreToSupabase(results) {
     if (!window.CT_SB_LEADERBOARD) return;
     if (!window.CT_SB_AUTH || !window.CT_SB_AUTH.isLoggedIn()) return;
@@ -161,20 +166,30 @@
     const sigKey = 'carbotrack:last_submitted_sig';
     try { if (localStorage.getItem(sigKey) === sig) return; } catch (e) {}
 
-    const clientResultId = user.id + '|' + (results.generatedAt || Date.now());
-
     const res = await window.CT_SB_LEADERBOARD.submitScore({
       totalTons:       results.totalTons,
       ecoScore:        results.ecoScore,
       ratingKey:       results.rating.key,
       ratingLabel:     results.rating.label,
-      breakdown:       results.breakdown,
-      clientResultId:  clientResultId
+      breakdown:       results.breakdown
     });
 
     if (res.ok) {
       try { localStorage.setItem(sigKey, sig); } catch (e) {}
-      if (window.CT_TOAST) window.CT_TOAST.show('Score saved to leaderboard!', 'success', 2800);
+      if (window.CT_TOAST) {
+        window.CT_TOAST.show(
+          res.deduplicated ? 'Score already on the leaderboard.' : 'Score saved to leaderboard!',
+          'success', 2800
+        );
+      }
+    } else {
+      console.warn('[Carbotrack] leaderboard submit failed:', res.code, res.error);
+      if (window.CT_TOAST) {
+        window.CT_TOAST.show(
+          'Could not save to leaderboard: ' + (res.error || 'unknown'),
+          'warning', 3600
+        );
+      }
     }
   }
 
@@ -279,7 +294,7 @@
     const hadExportClass = document.body.classList.contains('ct-exporting');
     let canvas = null;
 
-    /* FIX: block theme + resize listeners for the whole export */
+    /* Block theme + resize listeners for the whole export */
     isExporting = true;
 
     try {
@@ -290,7 +305,7 @@
 
       if (origTheme === 'dark') {
         html.setAttribute('data-theme', 'light');
-        /* FIX: manually re-render charts in light theme; do NOT dispatch */
+        /* Manually re-render charts in light theme; do NOT dispatch */
         window.CT_CHARTS.destroyAll();
         renderCharts(results);
         await new Promise(r => setTimeout(r, 380));
@@ -360,7 +375,7 @@
       if (!hadExportClass) document.body.classList.remove('ct-exporting');
       if (origTheme === 'dark') {
         html.setAttribute('data-theme', 'dark');
-        /* FIX: manually restore dark charts; do NOT dispatch */
+        /* Manually restore dark charts; do NOT dispatch */
         window.CT_CHARTS.destroyAll();
         renderCharts(results);
       }
@@ -428,7 +443,7 @@
 
     let resizeTimer = null;
     window.addEventListener('resize', function () {
-      /* FIX: skip while exporting */
+      /* Skip while exporting */
       if (isExporting) return;
       window.clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(function () {
@@ -438,7 +453,7 @@
     });
 
     document.addEventListener('ct:themechange', function () {
-      /* FIX: skip while exporting — we drive the re-render manually */
+      /* Skip while exporting — we drive the re-render manually */
       if (isExporting) return;
       window.CT_CHARTS.destroyAll();
       renderCharts(results);

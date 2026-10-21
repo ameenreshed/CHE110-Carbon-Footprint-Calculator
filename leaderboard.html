@@ -25,7 +25,289 @@
   <link rel="stylesheet" href="css/auth.css">
   <link rel="stylesheet" href="css/theme.css">
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ---------- Leaderboard tabs ---------- */
+    .lb-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .lb-tabs {
+      display: inline-flex;
+      gap: .25rem;
+      padding: .25rem;
+      background: #f1f5f3;
+      border-radius: 12px;
+    }
+    .lb-tab {
+      padding: .5rem 1rem;
+      font-size: .78rem;
+      font-weight: 600;
+      color: #64748b;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background .2s ease, color .2s ease;
+      white-space: nowrap;
+    }
+    .lb-tab.is-active {
+      background: #fff;
+      color: var(--forest-900);
+      box-shadow: 0 1px 3px rgba(13, 26, 21, .08);
+    }
+    .lb-tab:hover:not(.is-active) { color: var(--forest-800); }
+
+    .lb-mode-tabs {
+      background: rgba(16, 185, 129, .06);
+      border: 1px solid rgba(16, 185, 129, .2);
+    }
+    .lb-mode-tabs .lb-tab.is-active {
+      background: var(--leaf-600);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, .3);
+    }
+    .lb-mode-tabs .lb-tab:hover:not(.is-active) {
+      color: var(--leaf-700);
+    }
+
+    [data-theme="dark"] .lb-tabs { background: #0f1814; }
+    [data-theme="dark"] .lb-tab { color: #94a3b8; }
+    [data-theme="dark"] .lb-tab.is-active {
+      background: #131e19;
+      color: #f2f7f4;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    }
+    [data-theme="dark"] .lb-mode-tabs {
+      background: rgba(52, 211, 153, .08);
+      border-color: rgba(52, 211, 153, .25);
+    }
+    [data-theme="dark"] .lb-mode-tabs .lb-tab.is-active {
+      background: var(--leaf-500);
+      color: #0a110e;
+    }
+
+    /* ---------- Rows ---------- */
+    .lb-avatar {
+      width: 1.9rem;
+      height: 1.9rem;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--forest-900);
+      color: var(--leaf-400);
+      font-size: .65rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .lb-name {
+      font-weight: 600;
+      color: var(--forest-950);
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+    }
+    .lb-handle { font-size: .68rem; color: var(--text-muted); }
+    .lb-you-badge {
+      display: inline-block;
+      font-size: .55rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: .1rem .4rem;
+      border-radius: 5px;
+      background: var(--leaf-500);
+      color: #fff;
+    }
+    .lb-row.is-you {
+      background: rgba(16, 185, 129, .06);
+      box-shadow: inset 3px 0 0 var(--leaf-500);
+    }
+
+    /* Footprint cell with latest sub-line */
+    .lb-fp-main { line-height: 1.1; }
+    .lb-fp-main strong { font-size: .95rem; color: var(--forest-950); font-weight: 700; }
+    .lb-fp-latest {
+      font-size: .65rem;
+      color: var(--text-muted);
+      margin-top: .2rem;
+      line-height: 1.2;
+    }
+    .lb-fp-latest strong { color: var(--leaf-700); font-weight: 700; }
+    [data-theme="dark"] .lb-fp-main strong { color: var(--text-strong); }
+    [data-theme="dark"] .lb-fp-latest strong { color: var(--leaf-400); }
+
+    [data-theme="dark"] .lb-avatar { background: var(--leaf-600); color: #fff; }
+    [data-theme="dark"] .lb-name { color: var(--text-strong); }
+    [data-theme="dark"] .lb-row.is-you { background: rgba(52, 211, 153, .08); }
+
+    /* ---------- Your-rank card ---------- */
+    .lb-rank-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.15rem 1.25rem;
+      background: linear-gradient(135deg, rgba(16, 185, 129, .08), rgba(5, 150, 105, .03));
+      border: 1px solid rgba(16, 185, 129, .3);
+      border-radius: 16px;
+      margin-bottom: 1.25rem;
+    }
+    .lb-rank-card--blue {
+      background: linear-gradient(135deg, rgba(56, 189, 248, .08), rgba(14, 165, 233, .03));
+      border-color: rgba(56, 189, 248, .3);
+    }
+    .lb-rank-card--amber {
+      background: linear-gradient(135deg, rgba(251, 191, 36, .08), rgba(245, 158, 11, .03));
+      border-color: rgba(251, 191, 36, .3);
+    }
+    .lb-rank-card--red {
+      background: linear-gradient(135deg, rgba(239, 68, 68, .08), rgba(220, 38, 38, .03));
+      border-color: rgba(239, 68, 68, .3);
+    }
+    .lb-rank-card--muted {
+      background: rgba(241, 245, 243, .5);
+      border-color: var(--forest-200);
+      color: var(--text-muted);
+    }
+    .lb-rank-card__icon {
+      width: 2.6rem;
+      height: 2.6rem;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--leaf-500), var(--leaf-700));
+      color: #fff;
+      font-size: 1.05rem;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, .3);
+    }
+    .lb-rank-card--muted .lb-rank-card__icon { display: none; }
+    .lb-rank-card__body { flex: 1; min-width: 0; }
+    .lb-rank-card__eyebrow {
+      display: block;
+      font-size: .6rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--leaf-700);
+      margin-bottom: .2rem;
+    }
+    .lb-rank-card--muted .lb-rank-card__eyebrow { display: none; }
+    .lb-rank-card__title {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--forest-950);
+      line-height: 1.1;
+    }
+    .lb-rank-card__of {
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-left: .25rem;
+    }
+    .lb-rank-card__sub {
+      margin: .25rem 0 0;
+      font-size: .75rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .lb-rank-card__latest {
+      color: var(--leaf-700);
+      font-weight: 600;
+    }
+    .lb-rank-card__cta { flex-shrink: 0; }
+    .lb-rank-card--muted strong { color: var(--text-body); }
+    .lb-rank-card--muted p { margin: .15rem 0 0; font-size: .75rem; }
+
+    [data-theme="dark"] .lb-rank-card {
+      background: linear-gradient(135deg, rgba(52, 211, 153, .12), rgba(16, 185, 129, .04));
+      border-color: rgba(52, 211, 153, .3);
+    }
+    [data-theme="dark"] .lb-rank-card--blue {
+      background: linear-gradient(135deg, rgba(56, 189, 248, .12), rgba(14, 165, 233, .04));
+      border-color: rgba(56, 189, 248, .3);
+    }
+    [data-theme="dark"] .lb-rank-card--amber {
+      background: linear-gradient(135deg, rgba(251, 191, 36, .12), rgba(245, 158, 11, .04));
+      border-color: rgba(251, 191, 36, .3);
+    }
+    [data-theme="dark"] .lb-rank-card--red {
+      background: linear-gradient(135deg, rgba(239, 68, 68, .12), rgba(220, 38, 38, .04));
+      border-color: rgba(239, 68, 68, .3);
+    }
+    [data-theme="dark"] .lb-rank-card--muted { background: rgba(15, 24, 20, .5); border-color: var(--forest-300); }
+    [data-theme="dark"] .lb-rank-card__title { color: var(--text-strong); }
+    [data-theme="dark"] .lb-rank-card__latest { color: var(--leaf-400); }
+
+    /* ---------- Skeleton / error ---------- */
+    .lb-skeleton {
+      padding: 1rem;
+      background: #fff;
+      border: 1px solid var(--forest-100);
+      border-radius: 14px;
+      margin-bottom: .75rem;
+    }
+    .lb-skeleton__bar {
+      height: .85rem;
+      background: linear-gradient(90deg, #eef2f0 25%, #f6f9f7 50%, #eef2f0 75%);
+      background-size: 200% 100%;
+      animation: lb-shimmer 1.4s linear infinite;
+      border-radius: 4px;
+      margin-bottom: .5rem;
+    }
+    @keyframes lb-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    [data-theme="dark"] .lb-skeleton { background: #131e19; border-color: var(--forest-200); }
+    [data-theme="dark"] .lb-skeleton__bar {
+      background: linear-gradient(90deg, #1a2620 25%, #22352c 50%, #1a2620 75%);
+      background-size: 200% 100%;
+    }
+
+    .lb-error-card {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      background: rgba(254, 242, 242, .6);
+      border: 1px solid #fecaca;
+      border-radius: 16px;
+    }
+    .lb-error-card i {
+      font-size: 2rem;
+      color: #ef4444;
+      margin-bottom: .75rem;
+    }
+    .lb-error-card h3 {
+      font-size: 1.1rem;
+      color: #b91c1c;
+      margin-bottom: .35rem;
+    }
+    .lb-error-card p {
+      font-size: .82rem;
+      color: #7f1d1d;
+      max-width: 28rem;
+      margin: 0 auto 1.25rem;
+      line-height: 1.6;
+    }
+    [data-theme="dark"] .lb-error-card {
+      background: rgba(239, 68, 68, .08);
+      border-color: rgba(239, 68, 68, .3);
+    }
+    [data-theme="dark"] .lb-error-card h3 { color: #fca5a5; }
+    [data-theme="dark"] .lb-error-card p { color: #fecaca; }
+
+    @media (max-width: 640px) {
+      .lb-controls { flex-direction: column; align-items: stretch; }
+      .lb-tabs { justify-content: center; }
+      .lb-rank-card { flex-wrap: wrap; }
+      .lb-rank-card__cta { width: 100%; }
+    }
+  </style>
 </head>
 
 <body class="font-sans bg-earth text-slate-800 nature-bg">
@@ -87,7 +369,53 @@
         </p>
       </div>
 
-      <div id="leaderboard-empty" class="empty-state hidden">
+      <div class="lb-controls">
+        <div class="lb-tabs lb-mode-tabs" role="tablist" aria-label="Ranking mode">
+          <button type="button" class="lb-tab is-active" data-lb-mode="best" role="tab" aria-selected="true">
+            <i class="fa-solid fa-trophy" style="font-size:.7rem;margin-right:.35rem;"></i>Best Score
+          </button>
+          <button type="button" class="lb-tab" data-lb-mode="latest" role="tab" aria-selected="false">
+            <i class="fa-solid fa-clock-rotate-left" style="font-size:.7rem;margin-right:.35rem;"></i>Latest
+          </button>
+        </div>
+
+        <div class="lb-tabs" role="tablist" aria-label="Leaderboard period">
+          <button type="button" class="lb-tab is-active" data-lb-period="all" role="tab" aria-selected="true">All Time</button>
+          <button type="button" class="lb-tab" data-lb-period="week" role="tab" aria-selected="false">This Week</button>
+          <button type="button" class="lb-tab" data-lb-period="month" role="tab" aria-selected="false">This Month</button>
+        </div>
+      </div>
+
+      <div id="lb-your-rank"></div>
+
+      <div id="lb-loading" class="hidden">
+        <div class="lb-skeleton">
+          <div class="lb-skeleton__bar" style="width:60%"></div>
+          <div class="lb-skeleton__bar" style="width:85%"></div>
+          <div class="lb-skeleton__bar" style="width:40%"></div>
+        </div>
+        <div class="lb-skeleton">
+          <div class="lb-skeleton__bar" style="width:55%"></div>
+          <div class="lb-skeleton__bar" style="width:80%"></div>
+          <div class="lb-skeleton__bar" style="width:35%"></div>
+        </div>
+        <div class="lb-skeleton">
+          <div class="lb-skeleton__bar" style="width:65%"></div>
+          <div class="lb-skeleton__bar" style="width:75%"></div>
+          <div class="lb-skeleton__bar" style="width:45%"></div>
+        </div>
+      </div>
+
+      <div id="lb-error" class="lb-error-card hidden">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <h3>Could not load the leaderboard</h3>
+        <p id="lb-error-msg">Something went wrong while fetching rankings.</p>
+        <button type="button" id="lb-retry-btn" class="btn btn-primary btn-sm">
+          <i class="fa-solid fa-rotate-right"></i> Try Again
+        </button>
+      </div>
+
+      <div id="lb-empty" class="empty-state hidden">
         <div class="empty-state__icon"><i class="fa-solid fa-ranking-star"></i></div>
         <h2 class="section-heading">No Scores Yet</h2>
         <p class="section-sub">Be the first to submit your carbon footprint and claim the top spot.</p>
@@ -99,11 +427,11 @@
         </div>
       </div>
 
-      <div id="leaderboard-shell" class="hidden">
+      <div id="lb-shell" class="hidden">
         <div class="table-shell">
           <div class="table-shell__head">
-            <h3 class="table-shell__title">Top 20 — Lowest Annual Footprint</h3>
-            <span class="table-shell__meta" id="leaderboard-updated"></span>
+            <h3 class="table-shell__title">Top 20 — Leaderboard</h3>
+            <span class="table-shell__meta" id="lb-meta"></span>
           </div>
           <div class="scroll-x">
             <table class="data-table">
@@ -111,12 +439,12 @@
                 <tr>
                   <th>Rank</th>
                   <th>User</th>
-                  <th>Annual Footprint</th>
+                  <th>Footprint</th>
                   <th>Eco Score</th>
                   <th>Rating</th>
                 </tr>
               </thead>
-              <tbody id="leaderboard-body"></tbody>
+              <tbody id="lb-body"></tbody>
             </table>
           </div>
         </div>
@@ -167,11 +495,11 @@
       </div>
       <div class="footer-bottom">
         <span>© <span data-current-year>2026</span> Carbotrack Environmental Platform.</span>
-        
       </div>
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/supabase-auth.js"></script>
