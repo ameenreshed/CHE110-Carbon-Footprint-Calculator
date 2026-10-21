@@ -611,6 +611,64 @@
 }
 
 /* ==========================================================================
+   TIER MESSAGING — mood-tinted body + "Path Forward" callout
+   Added for the tier-aware certificate redesign.
+   ========================================================================== */
+
+/* Mood-tinted body copy — applies to the certificate description text */
+.cert-body.cert-body--celebrate {
+  color: #d1fae5 !important;
+  font-style: italic;
+}
+.cert-body.cert-body--encourage {
+  color: #bae6fd !important;
+  font-style: italic;
+}
+.cert-body.cert-body--action {
+  color: #fed7aa !important;
+  font-style: italic;
+}
+.cert-body.cert-body--urgent {
+  color: #fecaca !important;
+  font-style: italic;
+  font-weight: 600;
+}
+
+/* Path Forward callout — visible on moderate / high / severe tiers */
+.cert-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: .7rem;
+  margin: .5rem auto .25rem;
+  padding: .7rem .95rem;
+  max-width: 36rem;
+  width: 100%;
+  background: rgba(0, 0, 0, .28);
+  border: 1px solid var(--tier-badge-border);
+  border-radius: 6px;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(.78rem, 1.15vw, .92rem);
+  line-height: 1.55;
+  color: var(--tier-secondary);
+  text-align: left;
+  box-shadow: 0 0 18px var(--tier-glow);
+}
+.cert-callout[hidden] { display: none !important; }
+
+.cert-callout i {
+  color: var(--tier-primary);
+  font-size: .9em;
+  margin-top: .2rem;
+  flex-shrink: 0;
+}
+
+/* Mood-specific background tints (border + icon inherit from tier vars) */
+.cert-callout--encourage { background: rgba(56, 189, 248, .06); }
+.cert-callout--action    { background: rgba(251, 191, 36, .06); }
+.cert-callout--urgent    { background: rgba(239, 68, 68, .09); }
+
+/* ==========================================================================
    RESPONSIVE
    ========================================================================== */
 @media (max-width: 900px) {
@@ -633,6 +691,10 @@
   .cert-corner--tr, .cert-corner--br { right: 16px; }
   .cert-frame { inset: 10px; }
   .challenge-achievements { grid-template-columns: repeat(2, 1fr); }
+  .cert-callout {
+    padding: .65rem .75rem;
+    font-size: .82rem;
+  }
 }
 @media (max-width: 500px) {
   .cert-content { padding: 1.75rem 1rem 1rem; min-height: 460px; }

@@ -1,6 +1,11 @@
 /* ==========================================================================
    Carbotrack — auth.js
-   Username + password UI. Full name resolution + logout cleanup.
+   Username + password UI. HTML-escaped rendering. Clears all user data on logout.
+   FIXES:
+   - Listener leak: document-level listeners now abort on re-render via AbortController
+   - Modal close/reopen race: hidden is set only if modal is not reopened
+   - NEW: "My Profile" links added to header + mobile dropdowns
+   - NEW: profile.html added to GATED_PAGES
    ========================================================================== */
 window.CT_AUTH = (function () {
   'use strict';
@@ -16,10 +21,17 @@ window.CT_AUTH = (function () {
   /* ================================================================== */
   /*  HELPERS                                                           */
   /* ================================================================== */
+  function escapeHTML(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function resolveDisplayName(profile, meta, username, email) {
-    if (profile && profile.full_name && profile.full_name.trim()) {
-      return profile.full_name.trim();
-    }
+    if (profile && profile.full_name && profile.full_name.trim()) return profile.full_name.trim();
     if (meta && (meta.full_name || meta.name || meta.display_name)) {
       const m = meta.full_name || meta.name || meta.display_name;
       if (String(m).trim()) return String(m).trim();
@@ -58,14 +70,14 @@ window.CT_AUTH = (function () {
   function currentUser() { return publicUser(); }
   function isLoggedIn()  { return !!(sb && sb.isLoggedIn()); }
 
-  /* ================================================================== */
-  /*  CLEANUP — clear user-specific local data on logout                */
-  /* ================================================================== */
   function clearUserLocalData() {
     try {
-      if (window.CT_STORAGE && window.CT_STORAGE.clearChallenge) {
-        window.CT_STORAGE.clearChallenge();
+      if (window.CT_STORAGE) {
+        if (window.CT_STORAGE.clearChallenge) window.CT_STORAGE.clearChallenge();
+        if (window.CT_STORAGE.clearResults)   window.CT_STORAGE.clearResults();
+        if (window.CT_STORAGE.clearInputs)    window.CT_STORAGE.clearInputs();
       }
+      try { localStorage.removeItem('carbotrack:last_submitted_sig'); } catch (e) {}
     } catch (e) { /* ignore */ }
   }
 
@@ -178,6 +190,24 @@ window.CT_AUTH = (function () {
       if (e.key === 'Escape' && modalEl && !modalEl.hidden) closeModal();
     });
 
+    /* Focus trap — keep Tab inside the dialog. */
+    modalEl.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab') return;
+      const focusables = Array.from(
+        modalEl.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter(el => el.offsetParent !== null);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last  = focusables[focusables.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !modalEl.contains(document.activeElement))) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || !modalEl.contains(document.activeElement))) {
+        e.preventDefault(); first.focus();
+      }
+    });
+
     return modalEl;
   }
 
@@ -220,6 +250,8 @@ window.CT_AUTH = (function () {
         : 'Sign in to save scores and unlock the leaderboard.';
     }
 
+    /* Cancel any pending hide from a previous close */
+    modalEl.classList.remove('is-open');
     modalEl.hidden = false;
     requestAnimationFrame(function () { modalEl.classList.add('is-open'); });
     document.body.style.overflow = 'hidden';
@@ -235,7 +267,10 @@ window.CT_AUTH = (function () {
     if (!modalEl) return;
     modalEl.classList.remove('is-open');
     document.body.style.overflow = '';
-    window.setTimeout(function () { modalEl.hidden = true; }, 260);
+    /* Only hide if the modal hasn't been reopened in the meantime */
+    window.setTimeout(function () {
+      if (!modalEl.classList.contains('is-open')) modalEl.hidden = true;
+    }, 260);
     pending = null;
   }
 
@@ -319,36 +354,48 @@ window.CT_AUTH = (function () {
   }
 
   /* ================================================================== */
-  /*  HEADER ACCOUNT DROPDOWN                                           */
+  /*  HEADER ACCOUNT DROPDOWN (HTML-escaped)                            */
+  /*  Every listener is bound to a per-wrap AbortController.            */
+  /*  NEW: "My Profile" link added.                                     */
   /* ================================================================== */
   function renderHeaderButton() {
     const host = document.querySelector('.header-actions');
     if (!host) return;
 
     const existing = host.querySelector('.account-wrap');
-    if (existing) existing.remove();
+    if (existing) {
+      if (existing._ctAbort) existing._ctAbort.abort();
+      existing.remove();
+    }
 
     const user = currentUser();
     const wrap = document.createElement('div');
     wrap.className = 'account-wrap';
+    wrap._ctAbort = new AbortController();
+    const sig = wrap._ctAbort.signal;
 
     if (user) {
-      const first = user.name.split(' ')[0];
+      const safeName     = escapeHTML(user.name);
+      const safeUsername = escapeHTML(user.username);
+      const safeInitials = escapeHTML(user.initials);
+      const firstName    = escapeHTML(user.name.split(' ')[0]);
+
       wrap.innerHTML = `
         <button type="button" class="account-btn" id="account-toggle"
                 aria-haspopup="true" aria-expanded="false">
-          <span class="account-avatar">${user.initials}</span>
-          <span class="account-name">${first}</span>
+          <span class="account-avatar">${safeInitials}</span>
+          <span class="account-name">${firstName}</span>
           <i class="fa-solid fa-chevron-down account-caret"></i>
         </button>
         <div class="account-menu" id="account-menu">
           <div class="account-menu__head">
-            <span class="account-avatar account-avatar--lg">${user.initials}</span>
+            <span class="account-avatar account-avatar--lg">${safeInitials}</span>
             <div>
-              <strong>${user.name}</strong>
-              <small>@${user.username}</small>
+              <strong>${safeName}</strong>
+              <small>@${safeUsername}</small>
             </div>
           </div>
+          <a href="profile.html"><i class="fa-solid fa-user"></i> My Profile</a>
           <a href="leaderboard.html"><i class="fa-solid fa-ranking-star"></i> Leaderboard</a>
           <a href="certificate.html"><i class="fa-solid fa-certificate"></i> My Certificate</a>
           <a href="challenge.html"><i class="fa-solid fa-list-check"></i> 7-Day Challenge</a>
@@ -358,7 +405,11 @@ window.CT_AUTH = (function () {
           </button>
         </div>
       `;
-      host.appendChild(wrap);
+
+      /* Insert before theme toggle when present, so order stays stable */
+      const themeToggle = host.querySelector('[data-theme-toggle]');
+      if (themeToggle) host.insertBefore(wrap, themeToggle);
+      else host.appendChild(wrap);
 
       const toggle = wrap.querySelector('#account-toggle');
       const menu   = wrap.querySelector('#account-menu');
@@ -371,7 +422,7 @@ window.CT_AUTH = (function () {
         menu.classList.toggle('is-open', opening);
         toggle.setAttribute('aria-expanded', String(opening));
         caret.style.transform = opening ? 'rotate(180deg)' : '';
-      });
+      }, { signal: sig });
 
       document.addEventListener('click', function (e) {
         if (!menu.classList.contains('is-open')) return;
@@ -379,7 +430,7 @@ window.CT_AUTH = (function () {
         menu.classList.remove('is-open');
         toggle.setAttribute('aria-expanded', 'false');
         caret.style.transform = '';
-      });
+      }, { signal: sig });
 
       document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
@@ -388,14 +439,14 @@ window.CT_AUTH = (function () {
         toggle.setAttribute('aria-expanded', 'false');
         caret.style.transform = '';
         toggle.focus();
-      });
+      }, { signal: sig });
 
       menu.querySelectorAll('a').forEach(function (a) {
         a.addEventListener('click', function () {
           menu.classList.remove('is-open');
           toggle.setAttribute('aria-expanded', 'false');
           caret.style.transform = '';
-        });
+        }, { signal: sig });
       });
 
       wrap.querySelector('#account-logout').addEventListener('click', async function (e) {
@@ -409,7 +460,7 @@ window.CT_AUTH = (function () {
         if (window.CT_TOAST) window.CT_TOAST.show('Signed out.', 'info', 2000);
         renderHeaderButton();
         renderMobileLinks();
-      });
+      }, { signal: sig });
 
     } else {
       wrap.innerHTML = `
@@ -418,37 +469,51 @@ window.CT_AUTH = (function () {
           <span>Sign In</span>
         </button>
       `;
-      host.appendChild(wrap);
+      const themeToggle = host.querySelector('[data-theme-toggle]');
+      if (themeToggle) host.insertBefore(wrap, themeToggle);
+      else host.appendChild(wrap);
+
       wrap.querySelector('#account-signin')
-        .addEventListener('click', function () { openModal('login'); });
+        .addEventListener('click', function () { openModal('login'); }, { signal: sig });
     }
   }
 
   /* ================================================================== */
-  /*  MOBILE DRAWER ACCOUNT PANEL                                       */
+  /*  MOBILE DRAWER ACCOUNT PANEL (HTML-escaped)                        */
+  /*  NEW: "My Profile" link added.                                     */
   /* ================================================================== */
   function renderMobileLinks() {
     const menu = document.getElementById('mobile-menu');
     if (!menu) return;
 
     const old = menu.querySelector('.mobile-account');
-    if (old) old.remove();
+    if (old) {
+      if (old._ctAbort) old._ctAbort.abort();
+      old.remove();
+    }
 
     const user = currentUser();
     const block = document.createElement('div');
     block.className = 'mobile-account';
+    block._ctAbort = new AbortController();
+    const sig = block._ctAbort.signal;
 
     if (user) {
+      const safeName     = escapeHTML(user.name);
+      const safeUsername = escapeHTML(user.username);
+      const safeInitials = escapeHTML(user.initials);
+
       block.innerHTML = `
         <button type="button" class="mobile-account__head" aria-expanded="false">
-          <span class="account-avatar">${user.initials}</span>
+          <span class="account-avatar">${safeInitials}</span>
           <span class="mobile-account__meta">
-            <strong>${user.name}</strong>
-            <small>@${user.username}</small>
+            <strong>${safeName}</strong>
+            <small>@${safeUsername}</small>
           </span>
           <i class="fa-solid fa-chevron-down mobile-account__chevron"></i>
         </button>
         <div class="mobile-account__body">
+          <a href="profile.html"><i class="fa-solid fa-user"></i> My Profile</a>
           <a href="leaderboard.html"><i class="fa-solid fa-ranking-star"></i> Leaderboard</a>
           <a href="certificate.html"><i class="fa-solid fa-certificate"></i> My Certificate</a>
           <a href="challenge.html"><i class="fa-solid fa-list-check"></i> 7-Day Challenge</a>
@@ -465,7 +530,7 @@ window.CT_AUTH = (function () {
         const opening = !block.classList.contains('is-open');
         block.classList.toggle('is-open', opening);
         head.setAttribute('aria-expanded', String(opening));
-      });
+      }, { signal: sig });
 
       block.querySelector('#mobile-logout').addEventListener('click', async function () {
         await sb.signOut();
@@ -474,7 +539,7 @@ window.CT_AUTH = (function () {
         if (window.CT_TOAST) window.CT_TOAST.show('Signed out.', 'info', 2000);
         renderHeaderButton();
         renderMobileLinks();
-      });
+      }, { signal: sig });
 
     } else {
       block.innerHTML = `
@@ -487,13 +552,13 @@ window.CT_AUTH = (function () {
       block.querySelector('#mobile-signin').addEventListener('click', function () {
         if (window.CT_NAV) window.CT_NAV.close();
         openModal('login');
-      });
+      }, { signal: sig });
     }
 
     block.querySelectorAll('a').forEach(function (a) {
       a.addEventListener('click', function () {
         if (window.CT_NAV) window.CT_NAV.close();
-      });
+      }, { signal: sig });
     });
   }
 
@@ -505,11 +570,13 @@ window.CT_AUTH = (function () {
 
   /* ================================================================== */
   /*  GATING                                                            */
+  /*  NEW: profile.html added.                                          */
   /* ================================================================== */
   const GATED_PAGES = {
     'challenge.html':   { feature: 'the 7-Day Eco Challenge', icon: 'fa-list-check' },
     'certificate.html': { feature: 'your certificate',        icon: 'fa-certificate' },
-    'leaderboard.html': { feature: 'the leaderboard',         icon: 'fa-ranking-star' }
+    'leaderboard.html': { feature: 'the leaderboard',         icon: 'fa-ranking-star' },
+    'profile.html':     { feature: 'your profile',            icon: 'fa-user' }
   };
 
   function bindGatedLinks() {

@@ -6,14 +6,12 @@ window.CT_CONFIG = (function () {
   'use strict';
 
   return {
-    version: '1.3.0',
+    version: '1.4.0',
 
     storageKeys: {
-      results:     'carbotrack:results',
-      inputs:      'carbotrack:inputs',
-      challenge:   'carbotrack:challenge',
-      users:       'carbotrack:users',
-      session:     'carbotrack:session'
+      results:   'carbotrack:results',
+      inputs:    'carbotrack:inputs',
+      challenge: 'carbotrack:challenge'
     },
 
     benchmarks: {
@@ -21,6 +19,15 @@ window.CT_CONFIG = (function () {
       indiaAvg:     1.9,
       globalAvg:    4.7,
       developedAvg: 14.5
+    },
+
+    /* FIX: single source of truth for tier thresholds.
+       Both engine.js (results page) and certificate.js read from here,
+       eliminating the previous 2.2 / 4.5 / 7.5 vs 2 / 5 / 10 mismatch. */
+    tierThresholds: {
+      lowMax:      2.0,   //  < 2.0 t  → low / champion
+      moderateMax: 5.0,   //  2.0 – 5.0 → moderate
+      highMax:    10.0    //  5.0 – 10.0 → high  (≥10 → very-high / severe)
     },
 
     factors: {

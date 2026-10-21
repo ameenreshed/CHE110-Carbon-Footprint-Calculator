@@ -1,6 +1,7 @@
 /* ==========================================================================
    Carbotrack — base.css
-   Design tokens, reset, typography, global elements, print rules
+   Design tokens, reset, typography, global elements, print rules,
+   and the Premium Environmental Background.
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -38,6 +39,11 @@
   --text-muted:  #64748b;
   --border-soft: #e1ede7;
 
+  /* Glassmorphism Variables (Light Mode) */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --glass-shadow: 0 8px 32px rgba(13, 26, 21, 0.06);
+
   /* Radii */
   --r-sm:  8px;
   --r-md:  12px;
@@ -61,12 +67,24 @@
   --dur: .25s;
 }
 
+/* Dark Mode Overrides */
+[data-theme="dark"] {
+  --text-strong: #f2f7f4;
+  --text-body:   #cbd5e1;
+  --text-muted:  #94a3b8;
+  --border-soft: #22352c;
+  --earth:       #0d1512;
+
+  /* Glassmorphism Variables (Dark Mode) */
+  --glass-bg: rgba(19, 30, 25, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
 /* --------------------------------------------------------------------------
-   2. RESET
+   2. RESET & TYPOGRAPHY
    -------------------------------------------------------------------------- */
-*,
-*::before,
-*::after { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
 
 html {
   -webkit-text-size-adjust: 100%;
@@ -84,16 +102,16 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  position: relative;
+  z-index: 0;
+  overflow-x: hidden;
 }
 
 img, svg, canvas { display: block; max-width: 100%; }
-
 button, input, select, textarea { font: inherit; color: inherit; }
-
 button { cursor: pointer; background: none; border: none; }
-
 a { color: inherit; text-decoration: none; }
-
 ul, ol { margin: 0; padding: 0; list-style: none; }
 
 h1, h2, h3, h4, h5, h6 {
@@ -106,9 +124,6 @@ h1, h2, h3, h4, h5, h6 {
 
 p { margin: 0; }
 
-/* --------------------------------------------------------------------------
-   3. SELECTION & FOCUS
-   -------------------------------------------------------------------------- */
 ::selection { background: var(--leaf-500); color: #fff; }
 
 :focus-visible {
@@ -117,20 +132,12 @@ p { margin: 0; }
   border-radius: 4px;
 }
 
-/* --------------------------------------------------------------------------
-   4. CUSTOM SCROLLBAR
-   -------------------------------------------------------------------------- */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #f1f5f3; }
-::-webkit-scrollbar-thumb {
-  background: var(--forest-300);
-  border-radius: var(--r-pill);
-}
+::-webkit-scrollbar-thumb { background: var(--forest-300); border-radius: var(--r-pill); }
 ::-webkit-scrollbar-thumb:hover { background: var(--forest-500); }
 
-/* --------------------------------------------------------------------------
-   5. TYPOGRAPHY HELPERS
-   -------------------------------------------------------------------------- */
+/* Typography Helpers */
 .eyebrow {
   display: inline-block;
   font-size: .7rem;
@@ -140,10 +147,7 @@ p { margin: 0; }
   color: var(--leaf-600);
 }
 
-.section-heading {
-  font-size: clamp(1.75rem, 3.4vw, 2.35rem);
-  margin-top: .35rem;
-}
+.section-heading { font-size: clamp(1.75rem, 3.4vw, 2.35rem); margin-top: .35rem; }
 
 .section-sub {
   margin-top: .75rem;
@@ -159,31 +163,23 @@ p { margin: 0; }
   color: transparent;
 }
 
-/* --------------------------------------------------------------------------
-   6. ANIMATIONS
-   -------------------------------------------------------------------------- */
+/* Animations */
 @keyframes ct-pulse {
-  0%, 100% { opacity: 1;   transform: scale(1); }
-  50%      { opacity: .45; transform: scale(.86); }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .45; transform: scale(.86); }
 }
-
 @keyframes ct-fade-up {
   from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes ct-spin { to { transform: rotate(360deg); } }
 
 .pulse-dot { animation: ct-pulse 2s var(--ease) infinite; }
-
 .fade-up { animation: ct-fade-up .5s var(--ease) both; }
-
 .fa-spin { animation: ct-spin 1s linear infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .001ms !important;
@@ -191,8 +187,113 @@ p { margin: 0; }
   }
 }
 
+/* ==========================================================================
+   3. PREMIUM ENVIRONMENTAL BACKGROUND (Rich Layer)
+   ========================================================================== */
+
+.nature-bg .section--white,
+.nature-bg .section--alt,
+.nature-bg .section--earth,
+.nature-bg main,
+.nature-bg section {
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+}
+
+.nature-bg {
+  background-color: #f4fbf7 !important; /* Fallback */
+}
+
+/* Light Mode Background Layering */
+.nature-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: #f4fbf7;
+  background-image: 
+    /* 1. Floating Leaves in Corners (Top Left, Top Right, Bottom Left, Bottom Right) */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 900' preserveAspectRatio='none'%3E%3Cg fill='%2310b981' fill-opacity='0.06'%3E%3Cpath d='M-50,-50 C 150,-50 250,50 250,150 C 250,250 150,300 -50,300 Z'/%3E%3Cpath d='M1490,-50 C 1290,-50 1190,50 1190,150 C 1190,250 1290,300 1490,300 Z'/%3E%3Cpath d='M-50,950 C 150,950 250,850 250,750 C 250,650 150,600 -50,600 Z'/%3E%3Cpath d='M1490,950 C 1290,950 1190,850 1190,750 C 1190,650 1290,600 1490,600 Z'/%3E%3C/g%3E%3C/svg%3E"),
+    /* 2. Full Landscape Silhouette (Sun, Birds, Mountains, Water, Trees, Turbines, Factory, Solar) */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 400' preserveAspectRatio='none'%3E%3C!-- Sun / Orb --%3E%3Ccircle cx='1200' cy='120' r='80' fill='%23fbbf24' fill-opacity='0.1'/%3E%3C!-- Flying Birds --%3E%3Cg fill='none' stroke='%23059669' stroke-opacity='0.2' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M 300 100 Q 310 90 320 100 Q 330 90 340 100'/%3E%3Cpath d='M 350 80 Q 355 75 360 80 Q 365 75 370 80'/%3E%3Cpath d='M 900 150 Q 910 140 920 150 Q 930 140 940 150'/%3E%3Cpath d='M 950 130 Q 955 125 960 130 Q 965 125 970 130'/%3E%3C/g%3E%3C!-- Background Mountains --%3E%3Cpath d='M 0 280 Q 200 200 400 280 T 800 280 T 1440 280 L 1440 400 L 0 400 Z' fill='%2310b981' fill-opacity='0.05'/%3E%3C!-- Water / Lake --%3E%3Cpath d='M 0 320 Q 300 300 720 330 T 1440 320 L 1440 400 L 0 400 Z' fill='%230284c7' fill-opacity='0.08'/%3E%3C!-- Landscape Base --%3E%3Cpath d='M 0 350 Q 400 330 800 360 T 1440 350 L 1440 400 L 0 400 Z' fill='%23059669' fill-opacity='0.15'/%3E%3C!-- Eco Factory --%3E%3Cg fill='%23059669' fill-opacity='0.25'%3E%3Cpath d='M 550 400 L 550 300 L 580 300 L 580 270 L 610 270 L 610 300 L 640 300 L 640 250 L 670 250 L 670 300 L 700 300 L 700 400 Z'/%3E%3Crect x='560' y='260' width='10' height='40'/%3E%3Crect x='600' y='230' width='10' height='40'/%3E%3C/g%3E%3C!-- Solar Panels --%3E%3Cg fill='none' stroke='%23059669' stroke-opacity='0.3' stroke-width='2'%3E%3Cpolygon points='720,380 760,380 770,360 730,360'/%3E%3Cpolygon points='770,380 810,380 820,360 780,360'/%3E%3Cpolygon points='820,380 860,380 870,360 830,360'/%3E%3Cline x1='740' y1='380' x2='740' y2='400'/%3E%3Cline x1='790' y1='380' x2='790' y2='400'/%3E%3Cline x1='840' y1='380' x2='840' y2='400'/%3E%3C/g%3E%3C!-- Wind Turbines --%3E%3Cg fill='none' stroke='%23059669' stroke-opacity='0.3' stroke-width='3'%3E%3Cline x1='250' y1='400' x2='250' y2='240'/%3E%3Cpath d='M 250 240 L 210 210 M 250 240 L 290 210 M 250 240 L 250 280'/%3E%3Cline x1='1050' y1='400' x2='1050' y2='260'/%3E%3Cpath d='M 1050 260 L 1010 230 M 1050 260 L 1090 230 M 1050 260 L 1050 300'/%3E%3C/g%3E%3C!-- Trees (Pines) --%3E%3Cg fill='%23059669' fill-opacity='0.2'%3E%3Cpolygon points='100,400 120,300 140,400'/%3E%3Cpolygon points='400,400 420,310 440,400'/%3E%3Cpolygon points='900,400 920,320 940,400'/%3E%3Cpolygon points='1300,400 1320,300 1340,400'/%3E%3Cpolygon points='1350,400 1365,330 1380,400'/%3E%3C/g%3E%3C/svg%3E"),
+    /* 3. Soft Mist for depth */
+    radial-gradient(ellipse at 50% 100%, rgba(244, 251, 247, 0) 30%, rgba(244, 251, 247, 0.9) 100%),
+    /* 4. Base Aurora Mesh Gradients */
+    radial-gradient(at 0% 0%, hsla(152, 60%, 94%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(160, 50%, 92%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(140, 40%, 90%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 100%, hsla(210, 40%, 96%, 1) 0, transparent 50%),
+    linear-gradient(180deg, #f4fbf7 0%, #fbf9f5 100%);
+  background-position: center, bottom center, center, center, center, center, center, center;
+  background-size: 100% 100%, 100% 400px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Dark Mode Background Layering */
+[data-theme="dark"] .nature-bg {
+  background-color: #0d1512 !important;
+}
+
+[data-theme="dark"] .nature-bg::before {
+  background-color: #0d1512;
+  background-image: 
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 900' preserveAspectRatio='none'%3E%3Cg fill='%2334d399' fill-opacity='0.03'%3E%3Cpath d='M-50,-50 C 150,-50 250,50 250,150 C 250,250 150,300 -50,300 Z'/%3E%3Cpath d='M1490,-50 C 1290,-50 1190,50 1190,150 C 1190,250 1290,300 1490,300 Z'/%3E%3Cpath d='M-50,950 C 150,950 250,850 250,750 C 250,650 150,600 -50,600 Z'/%3E%3Cpath d='M1490,950 C 1290,950 1190,850 1190,750 C 1190,650 1290,600 1490,600 Z'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 400' preserveAspectRatio='none'%3E%3Ccircle cx='1200' cy='120' r='80' fill='%2334d399' fill-opacity='0.08'/%3E%3Cg fill='none' stroke='%2334d399' stroke-opacity='0.15' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M 300 100 Q 310 90 320 100 Q 330 90 340 100'/%3E%3Cpath d='M 350 80 Q 355 75 360 80 Q 365 75 370 80'/%3E%3Cpath d='M 900 150 Q 910 140 920 150 Q 930 140 940 150'/%3E%3Cpath d='M 950 130 Q 955 125 960 130 Q 965 125 970 130'/%3E%3C/g%3E%3Cpath d='M 0 280 Q 200 200 400 280 T 800 280 T 1440 280 L 1440 400 L 0 400 Z' fill='%2334d399' fill-opacity='0.03'/%3E%3Cpath d='M 0 320 Q 300 300 720 330 T 1440 320 L 1440 400 L 0 400 Z' fill='%2338bdf8' fill-opacity='0.05'/%3E%3Cpath d='M 0 350 Q 400 330 800 360 T 1440 350 L 1440 400 L 0 400 Z' fill='%2334d399' fill-opacity='0.08'/%3E%3Cg fill='%2334d399' fill-opacity='0.15'%3E%3Cpath d='M 550 400 L 550 300 L 580 300 L 580 270 L 610 270 L 610 300 L 640 300 L 640 250 L 670 250 L 670 300 L 700 300 L 700 400 Z'/%3E%3Crect x='560' y='260' width='10' height='40'/%3E%3Crect x='600' y='230' width='10' height='40'/%3E%3C/g%3E%3Cg fill='none' stroke='%2334d399' stroke-opacity='0.2' stroke-width='2'%3E%3Cpolygon points='720,380 760,380 770,360 730,360'/%3E%3Cpolygon points='770,380 810,380 820,360 780,360'/%3E%3Cpolygon points='820,380 860,380 870,360 830,360'/%3E%3Cline x1='740' y1='380' x2='740' y2='400'/%3E%3Cline x1='790' y1='380' x2='790' y2='400'/%3E%3Cline x1='840' y1='380' x2='840' y2='400'/%3E%3C/g%3E%3Cg fill='none' stroke='%2334d399' stroke-opacity='0.2' stroke-width='3'%3E%3Cline x1='250' y1='400' x2='250' y2='240'/%3E%3Cpath d='M 250 240 L 210 210 M 250 240 L 290 210 M 250 240 L 250 280'/%3E%3Cline x1='1050' y1='400' x2='1050' y2='260'/%3E%3Cpath d='M 1050 260 L 1010 230 M 1050 260 L 1090 230 M 1050 260 L 1050 300'/%3E%3C/g%3E%3Cg fill='%2334d399' fill-opacity='0.1'%3E%3Cpolygon points='100,400 120,300 140,400'/%3E%3Cpolygon points='400,400 420,310 440,400'/%3E%3Cpolygon points='900,400 920,320 940,400'/%3E%3Cpolygon points='1300,400 1320,300 1340,400'/%3E%3Cpolygon points='1350,400 1365,330 1380,400'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 50% 100%, rgba(13, 21, 18, 0) 30%, rgba(13, 21, 18, 0.9) 100%),
+    radial-gradient(at 0% 0%, hsla(152, 30%, 15%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(160, 30%, 12%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(140, 20%, 10%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 100%, hsla(210, 20%, 14%, 1) 0, transparent 50%),
+    linear-gradient(180deg, #0d1512 0%, #0a110e 100%);
+}
+
+/* ==========================================================================
+   4. PREMIUM GLASSMORPHISM (Frosted Panels)
+   ========================================================================== */
+
+.nature-bg .card,
+.nature-bg .calc-shell,
+.nature-bg .method-card,
+.nature-bg .table-shell,
+.nature-bg .benchmark-card,
+.nature-bg .kpi-card,
+.nature-bg .chart-container,
+.nature-bg .rec-panel,
+.nature-bg .rec-card,
+.nature-bg .challenge-item,
+.nature-bg .empty-state,
+.nature-bg .lock-panel {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(20px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+.nature-bg .hero {
+  background: linear-gradient(180deg, rgba(244, 251, 247, 0.7) 0%, rgba(251, 249, 245, 0.4) 100%) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+[data-theme="dark"] .nature-bg .hero {
+  background: linear-gradient(180deg, rgba(15, 24, 20, 0.7) 0%, rgba(13, 21, 18, 0.4) 100%) !important;
+}
+
+.nature-bg .about-panel {
+  background: rgba(27, 48, 39, 0.9) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
 /* --------------------------------------------------------------------------
-   7. PRINT (results report)
+   5. PRINT (results report)
+   FIX: `#results-section` was overriding `.hidden` because id (1-0-0)
+   beats class (0-1-0), both at `!important`. Use `:not(.hidden)` so an
+   empty results page never prints.
    -------------------------------------------------------------------------- */
 @media print {
   @page { margin: 14mm; }
@@ -202,16 +303,27 @@ p { margin: 0; }
   .no-print,
   #what-if-section,
   #challenge-section,
-  #problem-section { display: none !important; }
+  #problem-section,
+  .nature-bg::before { display: none !important; }
 
-  body {
+  body, .nature-bg {
     background: #fff !important;
     color: #000 !important;
     font-size: 11pt;
   }
 
-  #results-section,
-  #results-empty { display: block !important; margin: 0 !important; padding: 0 !important; }
+  /* FIX: only force-show the results section when it is NOT hidden */
+  #results-section:not(.hidden),
+  #results-empty:not(.hidden) {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #results-section.hidden,
+  #results-empty.hidden {
+    display: none !important;
+  }
 
   .chart-container,
   .rec-card,
@@ -219,7 +331,12 @@ p { margin: 0; }
 
   .kpi-card,
   .rec-card,
-  .chart-container { box-shadow: none !important; border: 1px solid #ccc !important; }
+  .chart-container { 
+    box-shadow: none !important; 
+    border: 1px solid #ccc !important; 
+    background: #fff !important; 
+    backdrop-filter: none !important; 
+  }
 
   a[href]::after { content: ""; }
 }

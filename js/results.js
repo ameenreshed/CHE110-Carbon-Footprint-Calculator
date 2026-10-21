@@ -1,6 +1,10 @@
 /* ==========================================================================
    Carbotrack — results.js
-   Dashboard render + print-style A4 PDF report download (no print dialog).
+   Dashboard render + PDF report download.
+   FIXES:
+   - PDF export no longer triggers 4 chart re-renders (2 theme-change events
+     + 1 resize event). Export now suppresses the change listeners and
+     re-renders charts explicitly.
    ========================================================================== */
 (function () {
   'use strict';
@@ -15,74 +19,32 @@
   };
 
   const RECOMMENDATION_LIBRARY = {
-    transport: {
-      name: 'Transportation', icon: 'fa-car',
-      tips: [
-        'Switch to bus/metro two days a week to cut commute emissions by up to 35%.',
-        'Maintain correct tyre pressure for 3–5% better fuel economy.',
-        'Carpool with classmates or colleagues travelling similar routes.'
-      ],
-      potential: 'Save ~400–700 kg CO₂e / yr'
-    },
-    flights: {
-      name: 'Air Travel', icon: 'fa-plane',
-      tips: [
-        'Replace one short-haul flight per year with rail or video conferencing.',
-        'Choose direct flights — take-off and landing burn the most fuel.',
-        'Offset unavoidable flights through verified reforestation programmes.'
-      ],
-      potential: 'Save ~250–1100 kg CO₂e / yr'
-    },
-    energy: {
-      name: 'Home Energy', icon: 'fa-bolt',
-      tips: [
-        'Set AC thermostats to 24 °C instead of 18 °C — saves up to 24% per unit.',
-        'Unplug standby chargers, monitors and TV setups before sleeping.',
-        'Use 5-star BEE-rated inverter appliances for cooling and refrigeration.'
-      ],
-      potential: 'Save ~250–500 kg CO₂e / yr'
-    },
-    food: {
-      name: 'Food & Nutrition', icon: 'fa-utensils',
-      tips: [
-        'Add two meat-free days per week to cut methane-intensive food impact.',
-        'Plan portions carefully to eliminate discarded plate waste.',
-        'Choose seasonal, locally-grown produce over cold-stored imports.'
-      ],
-      potential: 'Save ~300–600 kg CO₂e / yr'
-    },
-    water: {
-      name: 'Water Usage', icon: 'fa-droplet',
-      tips: [
-        'Cap showers at five minutes — saves water and water-heating energy.',
-        'Run washing machines only with full loads and on eco cycles.',
-        'Fix leaking taps promptly; a drip can waste 20+ litres a day.'
-      ],
-      potential: 'Save ~40–90 kg CO₂e / yr'
-    },
-    waste: {
-      name: 'Waste Management', icon: 'fa-recycle',
-      tips: [
-        'Rinse and segregate plastics and aluminium so recyclers can divert them.',
-        'Start simple pot composting for fruit peels and tea leaves.',
-        'Carry a stainless-steel bottle instead of buying packaged water.'
-      ],
-      potential: 'Save ~90–180 kg CO₂e / yr'
-    },
-    shopping: {
-      name: 'Shopping & Goods', icon: 'fa-bag-shopping',
-      tips: [
-        'Apply a 30-day rule before non-essential purchases.',
-        'Buy second-hand or repair clothing instead of fast fashion.',
-        'Consolidate online orders to reduce packaging and delivery trips.'
-      ],
-      potential: 'Save ~120–350 kg CO₂e / yr'
-    }
+    transport: { name: 'Transportation', icon: 'fa-car',
+      tips: ['Switch to bus/metro two days a week to cut commute emissions by up to 35%.','Maintain correct tyre pressure for 3–5% better fuel economy.','Carpool with classmates or colleagues travelling similar routes.'],
+      potential: 'Save ~400–700 kg CO₂e / yr' },
+    flights: { name: 'Air Travel', icon: 'fa-plane',
+      tips: ['Replace one short-haul flight per year with rail or video conferencing.','Choose direct flights — take-off and landing burn the most fuel.','Offset unavoidable flights through verified reforestation programmes.'],
+      potential: 'Save ~250–1100 kg CO₂e / yr' },
+    energy: { name: 'Home Energy', icon: 'fa-bolt',
+      tips: ['Set AC thermostats to 24 °C instead of 18 °C — saves up to 24% per unit.','Unplug standby chargers, monitors and TV setups before sleeping.','Use 5-star BEE-rated inverter appliances for cooling and refrigeration.'],
+      potential: 'Save ~250–500 kg CO₂e / yr' },
+    food: { name: 'Food & Nutrition', icon: 'fa-utensils',
+      tips: ['Add two meat-free days per week to cut methane-intensive food impact.','Plan portions carefully to eliminate discarded plate waste.','Choose seasonal, locally-grown produce over cold-stored imports.'],
+      potential: 'Save ~300–600 kg CO₂e / yr' },
+    water: { name: 'Water Usage', icon: 'fa-droplet',
+      tips: ['Cap showers at five minutes — saves water and water-heating energy.','Run washing machines only with full loads and on eco cycles.','Fix leaking taps promptly; a drip can waste 20+ litres a day.'],
+      potential: 'Save ~40–90 kg CO₂e / yr' },
+    waste: { name: 'Waste Management', icon: 'fa-recycle',
+      tips: ['Rinse and segregate plastics and aluminium so recyclers can divert them.','Start simple pot composting for fruit peels and tea leaves.','Carry a stainless-steel bottle instead of buying packaged water.'],
+      potential: 'Save ~90–180 kg CO₂e / yr' },
+    shopping: { name: 'Shopping & Goods', icon: 'fa-bag-shopping',
+      tips: ['Apply a 30-day rule before non-essential purchases.','Buy second-hand or repair clothing instead of fast fashion.','Consolidate online orders to reduce packaging and delivery trips.'],
+      potential: 'Save ~120–350 kg CO₂e / yr' }
   };
 
-  /* ================================================================== */
-  /*  RESOLVE                                                           */
-  /* ================================================================== */
+  /* FIX: export-mode flag suppresses theme + resize chart re-renders. */
+  let isExporting = false;
+
   function resolve() {
     const hashInputs = window.CT_STORAGE.readHashPayload();
     if (hashInputs) {
@@ -92,9 +54,7 @@
         window.CT_STORAGE.saveInputs(normalized);
         window.CT_STORAGE.saveResults(results);
         return { results: results, inputs: normalized };
-      } catch (e) {
-        console.warn('[Carbotrack] Hash payload invalid, falling through.', e);
-      }
+      } catch (e) { console.warn('[Carbotrack] Hash payload invalid, falling through.', e); }
     }
 
     const stored = window.CT_STORAGE.getResults();
@@ -109,19 +69,13 @@
         const results    = window.CT_ENGINE.calculate(normalized);
         window.CT_STORAGE.saveResults(results);
         return { results: results, inputs: normalized };
-      } catch (e) {
-        console.warn('[Carbotrack] Recompute failed.', e);
-      }
+      } catch (e) { console.warn('[Carbotrack] Recompute failed.', e); }
     }
     return null;
   }
 
-  /* ================================================================== */
-  /*  RENDER KPIs                                                       */
-  /* ================================================================== */
   function renderKPIs(r) {
     const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
-
     set('res-total-tons', r.totalTons.toFixed(2));
     set('res-monthly-kg', r.monthlyKg.toLocaleString());
     set('res-daily-kg',   r.dailyKg);
@@ -147,19 +101,12 @@
     }
 
     const trees = $('res-trees-note');
-    if (trees) {
-      trees.textContent = 'Equivalent to the annual carbon sequestered by ' + r.treesEquivalent + ' mature urban trees.';
-    }
+    if (trees) trees.textContent = 'Equivalent to the annual carbon sequestered by ' + r.treesEquivalent + ' mature urban trees.';
 
     const ts = $('res-timestamp');
-    if (ts && r.generatedAt) {
-      ts.textContent = 'Generated ' + new Date(r.generatedAt).toLocaleString();
-    }
+    if (ts && r.generatedAt) ts.textContent = 'Generated ' + new Date(r.generatedAt).toLocaleString();
   }
 
-  /* ================================================================== */
-  /*  RENDER CHARTS                                                     */
-  /* ================================================================== */
   function renderCharts(r) {
     if (typeof Chart === 'undefined') return;
     const labels = window.CT_CONFIG.categoryLabels;
@@ -171,9 +118,6 @@
     window.CT_CHARTS.renderBar('categoryBarChart', labels, values, window.CT_CONFIG.palette);
   }
 
-  /* ================================================================== */
-  /*  RENDER RECOMMENDATIONS                                            */
-  /* ================================================================== */
   function renderRecommendations(r) {
     const container = $('dynamic-recommendations-list');
     if (!container) return;
@@ -189,7 +133,6 @@
       const isTop = index === 0;
       const card = document.createElement('article');
       card.className = 'rec-card' + (isTop ? ' rec-card--top' : '');
-
       const tips = entry.meta.tips.map(function (t) {
         return '<li><i class="fa-solid fa-check"></i><span>' + t + '</span></li>';
       }).join('');
@@ -202,38 +145,41 @@
         '<h4 class="rec-card__title">' + entry.meta.name + ' Optimisation</h4>' +
         '<p class="rec-card__load">' + entry.amount.toLocaleString() + ' kg CO₂e / year</p>' +
         '<ul class="rec-card__tips">' + tips + '</ul>' +
-        '<div class="rec-card__foot">' +
-          '<span>Potential Reduction:</span>' +
-          '<strong>' + entry.meta.potential + '</strong>' +
-        '</div>';
+        '<div class="rec-card__foot"><span>Potential Reduction:</span><strong>' + entry.meta.potential + '</strong></div>';
 
       container.appendChild(card);
     });
   }
 
-  /* ================================================================== */
-  /*  SUBMIT TO SUPABASE                                                */
-  /* ================================================================== */
   async function submitScoreToSupabase(results) {
     if (!window.CT_SB_LEADERBOARD) return;
     if (!window.CT_SB_AUTH || !window.CT_SB_AUTH.isLoggedIn()) return;
+    const user = window.CT_SB_AUTH.getUser();
+    if (!user) return;
 
-    const payload = {
-      totalTons: results.totalTons,
-      ecoScore: results.ecoScore,
-      ratingKey: results.rating.key,
-      ratingLabel: results.rating.label,
-      breakdown: results.breakdown
-    };
+    const sig = user.id + '|' + (results.generatedAt || '') + '|' + results.totalTons + '|' + results.ecoScore;
+    const sigKey = 'carbotrack:last_submitted_sig';
+    try { if (localStorage.getItem(sigKey) === sig) return; } catch (e) {}
 
-    const res = await window.CT_SB_LEADERBOARD.submitScore(payload);
+    const clientResultId = user.id + '|' + (results.generatedAt || Date.now());
+
+    const res = await window.CT_SB_LEADERBOARD.submitScore({
+      totalTons:       results.totalTons,
+      ecoScore:        results.ecoScore,
+      ratingKey:       results.rating.key,
+      ratingLabel:     results.rating.label,
+      breakdown:       results.breakdown,
+      clientResultId:  clientResultId
+    });
+
     if (res.ok) {
+      try { localStorage.setItem(sigKey, sig); } catch (e) {}
       if (window.CT_TOAST) window.CT_TOAST.show('Score saved to leaderboard!', 'success', 2800);
     }
   }
 
   /* ================================================================== */
-  /*  EXPORT — print-style A4 PDF download                              */
+  /*  EXPORT — A4 PDF                                                   */
   /* ================================================================== */
   function hash6(str) {
     let h = 0x811c9dc5;
@@ -244,107 +190,73 @@
     return (h >>> 0).toString(16).padStart(6, '0').toUpperCase();
   }
 
-  /* Inject the one-time export stylesheet */
   function ensureExportStyles() {
     if (document.getElementById('ct-export-style')) return;
     const style = document.createElement('style');
     style.id = 'ct-export-style';
     style.textContent = `
-      body.ct-exporting {
-        background: #fbf9f5 !important;
-        overflow-x: hidden !important;
-      }
-      body.ct-exporting .site-header,
-      body.ct-exporting .site-footer,
-      body.ct-exporting .toolbar-actions,
-      body.ct-exporting .no-print,
-      body.ct-exporting .about-panel,
-      body.ct-exporting .back-to-top,
-      body.ct-exporting .toast-container,
-      body.ct-exporting .theme-toggle,
-      body.ct-exporting #nav-backdrop,
-      body.ct-exporting #mobile-menu,
-      body.ct-exporting .header-actions {
-        display: none !important;
-      }
+      body.ct-exporting { background: #fbf9f5 !important; overflow-x: hidden !important; }
+      body.ct-exporting .site-header, body.ct-exporting .site-footer,
+      body.ct-exporting .toolbar-actions, body.ct-exporting .no-print,
+      body.ct-exporting .about-panel, body.ct-exporting .back-to-top,
+      body.ct-exporting .toast-container, body.ct-exporting .theme-toggle,
+      body.ct-exporting #nav-backdrop, body.ct-exporting #mobile-menu,
+      body.ct-exporting .header-actions { display: none !important; }
       body.ct-exporting #results-section {
-        display: block !important;
-        width: 1240px !important;
-        max-width: 1240px !important;
-        min-width: 1240px !important;
-        padding: 40px !important;
-        margin: 0 !important;
-        background: #fbf9f5 !important;
-        box-sizing: border-box !important;
+        display: block !important; width: 1240px !important;
+        max-width: 1240px !important; min-width: 1240px !important;
+        padding: 40px !important; margin: 0 !important;
+        background: #fbf9f5 !important; box-sizing: border-box !important;
         border: none !important;
       }
       body.ct-exporting #results-section > .container {
-        max-width: 100% !important;
-        width: 100% !important;
-        padding: 0 !important;
-        margin: 0 !important;
+        max-width: 100% !important; width: 100% !important;
+        padding: 0 !important; margin: 0 !important;
       }
-      body.ct-exporting .results-toolbar {
-        margin-bottom: 28px !important;
-      }
+      body.ct-exporting .results-toolbar { margin-bottom: 28px !important; }
     `;
     document.head.appendChild(style);
   }
 
-  /* Detect natural page-break Y positions (in canvas pixels) */
   function findBreakPoints(section, scale) {
     const sectionRect = section.getBoundingClientRect();
     const candidates = section.querySelectorAll(
-      '.results-toolbar, .kpi-grid, .kpi-hero, .kpi-card, ' +
-      '.chart-grid, .chart-container, .rec-panel, .rec-card'
+      '.results-toolbar, .kpi-hero, .kpi-card, ' +
+      '.chart-container, .rec-panel, .rec-card'
     );
     const points = [];
     candidates.forEach(function (el) {
       const r = el.getBoundingClientRect();
-      const top    = Math.max(0, (r.top    - sectionRect.top)    * scale);
-      const bottom = Math.max(0, (r.bottom - sectionRect.top)    * scale);
-      if (bottom > top) points.push({ top: top, bottom: bottom });
+      const top    = Math.max(0, (r.top    - sectionRect.top) * scale);
+      const bottom = Math.max(0, (r.bottom - sectionRect.top) * scale);
+      if (bottom > top) points.push({ top, bottom });
     });
     points.sort(function (a, b) { return a.bottom - b.bottom; });
     return points;
   }
 
-  /* Split canvas into A4-proportioned page slices, respecting break points */
-  function paginateCanvas(canvas, scale, breakables, pdfW, pdfH) {
+  function paginateCanvas(canvas, breakables, pdfW, pdfH) {
     const pxPerMm = canvas.width / pdfW;
     const pageHeightPx = pdfH * pxPerMm;
-
     const pages = [];
     let startY = 0;
 
     while (startY < canvas.height - 2) {
       const idealEnd = Math.min(canvas.height, startY + pageHeightPx);
-
       if (idealEnd >= canvas.height - 2) {
-        pages.push({ startY: startY, endY: canvas.height });
+        pages.push({ startY, endY: canvas.height });
         break;
       }
-
-      /* Only consider break points that leave at least 40% of a page filled */
       const minY = startY + pageHeightPx * 0.4;
       let bestEnd = idealEnd;
-
-      /* Prefer the highest valid break point that fits on this page */
       for (let i = breakables.length - 1; i >= 0; i--) {
         const b = breakables[i];
-        if (b.bottom >= minY && b.bottom <= idealEnd) {
-          bestEnd = b.bottom;
-          break;
-        }
+        if (b.bottom >= minY && b.bottom <= idealEnd) { bestEnd = b.bottom; break; }
       }
-
-      /* Fallback: hard slice */
       if (bestEnd <= startY + 4) bestEnd = idealEnd;
-
-      pages.push({ startY: startY, endY: bestEnd });
+      pages.push({ startY, endY: bestEnd });
       startY = bestEnd;
     }
-
     return pages;
   }
 
@@ -362,35 +274,35 @@
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparing PDF…';
 
-    const html       = document.documentElement;
-    const origTheme  = html.getAttribute('data-theme');
+    const html      = document.documentElement;
+    const origTheme = html.getAttribute('data-theme');
     const hadExportClass = document.body.classList.contains('ct-exporting');
-
     let canvas = null;
 
+    /* FIX: block theme + resize listeners for the whole export */
+    isExporting = true;
+
     try {
-      if (typeof html2canvas === 'undefined') throw new Error('html2canvas library not loaded');
-      if (typeof window.jspdf === 'undefined') throw new Error('jsPDF library not loaded');
+      if (typeof html2canvas === 'undefined') throw new Error('html2canvas not loaded');
+      if (typeof window.jspdf === 'undefined') throw new Error('jsPDF not loaded');
 
       ensureExportStyles();
 
-      /* 1. Force light theme for a clean PDF */
       if (origTheme === 'dark') {
         html.setAttribute('data-theme', 'light');
-        document.dispatchEvent(new CustomEvent('ct:themechange', { detail: { theme: 'light' } }));
-        await new Promise(function (r) { setTimeout(r, 380); });
+        /* FIX: manually re-render charts in light theme; do NOT dispatch */
+        window.CT_CHARTS.destroyAll();
+        renderCharts(results);
+        await new Promise(r => setTimeout(r, 380));
       }
 
-      /* 2. Apply export layout */
       document.body.classList.add('ct-exporting');
 
-      /* 3. Wait for reflow + chart repaint + fonts */
-      await new Promise(function (r) {
-        requestAnimationFrame(function () { requestAnimationFrame(r); });
-      });
-      await new Promise(function (r) { setTimeout(r, 120); });
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      await new Promise(r => setTimeout(r, 120));
+
       if (document.fonts && document.fonts.ready) {
-        try { await document.fonts.ready; } catch (e) { /* ignore */ }
+        try { await document.fonts.ready; } catch (e) {}
       }
 
       const section = $('results-section');
@@ -398,120 +310,84 @@
 
       const scale = 2;
       canvas = await html2canvas(section, {
-        scale: scale,
-        useCORS: true,
-        backgroundColor: '#fbf9f5',
+        scale, useCORS: true, backgroundColor: '#fbf9f5',
         logging: false,
         width:  section.scrollWidth,
         height: section.scrollHeight,
         windowWidth: 1400,
         windowHeight: section.scrollHeight,
-        scrollX: 0,
-        scrollY: 0,
+        scrollX: 0, scrollY: 0,
         imageTimeout: 30000,
         allowTaint: false,
         removeContainer: true
       });
 
-      /* 4. Compute break points and paginate */
       const breakables = findBreakPoints(section, scale);
-
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true
-      });
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
 
-      const pages = paginateCanvas(canvas, scale, breakables, pdfW, pdfH);
+      const pages = paginateCanvas(canvas, breakables, pdfW, pdfH);
       const pxPerMm = canvas.width / pdfW;
 
       pages.forEach(function (page, idx) {
         if (idx > 0) pdf.addPage();
-
         const sliceH = page.endY - page.startY;
         const sliceCanvas = document.createElement('canvas');
         sliceCanvas.width  = canvas.width;
         sliceCanvas.height = sliceH;
-
         const ctx = sliceCanvas.getContext('2d');
         ctx.fillStyle = '#fbf9f5';
         ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
-        ctx.drawImage(
-          canvas,
-          0, page.startY, canvas.width, sliceH,
-          0, 0, canvas.width, sliceH
-        );
-
+        ctx.drawImage(canvas, 0, page.startY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
         const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.94);
         const sliceHmm  = sliceH / pxPerMm;
-
         pdf.addImage(sliceData, 'JPEG', 0, 0, pdfW, sliceHmm, undefined, 'FAST');
       });
 
-      /* 5. Filename + save */
-      const user = (window.CT_AUTH && window.CT_AUTH.currentUser)
-        ? window.CT_AUTH.currentUser()
-        : null;
+      const user = (window.CT_AUTH && window.CT_AUTH.currentUser) ? window.CT_AUTH.currentUser() : null;
       const username = user ? user.username : 'guest';
       const year = new Date().getFullYear();
       const id = 'RPT-' + year + '-' + hash6(username + (results.generatedAt || ''));
 
       pdf.save('Carbotrack-Report-' + id + '.pdf');
-
-      if (window.CT_TOAST) {
-        window.CT_TOAST.show('Report downloaded successfully!', 'success', 2800);
-      }
+      if (window.CT_TOAST) window.CT_TOAST.show('Report downloaded successfully!', 'success', 2800);
     } catch (err) {
       console.error('[Carbotrack] Report download failed:', err);
-      if (window.CT_TOAST) {
-        window.CT_TOAST.show('Report download failed. Please try again.', 'error', 3400);
-      }
+      if (window.CT_TOAST) window.CT_TOAST.show('Report download failed. Please try again.', 'error', 3400);
     } finally {
-      /* Restore theme + class + button */
       if (!hadExportClass) document.body.classList.remove('ct-exporting');
       if (origTheme === 'dark') {
         html.setAttribute('data-theme', 'dark');
-        document.dispatchEvent(new CustomEvent('ct:themechange', { detail: { theme: 'dark' } }));
+        /* FIX: manually restore dark charts; do NOT dispatch */
+        window.CT_CHARTS.destroyAll();
+        renderCharts(results);
       }
+      isExporting = false;
       btn.disabled = false;
       btn.innerHTML = original;
       canvas = null;
     }
   }
 
-  /* ================================================================== */
-  /*  CERTIFICATE BUTTON                                                */
-  /* ================================================================== */
   function injectCertificateButton() {
     const actions = document.querySelector('.toolbar-actions');
     if (!actions || document.getElementById('results-cert-btn')) return;
-
     const btn = document.createElement('a');
     btn.id = 'results-cert-btn';
     btn.className = 'btn btn-leaf btn-sm';
     btn.href = 'certificate.html';
     btn.dataset.authBound = '1';
     btn.innerHTML = '<i class="fa-solid fa-certificate"></i> Get Certificate';
-
     btn.addEventListener('click', function (e) {
       if (!window.CT_AUTH || window.CT_AUTH.isLoggedIn()) return;
       e.preventDefault();
-      window.CT_AUTH.request({
-        feature: 'your printable certificate',
-        redirect: 'certificate.html'
-      });
+      window.CT_AUTH.request({ feature: 'your printable certificate', redirect: 'certificate.html' });
     });
-
     actions.prepend(btn);
   }
 
-  /* ================================================================== */
-  /*  STATES                                                            */
-  /* ================================================================== */
   function showEmptyState() {
     const empty = $('results-empty');
     const main  = $('results-section');
@@ -526,9 +402,6 @@
     if (main)  main.classList.remove('hidden');
   }
 
-  /* ================================================================== */
-  /*  INIT                                                              */
-  /* ================================================================== */
   function init() {
     if (!$('results-section')) return;
 
@@ -543,7 +416,6 @@
     renderCharts(results);
     renderRecommendations(results);
     injectCertificateButton();
-
     submitScoreToSupabase(results);
 
     if (inputs) {
@@ -556,6 +428,8 @@
 
     let resizeTimer = null;
     window.addEventListener('resize', function () {
+      /* FIX: skip while exporting */
+      if (isExporting) return;
       window.clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(function () {
         window.CT_CHARTS.destroyAll();
@@ -564,6 +438,8 @@
     });
 
     document.addEventListener('ct:themechange', function () {
+      /* FIX: skip while exporting — we drive the re-render manually */
+      if (isExporting) return;
       window.CT_CHARTS.destroyAll();
       renderCharts(results);
     });
@@ -577,6 +453,7 @@
         if (!window.confirm('Clear all saved results and start over?')) return;
         window.CT_STORAGE.clearResults();
         window.CT_STORAGE.clearInputs();
+        try { localStorage.removeItem('carbotrack:last_submitted_sig'); } catch (e) {}
         window.location.href = 'calculator.html';
       });
     }

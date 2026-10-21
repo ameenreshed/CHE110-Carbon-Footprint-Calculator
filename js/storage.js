@@ -1,6 +1,6 @@
 /* ==========================================================================
    Carbotrack — storage.js
-   Safe persistence + URL-hash transport + account/session storage.
+   Safe persistence + URL-hash transport (TextEncoder/Decoder based).
    ========================================================================== */
 window.CT_STORAGE = (function () {
   'use strict';
@@ -73,10 +73,14 @@ window.CT_STORAGE = (function () {
     catch (e) { return fallback; }
   }
 
+  /* FIX: escape/unescape (deprecated) replaced with TextEncoder/TextDecoder. */
   function encodeInputs(obj) {
     try {
-      const json = JSON.stringify(obj);
-      const b64 = btoa(unescape(encodeURIComponent(json)));
+      const json  = JSON.stringify(obj);
+      const bytes = new TextEncoder().encode(json);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      const b64 = btoa(bin);
       return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     } catch (e) { return ''; }
   }
@@ -86,7 +90,10 @@ window.CT_STORAGE = (function () {
     try {
       let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
       while (b64.length % 4) b64 += '=';
-      return JSON.parse(decodeURIComponent(escape(atob(b64))));
+      const bin   = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return JSON.parse(new TextDecoder().decode(bytes));
     } catch (e) { return null; }
   }
 
@@ -115,12 +122,6 @@ window.CT_STORAGE = (function () {
     saveChallenge(s){ setJSON(K.challenge, s); },
     getChallenge()  { return getJSON(K.challenge, null); },
     clearChallenge(){ rawRemove(K.challenge); },
-
-    saveUsers(u)    { setJSON(K.users, u); },
-    getUsers()      { return getJSON(K.users, null); },
-    saveSession(s)  { setJSON(K.session, s); },
-    getSession()    { return getJSON(K.session, null); },
-    clearSession()  { rawRemove(K.session); },
 
     getRaw: rawGet,
     setRaw: rawSet,

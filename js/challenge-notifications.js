@@ -1,14 +1,14 @@
 /* ==========================================================================
    Carbotrack — challenge-notifications.js
-   Daily reminder system for the 7-Day Campus Eco Challenge.
-   Fires while Carbotrack is open (any tab); recovers missed days on load.
+   Daily reminder system. Fixed: test notifications no longer consume
+   the once-per-day reminder slot.
    ========================================================================== */
 window.CT_CHALLENGE_NOTIF = (function () {
   'use strict';
 
   const STORAGE_KEY  = 'carbotrack:notif';
   const DEFAULT_HOUR = 8;
-  const DEFAULT_MIN = 0;
+  const DEFAULT_MIN  = 0;
   const TOTAL_DAYS   = 7;
 
   let swRegistration = null;
@@ -79,8 +79,7 @@ window.CT_CHALLENGE_NOTIF = (function () {
     if (Notification.permission === 'granted') return 'granted';
     if (Notification.permission === 'denied')  return 'denied';
     try {
-      const p = await Notification.requestPermission();
-      return p;
+      return await Notification.requestPermission();
     } catch (e) { return 'denied'; }
   }
 
@@ -94,12 +93,9 @@ window.CT_CHALLENGE_NOTIF = (function () {
       boxes.forEach(function (cb) { if (cb.checked) done++; });
       return done;
     }
-    /* On non-challenge pages, read from storage */
     if (window.CT_STORAGE && window.CT_STORAGE.getChallenge) {
       const chal = window.CT_STORAGE.getChallenge();
-      if (chal && Array.isArray(chal.days)) {
-        return chal.days.filter(Boolean).length;
-      }
+      if (chal && Array.isArray(chal.days)) return chal.days.filter(Boolean).length;
     }
     return 0;
   }
@@ -137,9 +133,10 @@ window.CT_CHALLENGE_NOTIF = (function () {
     if (Notification.permission !== 'granted') return { ok: false };
 
     const today = todayKey();
+    const isTest = !!customBody;
 
-    /* Once-per-day guard (unless a customBody is passed for a one-shot) */
-    if (!customBody) {
+    /* Once-per-day guard — only for scheduled reminders, never for tests. */
+    if (!isTest) {
       const s = getSettings();
       if (s && s.lastFiredDay === today) return { ok: false, skipped: 'already-fired' };
     }
@@ -159,7 +156,6 @@ window.CT_CHALLENGE_NOTIF = (function () {
         data: { url: 'challenge.html' }
       });
     } catch (e) {
-      /* Fallback — desktop-only, no SW required */
       try {
         const n = new Notification(title, { body: body, tag: 'carbotrack-daily' });
         n.onclick = function () {
@@ -172,13 +168,13 @@ window.CT_CHALLENGE_NOTIF = (function () {
       }
     }
 
-    /* Record fire */
-    const s = getSettings() || {
-      enabled: true, hour: DEFAULT_HOUR, minute: DEFAULT_MIN
-    };
-    s.lastFiredAt  = new Date().toISOString();
-    s.lastFiredDay = today;
-    saveSettings(s);
+    /* FIX: only persist lastFiredDay for scheduled reminders, NOT tests. */
+    if (!isTest) {
+      const s = getSettings() || { enabled: true, hour: DEFAULT_HOUR, minute: DEFAULT_MIN };
+      s.lastFiredAt  = new Date().toISOString();
+      s.lastFiredDay = today;
+      saveSettings(s);
+    }
 
     return { ok: true };
   }
@@ -190,9 +186,7 @@ window.CT_CHALLENGE_NOTIF = (function () {
     const now    = new Date();
     const target = new Date();
     target.setHours(settings.hour, settings.minute, 0, 0);
-    if (target.getTime() <= now.getTime()) {
-      target.setDate(target.getDate() + 1);
-    }
+    if (target.getTime() <= now.getTime()) target.setDate(target.getDate() + 1);
     return target;
   }
 
@@ -209,7 +203,7 @@ window.CT_CHALLENGE_NOTIF = (function () {
     timeoutId = setTimeout(async function () {
       const still = getSettings();
       if (!still || !still.enabled) return;
-      await fireNotification();
+      try { await fireNotification(); } catch (e) { /* ignore */ }
       scheduleNext();
     }, delay);
   }
@@ -220,13 +214,11 @@ window.CT_CHALLENGE_NOTIF = (function () {
     if (!isSupported() || Notification.permission !== 'granted') return;
 
     const today = todayKey();
-    if (s.lastFiredDay === today) return; /* Already fired today */
+    if (s.lastFiredDay === today) return;
 
     const now    = new Date();
     const target = new Date();
     target.setHours(s.hour, s.minute, 0, 0);
-
-    /* Only fire if today's target time has already passed */
     if (now.getTime() >= target.getTime()) {
       setTimeout(function () { fireNotification(); }, 3000);
     }
@@ -239,7 +231,6 @@ window.CT_CHALLENGE_NOTIF = (function () {
     if (!isSupported()) {
       return { ok: false, error: 'Notifications are not supported in this browser.' };
     }
-
     const perm = await ensurePermission();
     if (perm === 'denied') {
       return { ok: false, error: 'Notifications are blocked. Enable them in your browser settings.' };
@@ -247,12 +238,10 @@ window.CT_CHALLENGE_NOTIF = (function () {
     if (perm !== 'granted') {
       return { ok: false, error: 'Notification permission was not granted.' };
     }
-
     const reg = await registerSW();
     if (!reg) {
       return { ok: false, error: 'Could not register the service worker.' };
     }
-
     const s = {
       enabled:      true,
       hour:         Number.isFinite(hour)   ? hour   : DEFAULT_HOUR,
@@ -286,7 +275,7 @@ window.CT_CHALLENGE_NOTIF = (function () {
   }
 
   /* ================================================================== */
-  /*  UI BINDING (only present on challenge.html)                       */
+  /*  UI BINDING                                                        */
   /* ================================================================== */
   function populateTimeSelectors() {
     const hourSel   = document.getElementById('notif-hour');
@@ -319,12 +308,12 @@ window.CT_CHALLENGE_NOTIF = (function () {
     const enabled = !!(s && s.enabled);
     const perm    = isSupported() ? Notification.permission : 'unsupported';
 
-    const status     = document.getElementById('notif-status');
-    const toggle     = document.getElementById('notif-toggle');
-    const timeRow    = document.getElementById('notif-time-row');
-    const hourSel    = document.getElementById('notif-hour');
-    const minuteSel  = document.getElementById('notif-minute');
-    const testBtn    = document.getElementById('notif-test-btn');
+    const status      = document.getElementById('notif-status');
+    const toggle      = document.getElementById('notif-toggle');
+    const timeRow     = document.getElementById('notif-time-row');
+    const hourSel     = document.getElementById('notif-hour');
+    const minuteSel   = document.getElementById('notif-minute');
+    const testBtn     = document.getElementById('notif-test-btn');
     const unsupported = document.getElementById('notif-unsupported');
 
     if (!isSupported()) {
@@ -377,10 +366,8 @@ window.CT_CHALLENGE_NOTIF = (function () {
   function handleTimeChange() {
     const s = getSettings();
     if (!s || !s.enabled) return;
-
     const hourSel   = document.getElementById('notif-hour');
     const minuteSel = document.getElementById('notif-minute');
-
     s.hour   = parseInt(hourSel.value, 10);
     s.minute = parseInt(minuteSel.value, 10);
     saveSettings(s);
@@ -406,7 +393,6 @@ window.CT_CHALLENGE_NOTIF = (function () {
   /*  BOOT                                                              */
   /* ================================================================== */
   function onCheckboxChange() {
-    /* Auto-disable + celebrate when done */
     setTimeout(function () {
       const done = countDone();
       if (done >= TOTAL_DAYS) {
@@ -424,9 +410,7 @@ window.CT_CHALLENGE_NOTIF = (function () {
     if (initDone) return;
     initDone = true;
 
-    /* Register the SW on every page so scheduling works site-wide */
     registerSW().then(function () {
-      /* Bind UI only if the challenge card exists */
       if (document.getElementById('notif-card')) {
         populateTimeSelectors();
 
@@ -440,20 +424,14 @@ window.CT_CHALLENGE_NOTIF = (function () {
         if (minuteSel) minuteSel.addEventListener('change', handleTimeChange);
         if (testBtn)   testBtn.addEventListener('click', handleTest);
 
-        /* If already 7/7 on load, reflect the "complete" state */
-        if (countDone() >= TOTAL_DAYS) {
-          disable();
-        }
-
+        if (countDone() >= TOTAL_DAYS) disable();
         updateUI();
       }
 
-      /* Any page: schedule + catch up on missed reminders */
       checkMissedOnLoad();
       scheduleNext();
     });
 
-    /* Wire checkbox listeners if this page has the challenge grid */
     document.querySelectorAll('.challenge-checkbox').forEach(function (cb) {
       cb.addEventListener('change', onCheckboxChange);
     });

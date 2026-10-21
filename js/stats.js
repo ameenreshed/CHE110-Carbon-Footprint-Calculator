@@ -1,6 +1,6 @@
 /* ==========================================================================
    Carbotrack — stats.js
-   Anonymous platform counters: visits, footprints, certificates, shares.
+   Anonymous counters. Fixed: in-flight dedupe prevents double RPC on load.
    ========================================================================== */
 window.CT_STATS = (function () {
   'use strict';
@@ -13,10 +13,8 @@ window.CT_STATS = (function () {
   let cacheTime   = 0;
   let rendering   = false;
   let bootstrapped = false;
+  let inflightFetch = null;   /* FIX: dedupe concurrent get_public_stats calls */
 
-  /* ================================================================== */
-  /*  IDS                                                               */
-  /* ================================================================== */
   function generateId() {
     if (window.crypto && window.crypto.randomUUID) {
       return window.crypto.randomUUID().replace(/-/g, '').slice(0, 24);
@@ -35,10 +33,7 @@ window.CT_STATS = (function () {
         localStorage.setItem(VISITOR_KEY, id);
       }
       return id;
-    } catch (e) {
-      /* localStorage blocked (private mode) — ephemeral per page load */
-      return 'e_' + generateId();
-    }
+    } catch (e) { return 'e_' + generateId(); }
   }
 
   function todayKey() {
@@ -47,18 +42,14 @@ window.CT_STATS = (function () {
   }
 
   function haveSentVisitToday() {
-    try {
-      return localStorage.getItem(VISIT_SENT_KEY) === todayKey();
-    } catch (e) { return false; }
+    try { return localStorage.getItem(VISIT_SENT_KEY) === todayKey(); }
+    catch (e) { return false; }
   }
 
   function markVisitSent() {
-    try { localStorage.setItem(VISIT_SENT_KEY, todayKey()); } catch (e) { /* ignore */ }
+    try { localStorage.setItem(VISIT_SENT_KEY, todayKey()); } catch (e) {}
   }
 
-  /* ================================================================== */
-  /*  RPC CALLS                                                         */
-  /* ================================================================== */
   async function recordVisit() {
     const client = window.CT_SUPABASE_CLIENT;
     if (!client) return null;
@@ -68,19 +59,14 @@ window.CT_STATS = (function () {
       const { data, error } = await client.rpc('record_visit', {
         p_session_id: getVisitorId()
       });
-      if (error) {
-        console.warn('[Carbotrack stats] record_visit failed', error);
-        return null;
-      }
+      if (error) { console.warn('[Carbotrack stats] record_visit failed', error); return null; }
       markVisitSent();
       if (data) {
         cachedStats = Array.isArray(data) ? data[0] : data;
         cacheTime = Date.now();
         return cachedStats;
       }
-    } catch (e) {
-      console.warn('[Carbotrack stats] record_visit threw', e);
-    }
+    } catch (e) { console.warn('[Carbotrack stats] record_visit threw', e); }
     return null;
   }
 
@@ -93,13 +79,12 @@ window.CT_STATS = (function () {
         p_session_id: getVisitorId(),
         p_metadata: metadata || {}
       });
-      /* Optimistic bump of local cache + UI */
       if (cachedStats) {
         const map = {
-          footprint_computed:   'footprints_computed',
-          certificate_issued:   'certificates_issued',
-          share:                'shares',
-          challenge_completed:  'challenge_completions'
+          footprint_computed:  'footprints_computed',
+          certificate_issued:  'certificates_issued',
+          share:               'shares',
+          challenge_completed: 'challenge_completions'
         };
         const dbKey = map[type];
         if (dbKey && cachedStats[dbKey] != null) {
@@ -107,37 +92,32 @@ window.CT_STATS = (function () {
           repaintNumbers();
         }
       }
-    } catch (e) {
-      console.warn('[Carbotrack stats] record_event failed', e);
-    }
+    } catch (e) { console.warn('[Carbotrack stats] record_event failed', e); }
   }
 
   async function fetchStats(force) {
     const client = window.CT_SUPABASE_CLIENT;
     if (!client) return null;
-    if (!force && cachedStats && Date.now() - cacheTime < CACHE_TTL_MS) {
+    if (!force && cachedStats && Date.now() - cacheTime < CACHE_TTL_MS) return cachedStats;
+    if (inflightFetch) return inflightFetch;
+
+    inflightFetch = (async function () {
+      try {
+        const { data, error } = await client.rpc('get_public_stats');
+        if (error) { console.warn('[Carbotrack stats] fetch failed', error); return cachedStats; }
+        if (data) {
+          cachedStats = Array.isArray(data) ? data[0] : data;
+          cacheTime = Date.now();
+          return cachedStats;
+        }
+      } catch (e) { console.warn('[Carbotrack stats] fetch threw', e); }
       return cachedStats;
-    }
-    try {
-      const { data, error } = await client.rpc('get_public_stats');
-      if (error) {
-        console.warn('[Carbotrack stats] fetch failed', error);
-        return cachedStats;
-      }
-      if (data) {
-        cachedStats = Array.isArray(data) ? data[0] : data;
-        cacheTime = Date.now();
-        return cachedStats;
-      }
-    } catch (e) {
-      console.warn('[Carbotrack stats] fetch threw', e);
-    }
-    return cachedStats;
+    })();
+
+    try { return await inflightFetch; }
+    finally { inflightFetch = null; }
   }
 
-  /* ================================================================== */
-  /*  FORMAT + RENDER                                                   */
-  /* ================================================================== */
   function fmt(n) {
     n = Number(n) || 0;
     if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -147,10 +127,10 @@ window.CT_STATS = (function () {
 
   function itemList(stats) {
     return [
-      { icon: 'fa-eye',             label: 'Visitors',             key: 'visits',                value: stats.visits },
-      { icon: 'fa-chart-simple',    label: 'Footprints Measured',  key: 'footprints_computed',   value: stats.footprints_computed },
-      { icon: 'fa-certificate',     label: 'Certificates Issued',  key: 'certificates_issued',   value: stats.certificates_issued },
-      { icon: 'fa-share-nodes',     label: 'Shares',               key: 'shares',                value: stats.shares }
+      { icon: 'fa-eye',          label: 'Visitors',             key: 'visits',              value: stats.visits },
+      { icon: 'fa-chart-simple', label: 'Footprints Measured',  key: 'footprints_computed', value: stats.footprints_computed },
+      { icon: 'fa-certificate',  label: 'Certificates Issued',  key: 'certificates_issued', value: stats.certificates_issued },
+      { icon: 'fa-share-nodes',  label: 'Shares',               key: 'shares',              value: stats.shares }
     ];
   }
 
@@ -161,9 +141,7 @@ window.CT_STATS = (function () {
         '<div class="stat-card">' +
           '<div class="stat-card__icon"><i class="fa-solid ' + it.icon + '"></i></div>' +
           '<div class="stat-card__body">' +
-            '<div class="stat-card__value" data-stat-key="' + it.key + '">' +
-              fmt(it.value) +
-            '</div>' +
+            '<div class="stat-card__value" data-stat-key="' + it.key + '">' + fmt(it.value) + '</div>' +
             '<div class="stat-card__label">' + it.label + '</div>' +
           '</div>' +
         '</div>'
@@ -175,9 +153,7 @@ window.CT_STATS = (function () {
     if (!cachedStats) return;
     document.querySelectorAll('[data-stat-key]').forEach(function (el) {
       const key = el.getAttribute('data-stat-key');
-      if (cachedStats[key] != null) {
-        el.textContent = fmt(cachedStats[key]);
-      }
+      if (cachedStats[key] != null) el.textContent = fmt(cachedStats[key]);
     });
   }
 
@@ -190,23 +166,15 @@ window.CT_STATS = (function () {
     if (stats) renderInto(host, stats);
   }
 
-  /* ================================================================== */
-  /*  INIT                                                              */
-  /* ================================================================== */
   function init() {
     if (bootstrapped) return;
     bootstrapped = true;
-
     if (!window.CT_SUPABASE_CLIENT) return;
 
-    /* Record the visit (debounced 1× per day per browser) */
     recordVisit();
 
-    /* Render any [data-stats-strip] hosts on the current page */
     document.querySelectorAll('[data-stats-strip]').forEach(function (host) {
-      if (!host.id) {
-        host.id = 'ct-stats-' + Math.random().toString(36).slice(2, 8);
-      }
+      if (!host.id) host.id = 'ct-stats-' + Math.random().toString(36).slice(2, 8);
       render(host.id);
     });
   }
@@ -214,7 +182,6 @@ window.CT_STATS = (function () {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
-    /* DOMContentLoaded may have already fired for late-loaded script */
     init();
   }
 

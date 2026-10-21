@@ -64,7 +64,8 @@ window.CT_ENGINE = (function () {
     const totalKg = commute + flights + energy + food + water + waste + shopping;
     const totalTons = totalKg / 1000;
 
-    const ecoScore = Math.max(20, Math.min(96, Math.round(100 - (totalTons * 8.5))));
+    /* FIX: score is now genuinely 0–100 (was clamped to 20–96). */
+    const ecoScore = Math.max(0, Math.min(100, Math.round(100 - totalTons * 8.5)));
 
     const breakdown = {
       commute:  Math.round(commute),
@@ -86,12 +87,13 @@ window.CT_ENGINE = (function () {
       pct: totalKg > 0 ? +((s.value / totalKg) * 100).toFixed(1) : 0
     }));
 
-    /* ---------- CLASSIFICATION (no emoji — Font Awesome used in UI) - */
+    /* ---------- CLASSIFICATION (config-driven thresholds) ---------- */
+    const T = C.tierThresholds;
     let rating;
-    if (totalTons <= 2.2)      rating = { key: 'low',       label: 'Lower Impact — Target Compliant' };
-    else if (totalTons <= 4.5) rating = { key: 'moderate',  label: 'Moderate Impact' };
-    else if (totalTons <= 7.5) rating = { key: 'high',      label: 'High Impact' };
-    else                       rating = { key: 'very-high', label: 'Very High Impact' };
+    if (totalTons < T.lowMax)           rating = { key: 'low',       label: 'Lower Impact — Target Compliant' };
+    else if (totalTons < T.moderateMax) rating = { key: 'moderate',  label: 'Moderate Impact' };
+    else if (totalTons < T.highMax)     rating = { key: 'high',      label: 'High Impact' };
+    else                                rating = { key: 'very-high', label: 'Very High Impact' };
 
     const vsParis = totalTons > 0
       ? +((totalTons / C.benchmarks.parisTarget) * 100).toFixed(0)
@@ -127,7 +129,7 @@ window.CT_ENGINE = (function () {
       personalKm:      clamp(num(raw.personalKm, 0),   0, 500),
       commuteDays:     clamp(num(raw.commuteDays, 0),  0, 7),
       publicKm:        clamp(num(raw.publicKm, 0),     0, 300),
-      carpoolFactor:   clamp(num(raw.carpoolFactor, 1), 0.1, 1),
+      carpoolFactor:   clamp(num(raw.carpoolFactor, 1), 0, 1),
       domesticFlights: clamp(num(raw.domesticFlights, 0), 0, 100),
       intlFlights:     clamp(num(raw.intlFlights, 0),     0, 50),
 

@@ -1,6 +1,8 @@
 /* ==========================================================================
    Carbotrack — challenge.js
-   7-Day Challenge tracker with Supabase persistence + platform stats.
+   7-Day Challenge tracker.
+   FIX: replaced window.confirm() with a styled modal that matches the rest
+   of the UI (celebrate-modal pattern).
    ========================================================================== */
 (function () {
   'use strict';
@@ -9,24 +11,15 @@
   const TOTAL_DAYS = 7;
 
   let celebrateModalEl = null;
+  let confirmModalEl = null;
   let authReady = false;
   let saveTimer = null;
   let lastSavedKey = null;
 
-  /* ================================================================== */
-  /*  AUTH WAIT                                                         */
-  /* ================================================================== */
   function waitForAuthReady(timeoutMs) {
-    if (window.CT_AUTH_READY) {
-      authReady = true;
-      return Promise.resolve();
-    }
+    if (window.CT_AUTH_READY) { authReady = true; return Promise.resolve(); }
     return new Promise(function (resolve) {
-      const timer = setTimeout(function () {
-        authReady = true;
-        resolve();
-      }, timeoutMs || 3000);
-
+      const timer = setTimeout(function () { authReady = true; resolve(); }, timeoutMs || 3000);
       document.addEventListener('ct:auth-ready', function () {
         clearTimeout(timer);
         authReady = true;
@@ -42,15 +35,9 @@
     return null;
   }
 
-  /* ================================================================== */
-  /*  LOCALSTORAGE                                                      */
-  /* ================================================================== */
   function saveLocal(days) {
     try {
-      window.CT_STORAGE.saveChallenge({
-        days: days,
-        updatedAt: new Date().toISOString()
-      });
+      window.CT_STORAGE.saveChallenge({ days: days, updatedAt: new Date().toISOString() });
     } catch (e) { /* ignore */ }
   }
 
@@ -66,9 +53,6 @@
     return [false, false, false, false, false, false, false];
   }
 
-  /* ================================================================== */
-  /*  APPLY / READ                                                      */
-  /* ================================================================== */
   function applyDays(days) {
     const boxes = document.querySelectorAll('.challenge-checkbox');
     boxes.forEach(function (cb, i) {
@@ -81,9 +65,6 @@
     return Array.from(boxes).map(function (cb) { return !!cb.checked; });
   }
 
-  /* ================================================================== */
-  /*  LOAD                                                              */
-  /* ================================================================== */
   async function loadAndRestore() {
     const user = getCurrentUser();
     const localDays = getLocal();
@@ -91,14 +72,12 @@
     if (user && window.CT_SB_CHALLENGE) {
       try {
         const remote = await window.CT_SB_CHALLENGE.load(user.id);
-
         if (remote.ok && remote.exists) {
           applyDays(remote.days);
           saveLocal(remote.days);
           lastSavedKey = JSON.stringify(remote.days);
           return;
         }
-
         if (localDays.some(Boolean)) {
           const migrated = await window.CT_SB_CHALLENGE.save(user.id, localDays);
           if (migrated.ok) {
@@ -108,7 +87,6 @@
             return;
           }
         }
-
         applyDays([false, false, false, false, false, false, false]);
         saveLocal([false, false, false, false, false, false, false]);
         lastSavedKey = JSON.stringify([false, false, false, false, false, false, false]);
@@ -122,33 +100,21 @@
     lastSavedKey = JSON.stringify(localDays);
   }
 
-  /* ================================================================== */
-  /*  SAVE                                                              */
-  /* ================================================================== */
   function saveState() {
     const days = readDaysFromCheckboxes();
-
     saveLocal(days);
 
     if (saveTimer) clearTimeout(saveTimer);
-
     saveTimer = setTimeout(async function () {
       const user = getCurrentUser();
       if (!user || !window.CT_SB_CHALLENGE) return;
-
       const key = JSON.stringify(days);
       if (key === lastSavedKey) return;
-
       const result = await window.CT_SB_CHALLENGE.save(user.id, days);
-      if (result.ok) {
-        lastSavedKey = key;
-      }
+      if (result.ok) lastSavedKey = key;
     }, 250);
   }
 
-  /* ================================================================== */
-  /*  PROGRESS                                                          */
-  /* ================================================================== */
   function countChecked() {
     let done = 0;
     document.querySelectorAll('.challenge-checkbox').forEach(function (cb) {
@@ -174,16 +140,13 @@
     return done;
   }
 
-  /* ================================================================== */
-  /*  CONFETTI                                                          */
-  /* ================================================================== */
   function spawnConfetti(count) {
     const colors = ['#34d399', '#f7e8b0', '#38bdf8', '#fbbf24', '#ef4444', '#a855f7', '#10b981'];
     const total = count || 90;
-
     for (let i = 0; i < total; i++) {
       const conf = document.createElement('div');
       conf.className = 'confetti';
+      conf.setAttribute('aria-hidden', 'true');
       conf.style.left = Math.random() * 100 + 'vw';
       conf.style.background = colors[Math.floor(Math.random() * colors.length)];
       conf.style.animationDelay = (Math.random() * 1.8) + 's';
@@ -197,12 +160,11 @@
   }
 
   /* ================================================================== */
-  /*  CELEBRATION MODAL                                                 */
+  /*  CELEBRATE MODAL                                                   */
   /* ================================================================== */
   function ensureCelebrateModal() {
     celebrateModalEl = $('celebrate-modal');
     if (!celebrateModalEl) return null;
-
     if (celebrateModalEl.dataset.wired === '1') return celebrateModalEl;
     celebrateModalEl.dataset.wired = '1';
 
@@ -210,15 +172,27 @@
     if (closeBtn) closeBtn.addEventListener('click', closeCelebration);
 
     celebrateModalEl.addEventListener('click', function (e) {
-      if (e.target === celebrateModalEl ||
-          e.target.classList.contains('celebrate-modal__backdrop')) {
+      if (e.target === celebrateModalEl || e.target.classList.contains('celebrate-modal__backdrop')) {
         closeCelebration();
       }
     });
 
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && celebrateModalEl && !celebrateModalEl.hidden) {
-        closeCelebration();
+      if (e.key === 'Escape' && celebrateModalEl && !celebrateModalEl.hidden) closeCelebration();
+    });
+
+    celebrateModalEl.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab') return;
+      const focusables = Array.from(
+        celebrateModalEl.querySelectorAll('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')
+      ).filter(el => el.offsetParent !== null);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last  = focusables[focusables.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !celebrateModalEl.contains(document.activeElement))) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || !celebrateModalEl.contains(document.activeElement))) {
+        e.preventDefault(); first.focus();
       }
     });
 
@@ -228,14 +202,11 @@
   function openCelebration() {
     const modal = ensureCelebrateModal();
     if (!modal) return;
-
     modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
     requestAnimationFrame(function () { modal.classList.add('is-open'); });
     document.body.style.overflow = 'hidden';
-
     spawnConfetti(90);
-
     window.setTimeout(function () {
       const btn = modal.querySelector('.btn-primary');
       if (btn) btn.focus();
@@ -247,13 +218,101 @@
     celebrateModalEl.classList.remove('is-open');
     celebrateModalEl.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
-    window.setTimeout(function () {
-      celebrateModalEl.hidden = true;
-    }, 300);
+    window.setTimeout(function () { celebrateModalEl.hidden = true; }, 300);
   }
 
   /* ================================================================== */
-  /*  HANDLERS                                                          */
+  /*  CONFIRM DIALOG — replaces window.confirm()                       */
+  /* ================================================================== */
+  function ensureConfirmModal() {
+    if (confirmModalEl) return confirmModalEl;
+
+    confirmModalEl = document.createElement('div');
+    confirmModalEl.id = 'ct-confirm-modal';
+    confirmModalEl.className = 'celebrate-modal';
+    confirmModalEl.hidden = true;
+    confirmModalEl.setAttribute('aria-hidden', 'true');
+    confirmModalEl.innerHTML = `
+      <div class="celebrate-modal__backdrop" data-confirm-cancel></div>
+      <div class="celebrate-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="ct-confirm-title">
+        <span class="celebrate-emoji" style="font-size:3rem;">❓</span>
+        <h2 class="celebrate-title" id="ct-confirm-title" style="font-size:1.5rem;">Are you sure?</h2>
+        <p class="celebrate-sub" id="ct-confirm-msg" style="font-size:1rem;"></p>
+        <div class="celebrate-actions">
+          <button type="button" class="btn btn-primary btn-lg" data-confirm-yes>
+            <i class="fa-solid fa-check"></i> <span>Yes, Continue</span>
+          </button>
+          <button type="button" class="btn btn-ghost" data-confirm-cancel>
+            <i class="fa-solid fa-xmark"></i> <span>Cancel</span>
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(confirmModalEl);
+
+    /* Focus trap — attached once */
+    confirmModalEl.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab') return;
+      const focusables = Array.from(
+        confirmModalEl.querySelectorAll('button:not([disabled])')
+      ).filter(el => el.offsetParent !== null);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last  = focusables[focusables.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !confirmModalEl.contains(document.activeElement))) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || !confirmModalEl.contains(document.activeElement))) {
+        e.preventDefault(); first.focus();
+      }
+    });
+
+    return confirmModalEl;
+  }
+
+  function confirmDialog(message) {
+    return new Promise(function (resolve) {
+      const modal = ensureConfirmModal();
+      const msgEl = modal.querySelector('#ct-confirm-msg');
+      if (msgEl) msgEl.textContent = message;
+
+      let settled = false;
+
+      function finish(result) {
+        if (settled) return;
+        settled = true;
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        window.setTimeout(function () { modal.hidden = true; }, 300);
+        document.removeEventListener('keydown', onKey);
+        resolve(result);
+      }
+
+      function onKey(e) {
+        if (e.key === 'Escape') finish(false);
+      }
+
+      modal.querySelector('[data-confirm-yes]').onclick = function () { finish(true); };
+      modal.querySelectorAll('[data-confirm-cancel]').forEach(function (el) {
+        el.onclick = function () { finish(false); };
+      });
+
+      document.addEventListener('keydown', onKey);
+
+      modal.hidden = false;
+      modal.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(function () { modal.classList.add('is-open'); });
+      document.body.style.overflow = 'hidden';
+
+      window.setTimeout(function () {
+        const btn = modal.querySelector('[data-confirm-yes]');
+        if (btn) btn.focus();
+      }, 120);
+    });
+  }
+
+  /* ================================================================== */
+  /*  EVENT HANDLERS                                                    */
   /* ================================================================== */
   function handleChange() {
     const prevDone = window.__ctPrevDone || 0;
@@ -261,51 +320,38 @@
 
     if (done === TOTAL_DAYS && prevDone < TOTAL_DAYS) {
       window.setTimeout(openCelebration, 220);
-
-      /* Record challenge_completed event */
-      if (window.CT_STATS) {
-        window.CT_STATS.recordEvent('challenge_completed');
-      }
-
-      if (window.CT_TOAST) {
-        window.CT_TOAST.show('Challenge complete — you are a Champion!', 'success', 3200);
-      }
+      if (window.CT_STATS) window.CT_STATS.recordEvent('challenge_completed');
+      if (window.CT_TOAST) window.CT_TOAST.show('Challenge complete — you are a Champion!', 'success', 3200);
     }
 
     window.__ctPrevDone = done;
   }
 
   async function resetChallenge() {
-    if (!window.confirm('Reset all 7-day challenge progress?')) return;
+    const ok = await confirmDialog('Reset all 7-day challenge progress? This cannot be undone.');
+    if (!ok) return;
 
-    document.querySelectorAll('.challenge-checkbox').forEach(function (cb) {
-      cb.checked = false;
-    });
-
+    document.querySelectorAll('.challenge-checkbox').forEach(function (cb) { cb.checked = false; });
     try { window.CT_STORAGE.clearChallenge(); } catch (e) { /* ignore */ }
-
     const user = getCurrentUser();
     if (user && window.CT_SB_CHALLENGE) {
       try { await window.CT_SB_CHALLENGE.reset(user.id); } catch (e) { /* ignore */ }
     }
-
     updateProgress();
     window.__ctPrevDone = 0;
     lastSavedKey = JSON.stringify([false, false, false, false, false, false, false]);
-
-    if (window.CT_TOAST) {
-      window.CT_TOAST.show('Challenge progress reset.', 'info', 2200);
-    }
+    if (window.CT_TOAST) window.CT_TOAST.show('Challenge progress reset.', 'info', 2200);
   }
 
-  /* ================================================================== */
-  /*  INIT                                                              */
-  /* ================================================================== */
   async function init() {
     const boxes = document.querySelectorAll('.challenge-checkbox');
     if (!boxes.length) return;
 
     await waitForAuthReady(3000);
+
+    /* If not logged in, gateCurrentPage will replace the page —
+       don't bind anything. */
+    if (window.CT_SB_AUTH && !window.CT_SB_AUTH.isLoggedIn()) return;
 
     await loadAndRestore();
 

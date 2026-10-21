@@ -1,6 +1,7 @@
 /* ==========================================================================
    Carbotrack — supabase-auth.js
    Username + password authentication + profile self-heal + auth-ready flag.
+   NEW: updateProfile() — allows editing the display name from the profile page.
    ========================================================================== */
 window.CT_SB_AUTH = (function () {
   'use strict';
@@ -30,9 +31,7 @@ window.CT_SB_AUTH = (function () {
   /* ================================================================== */
   /*  METADATA HELPERS                                                  */
   /* ================================================================== */
-  function getMeta(user) {
-    return (user && user.user_metadata) || {};
-  }
+  function getMeta(user) { return (user && user.user_metadata) || {}; }
 
   function metaFullName(user) {
     const m = getMeta(user);
@@ -140,7 +139,6 @@ window.CT_SB_AUTH = (function () {
       handleSession(session);
     });
 
-    /* Signal to the rest of the app that auth is fully initialized */
     window.CT_AUTH_READY = true;
     document.dispatchEvent(new CustomEvent('ct:auth-ready'));
   }
@@ -165,6 +163,15 @@ window.CT_SB_AUTH = (function () {
     return null;
   }
 
+  function validateFullName(name) {
+    if (!name) return 'Please enter your full name.';
+    const trimmed = String(name).trim();
+    if (trimmed.length < 2)   return 'Full name must be at least 2 characters.';
+    if (trimmed.length > 60)  return 'Full name is too long (max 60 characters).';
+    if (/[<>"']/.test(trimmed)) return 'Full name cannot contain <, >, " or \' characters.';
+    return null;
+  }
+
   /* ================================================================== */
   /*  AUTH                                                              */
   /* ================================================================== */
@@ -178,7 +185,8 @@ window.CT_SB_AUTH = (function () {
     const passErr = validatePassword(password);
     if (passErr) return { ok: false, error: passErr };
 
-    if (!fullName) return { ok: false, error: 'Please enter your full name.' };
+    const nameErr = validateFullName(fullName);
+    if (nameErr) return { ok: false, error: nameErr };
 
     const { data, error } = await client.auth.signUp({
       email: usernameToEmail(username),
@@ -249,6 +257,44 @@ window.CT_SB_AUTH = (function () {
     return { ok: true };
   }
 
+  /* ================================================================== */
+  /*  UPDATE PROFILE  (new — used by profile page)                      */
+  /* ================================================================== */
+  async function updateProfile(patch) {
+    if (!currentUser) return { ok: false, error: 'Not signed in.' };
+    if (!patch || typeof patch !== 'object') return { ok: false, error: 'Nothing to update.' };
+
+    const clean = {};
+
+    if (Object.prototype.hasOwnProperty.call(patch, 'full_name')) {
+      const nameErr = validateFullName(patch.full_name);
+      if (nameErr) return { ok: false, error: nameErr };
+      clean.full_name = String(patch.full_name).trim();
+      clean.avatar_initials = initialsOf(clean.full_name);
+    }
+
+    if (!Object.keys(clean).length) return { ok: false, error: 'Nothing to update.' };
+
+    const { data, error } = await client
+      .from('profiles')
+      .update(clean)
+      .eq('id', currentUser.id)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.warn('[Carbotrack] profile update failed', error);
+      return { ok: false, error: error.message || 'Could not save profile.' };
+    }
+
+    currentProfile = data || Object.assign({}, currentProfile, clean);
+    notify();
+    return { ok: true, profile: currentProfile };
+  }
+
+  /* ================================================================== */
+  /*  GETTERS / UTILS                                                   */
+  /* ================================================================== */
   function getUser()     { return currentUser; }
   function getProfile()  { return currentProfile; }
   function isLoggedIn()  { return !!currentUser; }
@@ -279,12 +325,14 @@ window.CT_SB_AUTH = (function () {
     signUp: signUp,
     signIn: signIn,
     signOut: signOut,
+    updateProfile: updateProfile,
     getUser: getUser,
     getProfile: getProfile,
     isLoggedIn: isLoggedIn,
     onChange: onChange,
     waitForProfile: waitForProfile,
     validateUsername: validateUsername,
-    validatePassword: validatePassword
+    validatePassword: validatePassword,
+    validateFullName: validateFullName
   };
 })();

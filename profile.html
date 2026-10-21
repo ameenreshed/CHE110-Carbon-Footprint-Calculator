@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile — Carbotrack</title>
+  <meta name="description" content="Your Carbotrack profile — certificates earned, footprint history, leaderboard rank and challenge progress.">
+
+  <script>try{var t=localStorage.getItem('carbotrack:theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%231b3027'/><path d='M 32 54 L 32 36 M 32 36 C 22 36 12 30 12 18 C 24 18 30 24 32 32 C 32 24 38 14 52 14 C 52 28 42 36 32 36 Z' stroke='%2334d399' stroke-width='3' stroke-linejoin='round' stroke-linecap='round' fill='%2334d399' fill-opacity='0.15'/></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/profile.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+
+<body class="font-sans bg-earth text-slate-800 nature-bg">
+
+  <header class="site-header" id="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="index.html" class="brand">
+          <span class="brand__mark"><i class="fa-solid fa-leaf"></i></span>
+          <span>
+            <span class="brand__name">Carbotrack</span>
+            <span class="brand__tag">Understand Your Impact</span>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary">
+          <a href="index.html" data-nav-link>Home</a>
+          <a href="index.html#problem-section">Why It Matters</a>
+          <a href="calculator.html" data-nav-link>Calculator</a>
+          <a href="results.html" data-nav-link>Results</a>
+          <a href="challenge.html" data-nav-link>Challenge</a>
+          <a href="leaderboard.html" data-nav-link>Leaderboard</a>
+          <a href="methodology.html" data-nav-link>Methodology</a>
+          <a href="about.html" data-nav-link>Academic</a>
+        </nav>
+
+        <div class="header-actions">
+          <a href="calculator.html" class="btn btn-primary btn-sm">
+            <span>Calculator</span>
+            <i class="fa-solid fa-calculator text-[10px]"></i>
+          </a>
+        </div>
+
+        <button id="mobile-menu-btn" class="mobile-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="mobile-menu">
+      <a href="index.html">Home</a>
+      <a href="calculator.html">Calculator</a>
+      <a href="results.html">Results</a>
+      <a href="challenge.html">7-Day Challenge</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="methodology.html">Methodology</a>
+      <a href="about.html">Academic Info</a>
+    </div>
+  </header>
+
+  <main class="section section--white section--border">
+    <div class="container" style="max-width:64rem;">
+
+      <!-- PROFILE HERO -->
+      <div class="profile-hero" id="profile-hero">
+        <div class="profile-hero__avatar" id="profile-avatar">—</div>
+        <div class="profile-hero__info">
+          <h1 class="profile-hero__name" id="profile-name">Loading…</h1>
+          <p class="profile-hero__handle" id="profile-handle">@—</p>
+          <p class="profile-hero__meta">
+            <span><i class="fa-solid fa-calendar-check"></i> Member since <strong id="profile-joined">—</strong></span>
+            <span class="profile-hero__sep">•</span>
+            <span><i class="fa-solid fa-fingerprint"></i> Account ID <code id="profile-id-short">—</code>
+              <button type="button" id="profile-id-copy" class="profile-copy-btn" title="Copy full account ID" aria-label="Copy account ID">
+                <i class="fa-solid fa-copy"></i>
+              </button>
+            </span>
+          </p>
+        </div>
+        <div class="profile-hero__actions">
+          <button type="button" id="profile-edit-name-btn" class="btn btn-outline btn-sm">
+            <i class="fa-solid fa-pen"></i> Edit Name
+          </button>
+          <button type="button" id="profile-signout-btn" class="btn btn-ghost btn-sm">
+            <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+          </button>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat__icon profile-stat__icon--green"><i class="fa-solid fa-leaf"></i></div>
+          <div class="profile-stat__body">
+            <div class="profile-stat__value" id="stat-best-footprint">—</div>
+            <div class="profile-stat__label">Best Footprint</div>
+          </div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat__icon profile-stat__icon--blue"><i class="fa-solid fa-chart-simple"></i></div>
+          <div class="profile-stat__body">
+            <div class="profile-stat__value" id="stat-eco-score">—</div>
+            <div class="profile-stat__label">Best Eco Score</div>
+          </div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat__icon profile-stat__icon--gold"><i class="fa-solid fa-trophy"></i></div>
+          <div class="profile-stat__body">
+            <div class="profile-stat__value" id="stat-rank">—</div>
+            <div class="profile-stat__label">Leaderboard Rank</div>
+          </div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat__icon profile-stat__icon--purple"><i class="fa-solid fa-list-check"></i></div>
+          <div class="profile-stat__body">
+            <div class="profile-stat__value" id="stat-challenge">—</div>
+            <div class="profile-stat__label">Challenge Days</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CERTIFICATE VAULT -->
+      <div class="profile-section">
+        <div class="profile-section__head">
+          <h2 class="profile-section__title"><i class="fa-solid fa-award"></i> Certificate Vault</h2>
+          <p class="profile-section__sub">Every certificate you have earned across the platform.</p>
+        </div>
+        <div class="profile-certs" id="profile-certs"></div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="profile-section">
+        <div class="profile-section__head">
+          <h2 class="profile-section__title"><i class="fa-solid fa-clock-rotate-left"></i> Footprint History</h2>
+          <p class="profile-section__sub">Your last 10 assessments, most recent first.</p>
+        </div>
+
+        <div id="profile-history-empty" class="profile-empty hidden">
+          <div class="profile-empty__icon"><i class="fa-solid fa-chart-simple"></i></div>
+          <h3 class="profile-empty__title">No assessments yet</h3>
+          <p class="profile-empty__sub">Run the calculator to start building your footprint history.</p>
+          <a href="calculator.html" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-calculator"></i> Open Calculator
+          </a>
+        </div>
+
+        <div id="profile-history-shell" class="table-shell hidden">
+          <div class="scroll-x">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Annual Footprint</th>
+                  <th>Eco Score</th>
+                  <th>Rating</th>
+                </tr>
+              </thead>
+              <tbody id="profile-history-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- EDIT NAME MODAL -->
+  <div id="profile-edit-modal" class="auth-overlay" hidden aria-hidden="true">
+    <div class="auth-card" style="max-width:24rem;" role="dialog" aria-modal="true" aria-labelledby="profile-edit-title">
+      <button type="button" class="auth-close" id="profile-edit-close" aria-label="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="auth-brand">
+        <span class="auth-brand__mark"><i class="fa-solid fa-leaf"></i></span>
+        <span>Carbotrack</span>
+      </div>
+
+      <h3 class="auth-title" id="profile-edit-title">Edit Display Name</h3>
+      <p class="auth-intent">This is what appears on your certificates and the leaderboard.</p>
+
+      <form class="auth-form" id="profile-edit-form" novalidate>
+        <label class="auth-field">
+          <span>Full Name</span>
+          <div class="auth-input-wrap">
+            <i class="fa-solid fa-id-card"></i>
+            <input id="profile-edit-input" type="text" maxlength="60" autocomplete="name" placeholder="e.g. Ananya Sharma">
+          </div>
+        </label>
+
+        <p class="auth-error" id="profile-edit-error" hidden></p>
+
+        <button type="submit" class="btn btn-primary btn-block" id="profile-edit-submit">
+          <i class="fa-solid fa-check"></i>
+          <span>Save Name</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <span class="footer-brand__mark"><i class="fa-solid fa-leaf"></i></span>
+            <span>Carbotrack</span>
+          </div>
+          <p style="font-size:.75rem;line-height:1.8;">
+            Measure your impact. Understand your footprint. Take informed action.
+          </p>
+        </div>
+        <div>
+          <h4 class="footer-title">Quick Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home Overview</a></li>
+            <li><a href="calculator.html">Carbon Calculator</a></li>
+            <li><a href="results.html">Results Dashboard</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
+            <li><a href="leaderboard.html">Global Leaderboard</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Academic Resources</h4>
+          <ul class="footer-links">
+            <li><a href="methodology.html">Emission Factors</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
+            <li><a href="about.html">CHE110 Assignment</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Project Dissemination</h4>
+          <div class="footer-social">
+            <a href="https://linkedin.com" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://youtube.com" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
+            <a href="https://instagram.com" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a>
+            <a href="https://github.com" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-current-year>2026</span> Carbotrack Environmental Platform.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/supabase-auth.js"></script>
+  <script src="js/supabase-leaderboard.js"></script>
+  <script src="js/supabase-challenge.js"></script>
+
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/challenge-notifications.js"></script>
+  <script src="js/stats.js"></script>
+</body>
+</html>
