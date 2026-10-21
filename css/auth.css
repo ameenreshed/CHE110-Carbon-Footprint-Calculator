@@ -1,6 +1,8 @@
 /* ==========================================================================
    Carbotrack — auth.css
    Account button, dropdown, modal, mobile block, lock screen.
+   FIX: .account-caret and .account-menu__head small now use #64748b
+   (was #94a3b8 — too light in light mode). Dark mode overrides still work.
    ========================================================================== */
 
 /* ---------- Header account button ---------- */
@@ -49,7 +51,7 @@
 
 .account-caret {
   font-size: .58rem;
-  color: #94a3b8;
+  color: #64748b;
   transition: transform .25s var(--ease);
 }
 
@@ -102,7 +104,7 @@
 .account-menu__head small {
   display: block;
   font-size: .68rem;
-  color: #94a3b8;
+  color: #64748b;
   margin-top: .1rem;
 }
 

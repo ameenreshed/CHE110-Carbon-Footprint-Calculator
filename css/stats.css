@@ -1,68 +1,59 @@
 /* ==========================================================================
    Carbotrack — stats.css
-   Platform counter strip on the homepage.
+   Single visits counter strip on the homepage.
+   Responsive across every device.
    ========================================================================== */
 
-.stats-strip-wrap {
-  padding-block: 3rem;
+/* ---------- Wrapper ---------- */
+.visit-counter-wrap {
+  padding-block: 2.5rem;
   background: linear-gradient(180deg, #fbf9f5 0%, #f5f2eb 100%);
   border-bottom: 1px solid var(--forest-100);
 }
-
-.stats-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  max-width: 60rem;
-  margin: 0 auto;
+@media (max-width: 640px) {
+  .visit-counter-wrap { padding-block: 2rem; }
 }
 
-@media (max-width: 900px) {
-  .stats-strip { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 480px) {
-  .stats-strip { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
-}
-
-.stat-card {
+/* ---------- Single card ---------- */
+.visit-counter {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1.25rem 1.35rem;
+  gap: 1.25rem;
+  max-width: 26rem;
+  margin: 0 auto;
+  padding: 1.35rem 1.75rem;
   background: #fff;
   border: 1px solid var(--forest-100);
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(13, 26, 21, .04);
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  border-radius: 20px;
+  box-shadow: 0 6px 24px rgba(13, 26, 21, .08);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 26px rgba(13, 26, 21, .10);
+.visit-counter:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(13, 26, 21, .12);
   border-color: var(--forest-300);
 }
 
-.stat-card__icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+.visit-counter__icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 14px;
   background: linear-gradient(135deg, #ecfdf5, #d1fae5);
   color: #059669;
   display: grid;
   place-items: center;
-  font-size: 1.15rem;
+  font-size: 1.4rem;
   flex-shrink: 0;
 }
 
-.stat-card__body {
-  min-width: 0;
+.visit-counter__body {
   flex: 1;
+  min-width: 0;
 }
 
-.stat-card__value {
+.visit-counter__value {
   font-family: 'Poppins', 'Inter', sans-serif;
-  font-size: 1.75rem;
+  font-size: clamp(2rem, 6vw, 2.75rem);
   font-weight: 800;
   color: var(--forest-950);
   line-height: 1;
@@ -71,47 +62,54 @@
   transition: color .2s ease;
 }
 
-.stat-card__label {
-  font-size: .65rem;
+.visit-counter__label {
+  font-size: .72rem;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--text-muted);
-  margin-top: .4rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-top: .5rem;
 }
 
-/* ---- Dark theme ---- */
-[data-theme="dark"] .stats-strip-wrap {
+/* ---------- Dark theme ---------- */
+[data-theme="dark"] .visit-counter-wrap {
   background: linear-gradient(180deg, #0d1512 0%, #0f1814 100%);
   border-bottom-color: var(--forest-200);
 }
-[data-theme="dark"] .stat-card {
+[data-theme="dark"] .visit-counter {
   background: #131e19;
   border-color: var(--forest-200);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .35);
 }
-[data-theme="dark"] .stat-card:hover {
+[data-theme="dark"] .visit-counter:hover {
   border-color: var(--forest-400);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, .35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .5);
 }
-[data-theme="dark"] .stat-card__icon {
-  background: linear-gradient(135deg, rgba(16, 185, 129, .15), rgba(52, 211, 153, .08));
+[data-theme="dark"] .visit-counter__icon {
+  background: linear-gradient(135deg, rgba(16,185,129,.18), rgba(52,211,153,.08));
   color: #34d399;
 }
-[data-theme="dark"] .stat-card__value { color: var(--text-strong); }
-[data-theme="dark"] .stat-card__label { color: var(--text-muted); }
+[data-theme="dark"] .visit-counter__value { color: var(--text-strong); }
+[data-theme="dark"] .visit-counter__label { color: var(--text-muted); }
 
-/* ---- Mobile ---- */
+/* ---------- Mobile ---------- */
 @media (max-width: 480px) {
-  .stat-card { padding: .85rem; gap: .6rem; border-radius: 12px; }
-  .stat-card__icon { width: 34px; height: 34px; font-size: .85rem; border-radius: 9px; }
-  .stat-card__value { font-size: 1.15rem; }
-  .stat-card__label { font-size: .55rem; letter-spacing: .06em; }
+  .visit-counter {
+    padding: 1.1rem 1.25rem;
+    gap: 1rem;
+    max-width: 100%;
+  }
+  .visit-counter__icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 1.1rem;
+    border-radius: 12px;
+  }
+  .visit-counter__value { font-size: 2rem; }
+  .visit-counter__label { font-size: .65rem; }
 }
 
-/* ---- Print ---- */
+/* ---------- Print ---------- */
 @media print {
-  .stats-strip-wrap { display: none !important; }
+  .visit-counter-wrap { display: none !important; }
 }

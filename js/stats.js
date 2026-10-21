@@ -1,18 +1,27 @@
 /* ==========================================================================
    Carbotrack — stats.js
-   Server-side counters with raw + deduped tiers.
+   Homepage counter shows ONLY total visits.
 
-   Auto-fires on every page load:
-     - 'page_view'  (raw, every load)
-     - 'visit'      (deduped, once per visitor per day)
+   VISIT SENSITIVITY — change VISIT_WINDOW_MS below:
+   ==========================================================================
+*/
 
-   Exposes CT_STATS.recordEvent(type, meta, dedupeKey) for other modules.
+/* ==========================================================================
+   VISIT WINDOW
+   How often a NEW visit counts for the same visitor.
+   Smaller = more sensitive = counter grows faster.
    ========================================================================== */
+// const VISIT_WINDOW_MS = 0;                // every page load counts (most sensitive)
+// const VISIT_WINDOW_MS = 60 * 1000;        // 1 minute
+// const VISIT_WINDOW_MS = 5 * 60 * 1000;    // 5 minutes
+const VISIT_WINDOW_MS = 30 * 60 * 1000;      // 30 minutes (default, session-based)
+// const VISIT_WINDOW_MS = 24 * 60 * 60 * 1000;  // once per day (old behavior)
+
 window.CT_STATS = (function () {
   'use strict';
 
   const VISITOR_KEY     = 'carbotrack:visitor_id';
-  const VISIT_SENT_KEY  = 'carbotrack:visit_sent_day';
+  const LAST_VISIT_KEY  = 'carbotrack:last_visit_at';
   const FIRED_KEY       = 'carbotrack:fired_events';
   const CACHE_TTL_MS    = 30 * 1000;
   const MAX_FIRED_KEYS  = 300;
@@ -47,27 +56,33 @@ window.CT_STATS = (function () {
     } catch (e) { return 'e_' + generateId(); }
   }
 
-  function todayKey() {
-    const d = new Date();
-    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  /* ================================================================== */
+  /*  VISIT TIMESTAMP (millisecond-precision, not day-precision)       */
+  /* ================================================================== */
+  function getLastVisitMs() {
+    try {
+      const raw = localStorage.getItem(LAST_VISIT_KEY);
+      return raw ? parseInt(raw, 10) || 0 : 0;
+    } catch (e) { return 0; }
   }
 
-  function haveSentVisitToday() {
-    try { return localStorage.getItem(VISIT_SENT_KEY) === todayKey(); }
-    catch (e) { return false; }
+  function markVisitSentMs() {
+    try { localStorage.setItem(LAST_VISIT_KEY, String(Date.now())); } catch (e) {}
   }
 
-  function markVisitSent() {
-    try { localStorage.setItem(VISIT_SENT_KEY, todayKey()); } catch (e) {}
+  function shouldSendVisit() {
+    if (VISIT_WINDOW_MS <= 0) return true;         // every page load
+    const last = getLastVisitMs();
+    if (!last) return true;                         // never visited
+    return (Date.now() - last) >= VISIT_WINDOW_MS;  // window expired
   }
 
   function pagePath() {
-    const path = window.location.pathname.split('/').pop() || 'index.html';
-    return path || 'index.html';
+    return window.location.pathname.split('/').pop() || 'index.html';
   }
 
   /* ================================================================== */
-  /*  LOCAL DEDUPE                                                      */
+  /*  LOCAL DEDUPE (events)                                             */
   /* ================================================================== */
   function readFired() {
     try { return JSON.parse(localStorage.getItem(FIRED_KEY) || '{}'); }
@@ -95,25 +110,40 @@ window.CT_STATS = (function () {
   }
 
   /* ================================================================== */
-  /*  VISIT (deduped, once per visitor per day)                        */
+  /*  VISIT — time-window based                                        */
   /* ================================================================== */
   async function recordVisit() {
     const client = window.CT_SUPABASE_CLIENT;
     if (!client) return null;
-    if (haveSentVisitToday()) return cachedStats;
+
+    // Skip entirely if window hasn't expired
+    if (!shouldSendVisit()) return cachedStats;
 
     try {
+      // Send window to server so both sides agree
+      const windowSeconds = Math.max(0, Math.round(VISIT_WINDOW_MS / 1000));
+
       const { data, error } = await client.rpc('record_visit', {
-        p_session_id: getVisitorId()
+        p_session_id:     getVisitorId(),
+        p_window_seconds: windowSeconds
       });
-      if (error) { console.warn('[CT stats] record_visit failed', error); return null; }
-      markVisitSent();
+
+      if (error) {
+        console.warn('[CT stats] record_visit failed', error);
+        return null;
+      }
+
+      // Mark locally ONLY after successful response
+      markVisitSentMs();
+
       if (data) {
         cachedStats = Array.isArray(data) ? data[0] : data;
         cacheTime = Date.now();
         return cachedStats;
       }
-    } catch (e) { console.warn('[CT stats] record_visit threw', e); }
+    } catch (e) {
+      console.warn('[CT stats] record_visit threw', e);
+    }
     return null;
   }
 
@@ -139,10 +169,7 @@ window.CT_STATS = (function () {
       if (error) {
         const msg = (error.message || '').toLowerCase();
         if (/p_dedupe_key|unknown.*parameter|function.*record_event/i.test(msg)) {
-          console.error(
-            '[CT stats] record_event RPC signature mismatch. ' +
-            'Run stats-dashboard.sql in Supabase SQL Editor.'
-          );
+          console.error('[CT stats] Run stats-dashboard.sql in Supabase.');
         } else {
           console.warn('[CT stats] record_event failed', error);
         }
@@ -150,40 +177,21 @@ window.CT_STATS = (function () {
       }
 
       if (dedupeKey) markFiredLocally(dedupeKey);
-
-      if (inserted === true && cachedStats) {
-        const map = {
-          page_view:            'page_views',
-          calculator_start:     'calculator_starts',
-          calculator_submit:    'calculator_submits',
-          footprint_computed:   'footprints_computed',
-          certificate_view:     'certificate_views',
-          certificate_download: 'certificate_downloads',
-          certificate_issued:   'certificates_issued',
-          share_click:          'share_clicks',
-          share:                'shares',
-          signup:               'signups',
-          signin:               'signins',
-          challenge_tick:       'challenge_ticks',
-          challenge_completed:  'challenge_completions'
-        };
-        const dbKey = map[type];
-        if (dbKey && cachedStats[dbKey] != null) {
-          cachedStats[dbKey] = Number(cachedStats[dbKey]) + 1;
-        }
-      }
     } catch (e) {
       console.warn('[CT stats] record_event threw', e);
     }
   }
 
   /* ================================================================== */
-  /*  PUBLIC API — auto page-view                                      */
+  /*  PAGE VIEW                                                         */
   /* ================================================================== */
   function trackPageView() {
     recordEvent('page_view', { page: pagePath() });
   }
 
+  /* ================================================================== */
+  /*  FETCH                                                             */
+  /* ================================================================== */
   async function fetchStats(force) {
     const client = window.CT_SUPABASE_CLIENT;
     if (!client) return null;
@@ -214,36 +222,18 @@ window.CT_STATS = (function () {
     return String(n);
   }
 
-  function itemList(stats) {
-    return [
-      { icon: 'fa-eye',          label: 'Visitors',             key: 'visits',              value: stats.visits },
-      { icon: 'fa-chart-simple', label: 'Footprints Measured',  key: 'footprints_computed', value: stats.footprints_computed },
-      { icon: 'fa-certificate',  label: 'Certificates Issued',  key: 'certificates_issued', value: stats.certificates_issued },
-      { icon: 'fa-share-nodes',  label: 'Shares',               key: 'shares',              value: stats.shares }
-    ];
-  }
-
-  function renderInto(host, stats) {
+  /* ================================================================== */
+  /*  RENDER — SINGLE VISITS CARD                                      */
+  /* ================================================================== */
+  function renderVisits(host, stats) {
     if (!host) return;
-    host.innerHTML = itemList(stats).map(function (it) {
-      return (
-        '<div class="stat-card">' +
-          '<div class="stat-card__icon"><i class="fa-solid ' + it.icon + '"></i></div>' +
-          '<div class="stat-card__body">' +
-            '<div class="stat-card__value" data-stat-key="' + it.key + '">' + fmt(it.value) + '</div>' +
-            '<div class="stat-card__label">' + it.label + '</div>' +
-          '</div>' +
-        '</div>'
-      );
-    }).join('');
-  }
-
-  function repaintNumbers() {
-    if (!cachedStats) return;
-    document.querySelectorAll('[data-stat-key]').forEach(function (el) {
-      const key = el.getAttribute('data-stat-key');
-      if (cachedStats[key] != null) el.textContent = fmt(cachedStats[key]);
-    });
+    const visits = Number(stats.visits) || 0;
+    host.innerHTML =
+      '<div class="visit-counter__icon"><i class="fa-solid fa-eye"></i></div>' +
+      '<div class="visit-counter__body">' +
+        '<div class="visit-counter__value" data-stat-key="visits">' + fmt(visits) + '</div>' +
+        '<div class="visit-counter__label">Total Site Visits</div>' +
+      '</div>';
   }
 
   async function render(hostId) {
@@ -252,7 +242,7 @@ window.CT_STATS = (function () {
     rendering = true;
     const stats = await fetchStats();
     rendering = false;
-    if (stats) renderInto(host, stats);
+    if (stats) renderVisits(host, stats);
   }
 
   /* ================================================================== */
@@ -264,11 +254,17 @@ window.CT_STATS = (function () {
     if (!window.CT_SUPABASE_CLIENT) return;
 
     trackPageView();
-    recordVisit();
 
-    document.querySelectorAll('[data-stats-strip]').forEach(function (host) {
-      if (!host.id) host.id = 'ct-stats-' + Math.random().toString(36).slice(2, 8);
-      render(host.id);
+    // Record visit, then re-fetch + re-render with fresh number
+    recordVisit().then(function () {
+      const host = document.querySelector('[data-stats-strip]');
+      if (host) {
+        if (!host.id) host.id = 'ct-visits';
+        // Force a fresh fetch so the displayed number reflects the new visit
+        fetchStats(true).then(function (stats) {
+          if (stats) renderVisits(host, stats);
+        });
+      }
     });
   }
 

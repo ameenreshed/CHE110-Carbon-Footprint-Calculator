@@ -1,6 +1,7 @@
 /* ==========================================================================
    Carbotrack — theme.css
-   Dark mode + toggle + drawer + polish + print.
+   Dark mode tokens, toggle, mobile drawer, back-to-top. Clean — no
+   safety-net !important overrides that break dark mode.
    ========================================================================== */
 
 /* ---- 1. Dark tokens ---- */
@@ -50,6 +51,9 @@ body.is-menu-open { overflow: hidden; }
 [data-theme="dark"] .main-nav a.is-active::after { background: var(--leaf-500); }
 [data-theme="dark"] .mobile-toggle { color: var(--text-body); }
 [data-theme="dark"] .mobile-toggle:hover { background: var(--forest-200); color: var(--text-strong); }
+[data-theme="dark"] .mobile-menu { background: #131e19; border-bottom-color: var(--forest-200); }
+[data-theme="dark"] .mobile-menu a { color: var(--text-body); border-bottom-color: var(--forest-200); }
+[data-theme="dark"] .mobile-menu a:hover { color: var(--leaf-400); }
 
 /* ---- 4. Buttons ---- */
 [data-theme="dark"] .btn-primary { background: var(--leaf-600); color: #fff; border: 1px solid var(--leaf-700); box-shadow: 0 4px 14px rgba(16,185,129,.25); }
@@ -199,6 +203,7 @@ body.is-menu-open { overflow: hidden; }
 /* ---- 16. Account (desktop) ---- */
 [data-theme="dark"] .account-btn { background: #131e19; border-color: var(--forest-200); color: var(--text-body); }
 [data-theme="dark"] .account-btn:hover { background: #0f1814; border-color: var(--forest-300); color: var(--text-strong); }
+[data-theme="dark"] .account-name { color: var(--text-strong); }
 [data-theme="dark"] .account-caret { color: var(--text-muted); }
 [data-theme="dark"] .account-menu { background: #131e19; border-color: var(--forest-200); box-shadow: 0 24px 60px rgba(0,0,0,.6); }
 [data-theme="dark"] .account-menu__head { border-bottom-color: var(--forest-200); }
@@ -268,19 +273,30 @@ body.is-menu-open { overflow: hidden; }
 [data-theme="dark"] .footer-social a { background: var(--forest-100); color: var(--forest-600); border: 1px solid var(--forest-300); }
 [data-theme="dark"] .footer-social a:hover { background: var(--leaf-600); color: #fff; border-color: var(--leaf-600); }
 
-/* ---- 21. Certificate ----
-   Certificate is intentionally self-contained and ALWAYS dark.
-   No theme overrides needed — see certificate.css. */
-
-/* ---- 22. Theme toggle ---- */
-.theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 2.35rem; height: 2.35rem; padding: 0; border-radius: 50%; background: var(--forest-50); color: var(--forest-700); border: 1px solid var(--forest-200); box-shadow: none; cursor: pointer; transition: background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease; flex-shrink: 0; }
+/* ---- 21. Theme toggle ---- */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--forest-50);
+  color: var(--forest-700);
+  border: 1px solid var(--forest-200);
+  box-shadow: none;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+  flex-shrink: 0;
+}
 .theme-toggle:hover { background: var(--forest-100); color: var(--forest-900); border-color: var(--forest-300); transform: rotate(15deg); }
 .theme-toggle:active { transform: rotate(15deg) scale(.94); }
 .theme-toggle i { font-size: .9rem; line-height: 1; }
 [data-theme="dark"] .theme-toggle { background: var(--forest-100); color: var(--leaf-400); border-color: var(--forest-300); }
 [data-theme="dark"] .theme-toggle:hover { background: var(--forest-200); color: var(--leaf-300); border-color: var(--forest-400); }
 
-/* ---- 23. Mobile Drawer (Premium Glassmorphism) ---- */
+/* ---- 22. Mobile drawer ---- */
 #mobile-menu {
   display: flex;
   flex-direction: column;
@@ -292,7 +308,7 @@ body.is-menu-open { overflow: hidden; }
   width: min(85vw, 22rem);
   height: 100vh;
   height: 100dvh;
-  background: rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
   backdrop-filter: blur(24px) saturate(150%);
   -webkit-backdrop-filter: blur(24px) saturate(150%);
   border-left: 1px solid rgba(255, 255, 255, 0.8);
@@ -308,22 +324,14 @@ body.is-menu-open { overflow: hidden; }
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.4s ease;
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
-
-#mobile-menu.is-open {
-  transform: translateX(0);
-  visibility: visible;
-  pointer-events: auto;
-}
-
+#mobile-menu.is-open { transform: translateX(0); visibility: visible; pointer-events: auto; }
 [data-theme="dark"] #mobile-menu {
-  background: rgba(13, 21, 18, 0.85) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(13, 21, 18, 0.95) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
 }
-
 @media (min-width: 1200px) {
-  #mobile-menu,
-  #mobile-menu.is-open { display: none !important; }
+  #mobile-menu, #mobile-menu.is-open { display: none !important; }
 }
 
 .nav-backdrop {
@@ -345,15 +353,16 @@ body.is-menu-open { overflow: hidden; }
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid rgba(197, 221, 207, 0.4);
   flex-shrink: 0;
 }
 [data-theme="dark"] .mobile-menu__head { border-bottom-color: rgba(255, 255, 255, 0.08); }
 .mobile-menu__head .brand { min-width: 0; flex: 1; text-decoration: none; }
-.mobile-menu__head .brand__name { font-size: 1.25rem; font-weight: 800; color: var(--forest-900); }
-.mobile-menu__head .brand__mark { width: 2.25rem; height: 2.25rem; font-size: 1rem; border-radius: 10px; }
+.mobile-menu__head .brand__name { font-size: 1.15rem; font-weight: 800; color: var(--forest-900); }
+.mobile-menu__head .brand__mark { width: 2.15rem; height: 2.15rem; font-size: 1rem; border-radius: 10px; }
 [data-theme="dark"] .mobile-menu__head .brand__name { color: #fff; }
+[data-theme="dark"] .mobile-menu__head .brand__mark { background: var(--leaf-600); color: #fff; }
 
 .mobile-menu__close {
   display: grid;
@@ -366,6 +375,7 @@ body.is-menu-open { overflow: hidden; }
   border: none;
   cursor: pointer;
   transition: all 0.25s ease;
+  flex-shrink: 0;
 }
 .mobile-menu__close:hover { background: var(--forest-100); transform: rotate(90deg); color: var(--forest-950); }
 [data-theme="dark"] .mobile-menu__close { background: rgba(255, 255, 255, 0.1); color: #fff; }
@@ -374,12 +384,12 @@ body.is-menu-open { overflow: hidden; }
 #mobile-menu > a {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  min-height: 52px;
-  padding: 0.85rem 1.5rem;
-  margin: 0.25rem 0.75rem;
+  gap: .85rem;
+  min-height: 48px;
+  padding: .75rem 1.25rem;
+  margin: .25rem .65rem;
   border-radius: 12px;
-  font-size: 0.95rem;
+  font-size: .92rem;
   font-weight: 600;
   color: var(--text-body);
   text-decoration: none;
@@ -391,9 +401,9 @@ body.is-menu-open { overflow: hidden; }
   color: var(--forest-500);
   font-size: 1rem;
   transition: color 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
 }
 #mobile-menu > a .mobile-menu__link-text { flex: 1; min-width: 0; }
-
 #mobile-menu > a::after {
   content: "\f054";
   font-family: "Font Awesome 6 Free";
@@ -402,16 +412,11 @@ body.is-menu-open { overflow: hidden; }
   color: var(--text-muted);
   opacity: 0.4;
   transition: transform 0.2s ease, opacity 0.2s ease;
+  flex-shrink: 0;
 }
-
-#mobile-menu > a:hover {
-  background: rgba(16, 185, 129, 0.08);
-  color: var(--leaf-700);
-  transform: translateX(4px);
-}
+#mobile-menu > a:hover { background: rgba(16, 185, 129, 0.08); color: var(--leaf-700); transform: translateX(4px); }
 #mobile-menu > a:hover .mobile-menu__link-icon { color: var(--leaf-600); transform: scale(1.1); }
 #mobile-menu > a:hover::after { opacity: 1; color: var(--leaf-600); transform: translateX(4px); }
-
 #mobile-menu > a.is-active {
   background: rgba(16, 185, 129, 0.15);
   color: var(--leaf-800);
@@ -420,19 +425,18 @@ body.is-menu-open { overflow: hidden; }
 }
 #mobile-menu > a.is-active .mobile-menu__link-icon { color: var(--leaf-700); }
 #mobile-menu > a.is-active::after { opacity: 1; color: var(--leaf-700); }
-
 [data-theme="dark"] #mobile-menu > a { color: #cbd5e1; }
 [data-theme="dark"] #mobile-menu > a:hover { background: rgba(16, 185, 129, 0.15); color: #fff; }
 [data-theme="dark"] #mobile-menu > a.is-active { background: rgba(16, 185, 129, 0.2); color: #fff; }
 
-#mobile-menu .mobile-account { padding: 0.5rem 0.75rem; margin-top: 0.5rem; }
+#mobile-menu .mobile-account { padding: 0.5rem 0.65rem; margin-top: 0.5rem; }
 [data-theme="dark"] #mobile-menu .mobile-account { border-top-color: rgba(255,255,255,0.08); }
 #mobile-menu .mobile-account__head {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.75rem;
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.7rem;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(197, 221, 207, 0.5);
@@ -441,34 +445,33 @@ body.is-menu-open { overflow: hidden; }
 #mobile-menu .mobile-account__head:hover { background: rgba(255, 255, 255, 0.8); }
 [data-theme="dark"] #mobile-menu .mobile-account__head { background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.1); }
 [data-theme="dark"] #mobile-menu .mobile-account__head:hover { background: rgba(0,0,0,0.4); }
-
 #mobile-menu .mobile-account__meta strong { display: block; font-size: 0.9rem; color: var(--forest-950); line-height: 1.2; }
 #mobile-menu .mobile-account__meta small { display: block; font-size: 0.72rem; color: var(--text-muted); }
 [data-theme="dark"] #mobile-menu .mobile-account__meta strong { color: #fff; }
 
 #mobile-menu .mobile-account__body { display: grid; gap: 0.25rem; padding-top: 0.5rem; }
-#mobile-menu .mobile-account__body a, 
+#mobile-menu .mobile-account__body a,
 #mobile-menu .mobile-account__body button {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0.75rem;
+  gap: 0.65rem;
+  min-height: 44px;
+  padding: 0.6rem 0.7rem;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 500;
   color: var(--text-body);
   transition: background 0.2s ease;
 }
-#mobile-menu .mobile-account__body a:hover, 
+#mobile-menu .mobile-account__body a:hover,
 #mobile-menu .mobile-account__body button:hover { background: rgba(197, 221, 207, 0.3); }
-[data-theme="dark"] #mobile-menu .mobile-account__body a:hover, 
+[data-theme="dark"] #mobile-menu .mobile-account__body a:hover,
 [data-theme="dark"] #mobile-menu .mobile-account__body button:hover { background: rgba(255, 255, 255, 0.1); }
-
-#mobile-menu .mobile-account__body button#mobile-logout { color: #ef4444; margin-top: 0.5rem; }
+#mobile-menu .mobile-account__body button#mobile-logout { color: #ef4444; margin-top: 0.4rem; }
 #mobile-menu .mobile-account__body button#mobile-logout:hover { background: rgba(239, 68, 68, 0.1); }
 
 #mobile-menu .mobile-theme {
-  padding: 1rem 0.75rem;
+  padding: 0.85rem 0.65rem;
   margin-top: auto;
   border-top: 1px solid rgba(197, 221, 207, 0.4);
 }
@@ -477,11 +480,11 @@ body.is-menu-open { overflow: hidden; }
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
   width: 100%;
-  min-height: 48px;
+  min-height: 44px;
   border-radius: 12px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: var(--forest-800);
   background: rgba(197, 221, 207, 0.3);
@@ -491,19 +494,28 @@ body.is-menu-open { overflow: hidden; }
 [data-theme="dark"] #mobile-menu .mobile-theme__btn { background: rgba(255,255,255,0.08); color: #fff; }
 [data-theme="dark"] #mobile-menu .mobile-theme__btn:hover { background: rgba(255,255,255,0.15); }
 
-#mobile-menu .mobile-menu__actions {
-  padding: 1rem 1.5rem;
-  margin-top: 0.5rem;
-}
+#mobile-menu .mobile-menu__actions { padding: 0.85rem 1.25rem; margin-top: 0.5rem; }
 
-/* ---- 24. Back to top ---- */
+/* ---- 23. Back to top ---- */
 .back-to-top {
-  position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 40;
-  width: 2.75rem; height: 2.75rem; border-radius: 50%;
-  background: var(--forest-900); color: #fff;
-  display: grid; place-items: center; box-shadow: var(--sh-lg);
-  opacity: 0; visibility: hidden; transform: translateY(12px);
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 40;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--forest-900);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--sh-lg);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
   transition: opacity .3s var(--ease), transform .3s var(--ease), visibility .3s var(--ease), background .2s var(--ease);
+  border: none;
+  cursor: pointer;
 }
 .back-to-top.is-visible { opacity: 1; visibility: visible; transform: translateY(0); }
 .back-to-top:hover { background: var(--leaf-600); transform: translateY(-2px); }
@@ -511,46 +523,50 @@ body.is-menu-open { overflow: hidden; }
 [data-theme="dark"] .back-to-top { background: var(--leaf-600); color: #0a110e; }
 [data-theme="dark"] .back-to-top:hover { background: var(--leaf-500); }
 
-/* ---- 25. Mobile polish ---- */
-@media (max-width: 520px) {
-  .calc-nav { flex-wrap: wrap; gap: .5rem; }
-  .calc-nav > div { flex-wrap: wrap; gap: .4rem; }
-  .calc-nav button { padding: .6rem .85rem; font-size: .75rem; }
+@media (max-width: 640px) {
+  .back-to-top { bottom: .85rem; right: .85rem; width: 2.5rem; height: 2.5rem; }
 }
+
+/* ---- 24. Mobile polish ---- */
 @media (max-width: 400px) {
   .brand__tag { display: none; }
-  .brand__name { font-size: 1.15rem; }
-  .brand__mark { width: 2.25rem; height: 2.25rem; font-size: 1rem; }
-  .section-heading { font-size: 1.5rem; }
-}
-@media (max-width: 640px) {
-  .toast-container { left: 1rem; right: 1rem; bottom: 1rem; max-width: none; }
-  .toast { max-width: none; }
-  .back-to-top { bottom: 1rem; right: 1rem; width: 2.5rem; height: 2.5rem; }
   .header-actions .btn-primary span { display: none; }
 }
 
-/* ---- 26. Drawer stacking guard ---- */
+/* ---- 25. Drawer stacking ---- */
 body > #mobile-menu  { z-index: 95; }
 body > #nav-backdrop { z-index: 90; }
 body.is-menu-open > .site-header     { z-index: 40; }
 body.is-menu-open > .back-to-top     { z-index: 30; }
 body.is-menu-open > .toast-container { z-index: 30; }
 
-/* ---- 27. Print ---- */
+/* ---- 26. Print ---- */
 @media print {
   .back-to-top, .toast-container, .theme-toggle, .mobile-theme,
   .nav-backdrop, #mobile-menu { display: none !important; }
   body.is-menu-open { overflow: auto !important; }
   [data-theme="dark"] body { background: #fff !important; color: #000 !important; }
-  [data-theme="dark"] .site-header, [data-theme="dark"] .site-footer, [data-theme="dark"] .no-print { display: none !important; }
-  [data-theme="dark"] .section--white, [data-theme="dark"] .section--alt, [data-theme="dark"] .card,
-  [data-theme="dark"] .kpi-hero, [data-theme="dark"] .kpi-card, [data-theme="dark"] .chart-container,
-  [data-theme="dark"] .rec-panel, [data-theme="dark"] .rec-card,
-  [data-theme="dark"] .about-panel, [data-theme="dark"] .method-card, [data-theme="dark"] .table-shell,
+  [data-theme="dark"] .site-header,
+  [data-theme="dark"] .site-footer,
+  [data-theme="dark"] .no-print { display: none !important; }
+  [data-theme="dark"] .section--white,
+  [data-theme="dark"] .section--alt,
+  [data-theme="dark"] .card,
+  [data-theme="dark"] .kpi-hero,
+  [data-theme="dark"] .kpi-card,
+  [data-theme="dark"] .chart-container,
+  [data-theme="dark"] .rec-panel,
+  [data-theme="dark"] .rec-card,
+  [data-theme="dark"] .about-panel,
+  [data-theme="dark"] .method-card,
+  [data-theme="dark"] .table-shell,
   [data-theme="dark"] .lock-panel {
-    background: #fff !important; color: #000 !important; border-color: #ccc !important; box-shadow: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #ccc !important;
+    box-shadow: none !important;
   }
-  [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, [data-theme="dark"] h4,
-  [data-theme="dark"] p, [data-theme="dark"] li, [data-theme="dark"] span, [data-theme="dark"] strong { color: #000 !important; }
+  [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+  [data-theme="dark"] h4, [data-theme="dark"] p, [data-theme="dark"] li,
+  [data-theme="dark"] span, [data-theme="dark"] strong { color: #000 !important; }
 }

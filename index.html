@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carbotrack — Carbon Footprint Calculator & Environmental Impact Platform</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Carbotrack — Carbon Footprint Calculator &amp; Environmental Impact Platform</title>
   <meta name="description" content="Measure your personal carbon footprint across travel, electricity, diet, water, waste and lifestyle. Get science-backed recommendations to reduce your impact.">
+  <meta name="theme-color" content="#1b3027">
 
   <script>try{var t=localStorage.getItem('carbotrack:theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 
@@ -19,10 +20,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/tailwind-config.js"></script>
 
-  <link rel="preload" as="image" href="img/bg/carbon-ecosystem.webp">
-
   <link rel="stylesheet" href="css/base.css">
-  <style>:root { --ct-bg-photo: url('img/bg/carbon-ecosystem.webp'); }</style>
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
@@ -196,36 +194,16 @@
     </div>
   </section>
 
-  <section class="stats-strip-wrap no-print" aria-label="Platform statistics">
+  <!-- SINGLE VISITS COUNTER -->
+  <section class="visit-counter-wrap no-print" aria-label="Site visits">
     <div class="container">
-      <div class="stats-strip" id="platform-stats-strip" data-stats-strip>
-        <div class="stat-card">
-          <div class="stat-card__icon"><i class="fa-solid fa-eye"></i></div>
-          <div class="stat-card__body">
-            <div class="stat-card__value">—</div>
-            <div class="stat-card__label">Visitors</div>
-          </div>
+      <div class="visit-counter" id="platform-stats-strip" data-stats-strip>
+        <div class="visit-counter__icon">
+          <i class="fa-solid fa-eye"></i>
         </div>
-        <div class="stat-card">
-          <div class="stat-card__icon"><i class="fa-solid fa-chart-simple"></i></div>
-          <div class="stat-card__body">
-            <div class="stat-card__value">—</div>
-            <div class="stat-card__label">Footprints Measured</div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card__icon"><i class="fa-solid fa-certificate"></i></div>
-          <div class="stat-card__body">
-            <div class="stat-card__value">—</div>
-            <div class="stat-card__label">Certificates Issued</div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card__icon"><i class="fa-solid fa-share-nodes"></i></div>
-          <div class="stat-card__body">
-            <div class="stat-card__value">—</div>
-            <div class="stat-card__label">Shares</div>
-          </div>
+        <div class="visit-counter__body">
+          <div class="visit-counter__value" data-stat-key="visits">—</div>
+          <div class="visit-counter__label">Total Site Visits</div>
         </div>
       </div>
     </div>
@@ -357,7 +335,6 @@
             <li><a href="methodology.html">Emission Factors Methodology</a></li>
             <li><a href="challenge.html">7-Day Eco Challenge</a></li>
             <li><a href="about.html">CHE110 Assignment Details</a></li>
-            <li><a href="privacy.html">Privacy &amp; Ethics</a></li>
             <li><a href="results.html">Saved Results Dashboard</a></li>
           </ul>
         </div>
@@ -396,7 +373,7 @@
   <script src="js/app.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/theme.js"></script>
-  <script src="js/stats.js"></script>
+  <script src="js/stats.js?v=5"></script>
   <script src="js/challenge-notifications.js"></script>
 </body>
 </html>

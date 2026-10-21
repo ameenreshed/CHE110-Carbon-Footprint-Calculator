@@ -1,6 +1,8 @@
 /* ==========================================================================
    Carbotrack — pages.css
-   Page-specific styling
+   Page-specific styling.
+   FIX: .chart-container__meta and .table-shell__meta use #64748b
+   (was #94a3b8 — too light in light mode).
    ========================================================================== */
 
 /* ==========================================================================
@@ -464,7 +466,7 @@
 }
 
 .chart-container__title { font-size: 1.05rem; }
-.chart-container__meta  { font-size: .68rem; color: #94a3b8; }
+.chart-container__meta  { font-size: .68rem; color: #64748b; }
 
 .chart-canvas-wrap {
   position: relative;
@@ -803,7 +805,7 @@
 }
 
 .table-shell__title { font-size: 1rem; }
-.table-shell__meta  { font-size: .68rem; color: #94a3b8; }
+.table-shell__meta  { font-size: .68rem; color: #64748b; }
 
 /* ==========================================================================
    8. ABOUT PAGE
