@@ -1,6 +1,10 @@
 /* ==========================================================================
    Carbotrack — calculator.js
-   Multi-step form controller with platform stats tracking.
+   Multi-step form controller with DEDUPED platform stats tracking.
+
+   FIX: footprint_computed event now uses a dedupe key
+   (totalTons + ecoScore + today's date) so re-submitting the same
+   values on the same day counts once.
    ========================================================================== */
 window.CT_CALCULATOR = (function () {
   'use strict';
@@ -247,12 +251,19 @@ window.CT_CALCULATOR = (function () {
     window.CT_STORAGE.saveInputs(normalized);
     window.CT_STORAGE.saveResults(results);
 
-    /* Record footprint_computed event for platform stats */
+    /* FIX: dedupe footprint_computed by (totalTons + ecoScore + today).
+       Re-submitting the same values on the same day = 1 count. */
     if (window.CT_STATS) {
-      window.CT_STATS.recordEvent('footprint_computed', {
-        totalTons: results.totalTons,
-        rating: results.rating.key
-      });
+      var today = new Date().toISOString().slice(0, 10);
+      var sig = 'footprint_computed:'
+        + results.totalTons.toFixed(2)
+        + ':' + results.ecoScore
+        + ':' + today;
+      window.CT_STATS.recordEvent(
+        'footprint_computed',
+        { totalTons: results.totalTons, rating: results.rating.key },
+        sig
+      );
     }
 
     const payload = window.CT_STORAGE.encodeInputs(normalized);

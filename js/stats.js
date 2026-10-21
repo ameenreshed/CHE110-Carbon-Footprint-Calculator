@@ -1,20 +1,30 @@
 /* ==========================================================================
    Carbotrack — stats.js
-   Anonymous counters. Fixed: in-flight dedupe prevents double RPC on load.
+   Anonymous counters with server-side deduplication.
+
+   FIX: recordEvent now accepts an optional dedupeKey. The RPC returns
+   true/false — true means it was newly counted, false means duplicate.
+   Local increment only happens when server returns true. Local dedupe
+   short-circuits repeated calls within the same browser/session.
    ========================================================================== */
 window.CT_STATS = (function () {
   'use strict';
 
-  const VISITOR_KEY    = 'carbotrack:visitor_id';
-  const VISIT_SENT_KEY = 'carbotrack:visit_sent_day';
-  const CACHE_TTL_MS   = 30 * 1000;
+  const VISITOR_KEY     = 'carbotrack:visitor_id';
+  const VISIT_SENT_KEY  = 'carbotrack:visit_sent_day';
+  const FIRED_KEY       = 'carbotrack:fired_events';
+  const CACHE_TTL_MS    = 30 * 1000;
+  const MAX_FIRED_KEYS  = 300;
 
-  let cachedStats = null;
-  let cacheTime   = 0;
-  let rendering   = false;
-  let bootstrapped = false;
-  let inflightFetch = null;   /* FIX: dedupe concurrent get_public_stats calls */
+  let cachedStats   = null;
+  let cacheTime     = 0;
+  let rendering     = false;
+  let bootstrapped  = false;
+  let inflightFetch = null;
 
+  /* ================================================================== */
+  /*  HELPERS                                                           */
+  /* ================================================================== */
   function generateId() {
     if (window.crypto && window.crypto.randomUUID) {
       return window.crypto.randomUUID().replace(/-/g, '').slice(0, 24);
@@ -50,6 +60,39 @@ window.CT_STATS = (function () {
     try { localStorage.setItem(VISIT_SENT_KEY, todayKey()); } catch (e) {}
   }
 
+  /* ================================================================== */
+  /*  LOCAL DEDUPE (fast short-circuit before RPC)                      */
+  /* ================================================================== */
+  function readFired() {
+    try { return JSON.parse(localStorage.getItem(FIRED_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+
+  function writeFired(obj) {
+    try {
+      /* Keep only the newest 300 keys to prevent localStorage bloat */
+      const keys = Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; });
+      keys.slice(MAX_FIRED_KEYS).forEach(function (k) { delete obj[k]; });
+      localStorage.setItem(FIRED_KEY, JSON.stringify(obj));
+    } catch (e) { /* ignore */ }
+  }
+
+  function hasFiredLocally(key) {
+    if (!key) return false;
+    const fired = readFired();
+    return !!fired[key];
+  }
+
+  function markFiredLocally(key) {
+    if (!key) return;
+    const fired = readFired();
+    fired[key] = Date.now();
+    writeFired(fired);
+  }
+
+  /* ================================================================== */
+  /*  VISITS                                                            */
+  /* ================================================================== */
   async function recordVisit() {
     const client = window.CT_SUPABASE_CLIENT;
     if (!client) return null;
@@ -70,16 +113,50 @@ window.CT_STATS = (function () {
     return null;
   }
 
-  async function recordEvent(type, metadata) {
+  /* ================================================================== */
+  /*  EVENTS  (server-side dedupe via p_dedupe_key)                     */
+  /* ================================================================== */
+  async function recordEvent(type, metadata, dedupeKey) {
     const client = window.CT_SUPABASE_CLIENT;
     if (!client) return;
+
+    /* 1. Local dedupe — skip entirely if already fired in this browser */
+    if (dedupeKey && hasFiredLocally(dedupeKey)) {
+      return;
+    }
+
     try {
-      await client.rpc('record_event', {
+      const params = {
         p_event_type: type,
         p_session_id: getVisitorId(),
-        p_metadata: metadata || {}
-      });
-      if (cachedStats) {
+        p_metadata:   metadata || {}
+      };
+      if (dedupeKey) params.p_dedupe_key = dedupeKey;
+
+      const { data: inserted, error } = await client.rpc('record_event', params);
+
+      if (error) {
+        /* If the DB hasn't been updated with the new RPC signature,
+           tell the developer clearly. */
+        const msg = (error.message || '').toLowerCase();
+        if (/p_dedupe_key|unknown.*parameter|function.*record_event/i.test(msg)) {
+          console.error(
+            '[Carbotrack stats] record_event RPC signature mismatch. ' +
+            'Run stats-dedupe.sql in Supabase SQL Editor to enable deduplication.'
+          );
+        } else {
+          console.warn('[Carbotrack stats] record_event failed', error);
+        }
+        return;
+      }
+
+      /* 2. Mark local dedupe as fired regardless of server response —
+            server may also dedupe if this browser fired it before
+            localStorage was cleared. */
+      if (dedupeKey) markFiredLocally(dedupeKey);
+
+      /* 3. Only increment local cache if server confirms it inserted */
+      if (inserted === true && cachedStats) {
         const map = {
           footprint_computed:  'footprints_computed',
           certificate_issued:  'certificates_issued',
@@ -92,9 +169,14 @@ window.CT_STATS = (function () {
           repaintNumbers();
         }
       }
-    } catch (e) { console.warn('[Carbotrack stats] record_event failed', e); }
+    } catch (e) {
+      console.warn('[Carbotrack stats] record_event threw', e);
+    }
   }
 
+  /* ================================================================== */
+  /*  FETCH STATS                                                       */
+  /* ================================================================== */
   async function fetchStats(force) {
     const client = window.CT_SUPABASE_CLIENT;
     if (!client) return null;
@@ -118,6 +200,9 @@ window.CT_STATS = (function () {
     finally { inflightFetch = null; }
   }
 
+  /* ================================================================== */
+  /*  RENDER                                                            */
+  /* ================================================================== */
   function fmt(n) {
     n = Number(n) || 0;
     if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -166,6 +251,9 @@ window.CT_STATS = (function () {
     if (stats) renderInto(host, stats);
   }
 
+  /* ================================================================== */
+  /*  BOOT                                                              */
+  /* ================================================================== */
   function init() {
     if (bootstrapped) return;
     bootstrapped = true;
@@ -190,6 +278,7 @@ window.CT_STATS = (function () {
     recordEvent:   recordEvent,
     fetchStats:    fetchStats,
     render:        render,
-    formatNumber:  fmt
+    formatNumber:  fmt,
+    getVisitorId:  getVisitorId
   };
 })();

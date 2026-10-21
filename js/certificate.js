@@ -1,11 +1,15 @@
 /* ==========================================================================
    Carbotrack — certificate.js
-   Dual certificates + full-name resolution + platform stats tracking.
-   FIXES:
-   - Auth-ready race: waitForAuthReadyDeep + direct isLoggedIn fallback.
-   - QR: 280 px (2× of 140 CSS box) → no subpixel blur.
-   - Tier messaging: warm appreciation for champions, actionable urgency
-     for high / severe — with a "Path Forward" callout box.
+   Dual certificates + full-name resolution + tier messaging +
+   DEDUPED platform stats tracking.
+
+   FIXES in this version:
+   - Stats dedupe: one certificate issuance = 1 count regardless of
+     how many times the user downloads (PDF + PNG + retries).
+   - Stats dedupe: one share per (certificate, channel) — re-clicking
+     the same channel doesn't inflate the counter.
+   - Prior fixes retained: auth-ready grace period, QR at 2× display,
+     tier-specific messaging with "Path Forward" callouts.
    ========================================================================== */
 (function () {
   'use strict';
@@ -15,8 +19,6 @@
 
   /* ================================================================== */
   /*  TIERS                                                             */
-  /*  Each tier carries: title, subtitle, badge, seal, message, mood    */
-  /*  and an optional callout shown as a "Path Forward" box.            */
   /* ================================================================== */
   const TIERS = {
     champion: {
@@ -302,29 +304,23 @@
 
     const set = function (id, v) { const el = $(id); if (el) el.textContent = v; };
 
-    /* Core content */
     set('cert-name', data.name);
     set('cert-tons', data.totalTons.toFixed(2) + ' t');
     set('cert-score', data.ecoScore + '/100');
     set('cert-date', formatDate(data.issuedAt));
     set('cert-id', data.certId);
 
-    /* Tier pill */
     set('cert-tier-badge', tier.badge);
     set('cert-tier-range', tier.range);
-
-    /* Title + subtitle */
     set('cert-tier-title', tier.title);
     set('cert-tier-subtitle', tier.subtitle);
 
-    /* Body — mood-tinted via .cert-body--<mood> */
     const bodyEl = $('cert-tier-message');
     if (bodyEl) {
       bodyEl.textContent = tier.message;
       bodyEl.className = 'cert-body cert-body--' + tier.mood;
     }
 
-    /* Callout — shown for moderate / high / severe */
     const callout = $('cert-callout');
     const calloutText = $('cert-callout-text');
     if (callout && calloutText) {
@@ -337,7 +333,6 @@
       }
     }
 
-    /* Icons */
     const tierIcon = $('cert-tier-icon');
     if (tierIcon) tierIcon.className = 'fa-solid ' + tier.icon;
 
@@ -491,6 +486,45 @@
     }[tier.key] || '#07130d';
   }
 
+  /* ================================================================== */
+  /*  STATS HELPERS — DEDUPE                                            */
+  /* ================================================================== */
+  function recordCertificateIssuedOnce() {
+    if (!currentCert.data || !currentCert.data.certId) return;
+    if (!window.CT_STATS) return;
+
+    /* Dedupe by cert ID: PDF download + PNG download of the same
+       certificate = 1 count. Retrying a download = still 1 count. */
+    window.CT_STATS.recordEvent(
+      'certificate_issued',
+      {
+        mode: currentCert.mode,
+        certId: currentCert.data.certId
+      },
+      'certificate_issued:' + currentCert.data.certId
+    );
+  }
+
+  function recordShareOnce(channel) {
+    if (!currentCert.data || !currentCert.data.certId) return;
+    if (!window.CT_STATS) return;
+
+    /* Dedupe by (cert ID + channel):
+       Same cert to WhatsApp twice = 1 count.
+       Same cert to WhatsApp + LinkedIn = 2 counts. */
+    window.CT_STATS.recordEvent(
+      'share',
+      {
+        channel: channel,
+        mode: currentCert.mode
+      },
+      'share:' + currentCert.data.certId + ':' + channel
+    );
+  }
+
+  /* ================================================================== */
+  /*  CAPTURE (continued)                                               */
+  /* ================================================================== */
   async function captureCanvas() {
     const sheet = activeSheet();
     if (!sheet) throw new Error('Certificate element not found');
@@ -560,12 +594,7 @@
       const prefix = currentCert.mode === 'challenge' ? 'Challenge' : 'Certificate';
       pdf.save('Carbotrack-' + prefix + '-' + currentCert.data.certId + '.pdf');
 
-      if (window.CT_STATS) {
-        window.CT_STATS.recordEvent('certificate_issued', {
-          mode: currentCert.mode,
-          certId: currentCert.data.certId
-        });
-      }
+      recordCertificateIssuedOnce();
 
       if (window.CT_TOAST) window.CT_TOAST.show('PDF downloaded successfully!', 'success', 2800);
     } catch (err) {
@@ -600,12 +629,7 @@
       link.click();
       document.body.removeChild(link);
 
-      if (window.CT_STATS) {
-        window.CT_STATS.recordEvent('certificate_issued', {
-          mode: currentCert.mode,
-          certId: currentCert.data.certId
-        });
-      }
+      recordCertificateIssuedOnce();
 
       if (window.CT_TOAST) window.CT_TOAST.show('PNG downloaded!', 'success', 2800);
     } catch (err) {
@@ -708,12 +732,7 @@
         const dest = target.build(buildShareText(), getShareUrl());
         window.open(dest, '_blank', 'noopener,noreferrer,width=620,height=680');
 
-        if (window.CT_STATS) {
-          window.CT_STATS.recordEvent('share', {
-            channel: target.key,
-            mode: currentCert.mode
-          });
-        }
+        recordShareOnce(target.key);
 
         if (window.CT_TOAST) window.CT_TOAST.show('Opening ' + target.label + '…', 'info', 2200);
       });
@@ -739,12 +758,7 @@
           url: getShareUrl()
         });
 
-        if (window.CT_STATS) {
-          window.CT_STATS.recordEvent('share', {
-            channel: 'native',
-            mode: currentCert.mode
-          });
-        }
+        recordShareOnce('native');
 
         if (window.CT_TOAST) window.CT_TOAST.show('Shared!', 'success', 2200);
       } catch (err) {
@@ -777,7 +791,7 @@
       copyUrlBtn.addEventListener('click', async function () {
         try {
           await copyText(getShareUrl());
-          if (window.CT_STATS) window.CT_STATS.recordEvent('share', { channel: 'clipboard', mode: currentCert.mode });
+          recordShareOnce('clipboard');
           if (window.CT_TOAST) window.CT_TOAST.show('Share link copied!', 'success', 2200);
         } catch (e) {
           if (urlInput) { urlInput.select(); urlInput.setSelectionRange(0, 99999); }
@@ -790,7 +804,7 @@
       copyTextBtn.addEventListener('click', async function () {
         try {
           await copyText(buildShareText() + '\n\n' + getShareUrl());
-          if (window.CT_STATS) window.CT_STATS.recordEvent('share', { channel: 'copy_text', mode: currentCert.mode });
+          recordShareOnce('copy_text');
           if (window.CT_TOAST) window.CT_TOAST.show('Share text copied!', 'success', 2200);
         } catch (e) {
           if (window.CT_TOAST) window.CT_TOAST.show('Copy failed.', 'error', 2600);
@@ -856,7 +870,7 @@
     const urlInput = $('share-url-input');
     if (urlInput) urlInput.value = getShareUrl();
 
-    /* QR at 280 px (2× of 140 CSS box) — no subpixel blur */
+    /* QR at 2× display size (140 CSS box → 280 render) */
     const qrHost = $('share-qr-canvas');
     if (qrHost) renderQRCode(qrHost, getShareUrl(), 280);
 
@@ -973,9 +987,7 @@
         link.click();
         document.body.removeChild(link);
 
-        if (window.CT_STATS) {
-          window.CT_STATS.recordEvent('share', { channel: 'share_card', mode: currentCert.mode });
-        }
+        recordShareOnce('share_card');
 
         if (window.CT_TOAST) window.CT_TOAST.show('Share card downloaded!', 'success', 2800);
       } finally {
@@ -1049,7 +1061,7 @@
       return;
     }
 
-    /* 2. Wait for auth (with grace period) then check login state. */
+    /* 2. Wait for auth (with grace period) */
     await waitForAuthReadyDeep(3000, 4000);
 
     const sb = window.CT_SB_AUTH;
@@ -1059,7 +1071,7 @@
 
     if (!loggedIn) return;
 
-    /* 3. Wait for profile (name) to be resolved */
+    /* 3. Wait for profile name */
     await waitForProfile(4000);
 
     /* 4. Challenge mode */

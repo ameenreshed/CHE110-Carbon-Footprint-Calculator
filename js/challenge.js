@@ -1,8 +1,9 @@
 /* ==========================================================================
    Carbotrack — challenge.js
-   7-Day Challenge tracker.
-   FIX: replaced window.confirm() with a styled modal that matches the rest
-   of the UI (celebrate-modal pattern).
+   7-Day Challenge tracker with styled confirm modal + DEDUPED stats.
+
+   FIX: challenge_completed event uses a per-user dedupe key so
+   completing (or resetting + completing) counts once per user.
    ========================================================================== */
 (function () {
   'use strict';
@@ -222,7 +223,7 @@
   }
 
   /* ================================================================== */
-  /*  CONFIRM DIALOG — replaces window.confirm()                       */
+  /*  CONFIRM DIALOG                                                    */
   /* ================================================================== */
   function ensureConfirmModal() {
     if (confirmModalEl) return confirmModalEl;
@@ -250,7 +251,6 @@
     `;
     document.body.appendChild(confirmModalEl);
 
-    /* Focus trap — attached once */
     confirmModalEl.addEventListener('keydown', function (e) {
       if (e.key !== 'Tab') return;
       const focusables = Array.from(
@@ -320,7 +320,15 @@
 
     if (done === TOTAL_DAYS && prevDone < TOTAL_DAYS) {
       window.setTimeout(openCelebration, 220);
-      if (window.CT_STATS) window.CT_STATS.recordEvent('challenge_completed');
+
+      /* FIX: per-user dedupe — completing the challenge counts once per user
+         even if they reset and complete again. */
+      if (window.CT_STATS) {
+        var user = getCurrentUser();
+        var key = user ? ('challenge_completed:' + user.id) : null;
+        window.CT_STATS.recordEvent('challenge_completed', {}, key);
+      }
+
       if (window.CT_TOAST) window.CT_TOAST.show('Challenge complete — you are a Champion!', 'success', 3200);
     }
 
@@ -349,8 +357,6 @@
 
     await waitForAuthReady(3000);
 
-    /* If not logged in, gateCurrentPage will replace the page —
-       don't bind anything. */
     if (window.CT_SB_AUTH && !window.CT_SB_AUTH.isLoggedIn()) return;
 
     await loadAndRestore();
