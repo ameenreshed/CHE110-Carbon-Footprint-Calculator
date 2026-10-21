@@ -1,7 +1,7 @@
 /* ==========================================================================
    Carbotrack — base.css
    Design tokens, reset, typography, global elements, print rules,
-   and the Premium Environmental Background.
+   and the Premium Environmental Background (AI photo, no SVG landscape).
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -75,7 +75,6 @@
   --border-soft: #22352c;
   --earth:       #0d1512;
 
-  /* Glassmorphism Variables (Dark Mode) */
   --glass-bg: rgba(19, 30, 25, 0.6);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -188,7 +187,15 @@ p { margin: 0; }
 }
 
 /* ==========================================================================
-   3. PREMIUM ENVIRONMENTAL BACKGROUND (Rich Layer)
+   3. PREMIUM ENVIRONMENTAL BACKGROUND — AI PHOTO ONLY
+   SVG landscape removed. Photo is the visual. Light overlay for text.
+
+   Layer order (top → bottom):
+     1. Floating corner leaves (subtle accent, ~4% opacity)
+     2. Aurora color tint (very transparent, brand color cast)
+     3. Vertical fade overlay (stronger at top for text readability)
+     4. AI PHOTO ← the star
+     5. Fallback gradient
    ========================================================================== */
 
 .nature-bg .section--white,
@@ -202,10 +209,10 @@ p { margin: 0; }
 }
 
 .nature-bg {
-  background-color: #f4fbf7 !important; /* Fallback */
+  background-color: #f4fbf7 !important;
 }
 
-/* Light Mode Background Layering */
+/* Light mode */
 .nature-bg::before {
   content: "";
   position: fixed;
@@ -213,41 +220,74 @@ p { margin: 0; }
   z-index: -1;
   pointer-events: none;
   background-color: #f4fbf7;
-  background-image: 
-    /* 1. Floating Leaves in Corners (Top Left, Top Right, Bottom Left, Bottom Right) */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 900' preserveAspectRatio='none'%3E%3Cg fill='%2310b981' fill-opacity='0.06'%3E%3Cpath d='M-50,-50 C 150,-50 250,50 250,150 C 250,250 150,300 -50,300 Z'/%3E%3Cpath d='M1490,-50 C 1290,-50 1190,50 1190,150 C 1190,250 1290,300 1490,300 Z'/%3E%3Cpath d='M-50,950 C 150,950 250,850 250,750 C 250,650 150,600 -50,600 Z'/%3E%3Cpath d='M1490,950 C 1290,950 1190,850 1190,750 C 1190,650 1290,600 1490,600 Z'/%3E%3C/g%3E%3C/svg%3E"),
-    /* 2. Full Landscape Silhouette (Sun, Birds, Mountains, Water, Trees, Turbines, Factory, Solar) */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 400' preserveAspectRatio='none'%3E%3C!-- Sun / Orb --%3E%3Ccircle cx='1200' cy='120' r='80' fill='%23fbbf24' fill-opacity='0.1'/%3E%3C!-- Flying Birds --%3E%3Cg fill='none' stroke='%23059669' stroke-opacity='0.2' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M 300 100 Q 310 90 320 100 Q 330 90 340 100'/%3E%3Cpath d='M 350 80 Q 355 75 360 80 Q 365 75 370 80'/%3E%3Cpath d='M 900 150 Q 910 140 920 150 Q 930 140 940 150'/%3E%3Cpath d='M 950 130 Q 955 125 960 130 Q 965 125 970 130'/%3E%3C/g%3E%3C!-- Background Mountains --%3E%3Cpath d='M 0 280 Q 200 200 400 280 T 800 280 T 1440 280 L 1440 400 L 0 400 Z' fill='%2310b981' fill-opacity='0.05'/%3E%3C!-- Water / Lake --%3E%3Cpath d='M 0 320 Q 300 300 720 330 T 1440 320 L 1440 400 L 0 400 Z' fill='%230284c7' fill-opacity='0.08'/%3E%3C!-- Landscape Base --%3E%3Cpath d='M 0 350 Q 400 330 800 360 T 1440 350 L 1440 400 L 0 400 Z' fill='%23059669' fill-opacity='0.15'/%3E%3C!-- Eco Factory --%3E%3Cg fill='%23059669' fill-opacity='0.25'%3E%3Cpath d='M 550 400 L 550 300 L 580 300 L 580 270 L 610 270 L 610 300 L 640 300 L 640 250 L 670 250 L 670 300 L 700 300 L 700 400 Z'/%3E%3Crect x='560' y='260' width='10' height='40'/%3E%3Crect x='600' y='230' width='10' height='40'/%3E%3C/g%3E%3C!-- Solar Panels --%3E%3Cg fill='none' stroke='%23059669' stroke-opacity='0.3' stroke-width='2'%3E%3Cpolygon points='720,380 760,380 770,360 730,360'/%3E%3Cpolygon points='770,380 810,380 820,360 780,360'/%3E%3Cpolygon points='820,380 860,380 870,360 830,360'/%3E%3Cline x1='740' y1='380' x2='740' y2='400'/%3E%3Cline x1='790' y1='380' x2='790' y2='400'/%3E%3Cline x1='840' y1='380' x2='840' y2='400'/%3E%3C/g%3E%3C!-- Wind Turbines --%3E%3Cg fill='none' stroke='%23059669' stroke-opacity='0.3' stroke-width='3'%3E%3Cline x1='250' y1='400' x2='250' y2='240'/%3E%3Cpath d='M 250 240 L 210 210 M 250 240 L 290 210 M 250 240 L 250 280'/%3E%3Cline x1='1050' y1='400' x2='1050' y2='260'/%3E%3Cpath d='M 1050 260 L 1010 230 M 1050 260 L 1090 230 M 1050 260 L 1050 300'/%3E%3C/g%3E%3C!-- Trees (Pines) --%3E%3Cg fill='%23059669' fill-opacity='0.2'%3E%3Cpolygon points='100,400 120,300 140,400'/%3E%3Cpolygon points='400,400 420,310 440,400'/%3E%3Cpolygon points='900,400 920,320 940,400'/%3E%3Cpolygon points='1300,400 1320,300 1340,400'/%3E%3Cpolygon points='1350,400 1365,330 1380,400'/%3E%3C/g%3E%3C/svg%3E"),
-    /* 3. Soft Mist for depth */
-    radial-gradient(ellipse at 50% 100%, rgba(244, 251, 247, 0) 30%, rgba(244, 251, 247, 0.9) 100%),
-    /* 4. Base Aurora Mesh Gradients */
-    radial-gradient(at 0% 0%, hsla(152, 60%, 94%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(160, 50%, 92%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(140, 40%, 90%, 1) 0, transparent 50%),
-    radial-gradient(at 50% 100%, hsla(210, 40%, 96%, 1) 0, transparent 50%),
+  background-image:
+    /* 1. Floating corner leaves — very subtle */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 900' preserveAspectRatio='none'%3E%3Cg fill='%2310b981' fill-opacity='0.05'%3E%3Cpath d='M-50,-50 C 150,-50 250,50 250,150 C 250,250 150,300 -50,300 Z'/%3E%3Cpath d='M1490,-50 C 1290,-50 1190,50 1190,150 C 1190,250 1290,300 1490,300 Z'/%3E%3Cpath d='M-50,950 C 150,950 250,850 250,750 C 250,650 150,600 -50,600 Z'/%3E%3Cpath d='M1490,950 C 1290,950 1190,850 1190,750 C 1190,650 1290,600 1490,600 Z'/%3E%3C/g%3E%3C/svg%3E"),
+    /* 2. Aurora color tint — 40% alpha so photo shows through */
+    radial-gradient(at 0% 0%,   hsla(152, 60%, 94%, 0.40) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(160, 50%, 92%, 0.40) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(140, 40%, 90%, 0.40) 0, transparent 50%),
+    radial-gradient(at 50% 100%, hsla(210, 40%, 96%, 0.40) 0, transparent 50%),
+    /* 3. Vertical fade — heavier at top for text legibility */
+    linear-gradient(180deg,
+      rgba(244, 251, 247, 0.85) 0%,
+      rgba(244, 251, 247, 0.65) 35%,
+      rgba(251, 249, 245, 0.55) 70%,
+      rgba(251, 249, 245, 0.65) 100%),
+    /* 4. AI PHOTO — path relative to this CSS file */
+    url('../img/bg/carbon-ecosystem.webp'),
+    /* 5. Fallback */
     linear-gradient(180deg, #f4fbf7 0%, #fbf9f5 100%);
-  background-position: center, bottom center, center, center, center, center, center, center;
-  background-size: 100% 100%, 100% 400px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-position:
+    center, center, center, center, center, center, center, center;
+  background-size:
+    100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, cover, 100% 100%;
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
 
-/* Dark Mode Background Layering */
+/* Dark mode */
 [data-theme="dark"] .nature-bg {
   background-color: #0d1512 !important;
 }
 
 [data-theme="dark"] .nature-bg::before {
   background-color: #0d1512;
-  background-image: 
+  background-image:
+    /* 1. Floating corner leaves */
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 900' preserveAspectRatio='none'%3E%3Cg fill='%2334d399' fill-opacity='0.03'%3E%3Cpath d='M-50,-50 C 150,-50 250,50 250,150 C 250,250 150,300 -50,300 Z'/%3E%3Cpath d='M1490,-50 C 1290,-50 1190,50 1190,150 C 1190,250 1290,300 1490,300 Z'/%3E%3Cpath d='M-50,950 C 150,950 250,850 250,750 C 250,650 150,600 -50,600 Z'/%3E%3Cpath d='M1490,950 C 1290,950 1190,850 1190,750 C 1190,650 1290,600 1490,600 Z'/%3E%3C/g%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 400' preserveAspectRatio='none'%3E%3Ccircle cx='1200' cy='120' r='80' fill='%2334d399' fill-opacity='0.08'/%3E%3Cg fill='none' stroke='%2334d399' stroke-opacity='0.15' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M 300 100 Q 310 90 320 100 Q 330 90 340 100'/%3E%3Cpath d='M 350 80 Q 355 75 360 80 Q 365 75 370 80'/%3E%3Cpath d='M 900 150 Q 910 140 920 150 Q 930 140 940 150'/%3E%3Cpath d='M 950 130 Q 955 125 960 130 Q 965 125 970 130'/%3E%3C/g%3E%3Cpath d='M 0 280 Q 200 200 400 280 T 800 280 T 1440 280 L 1440 400 L 0 400 Z' fill='%2334d399' fill-opacity='0.03'/%3E%3Cpath d='M 0 320 Q 300 300 720 330 T 1440 320 L 1440 400 L 0 400 Z' fill='%2338bdf8' fill-opacity='0.05'/%3E%3Cpath d='M 0 350 Q 400 330 800 360 T 1440 350 L 1440 400 L 0 400 Z' fill='%2334d399' fill-opacity='0.08'/%3E%3Cg fill='%2334d399' fill-opacity='0.15'%3E%3Cpath d='M 550 400 L 550 300 L 580 300 L 580 270 L 610 270 L 610 300 L 640 300 L 640 250 L 670 250 L 670 300 L 700 300 L 700 400 Z'/%3E%3Crect x='560' y='260' width='10' height='40'/%3E%3Crect x='600' y='230' width='10' height='40'/%3E%3C/g%3E%3Cg fill='none' stroke='%2334d399' stroke-opacity='0.2' stroke-width='2'%3E%3Cpolygon points='720,380 760,380 770,360 730,360'/%3E%3Cpolygon points='770,380 810,380 820,360 780,360'/%3E%3Cpolygon points='820,380 860,380 870,360 830,360'/%3E%3Cline x1='740' y1='380' x2='740' y2='400'/%3E%3Cline x1='790' y1='380' x2='790' y2='400'/%3E%3Cline x1='840' y1='380' x2='840' y2='400'/%3E%3C/g%3E%3Cg fill='none' stroke='%2334d399' stroke-opacity='0.2' stroke-width='3'%3E%3Cline x1='250' y1='400' x2='250' y2='240'/%3E%3Cpath d='M 250 240 L 210 210 M 250 240 L 290 210 M 250 240 L 250 280'/%3E%3Cline x1='1050' y1='400' x2='1050' y2='260'/%3E%3Cpath d='M 1050 260 L 1010 230 M 1050 260 L 1090 230 M 1050 260 L 1050 300'/%3E%3C/g%3E%3Cg fill='%2334d399' fill-opacity='0.1'%3E%3Cpolygon points='100,400 120,300 140,400'/%3E%3Cpolygon points='400,400 420,310 440,400'/%3E%3Cpolygon points='900,400 920,320 940,400'/%3E%3Cpolygon points='1300,400 1320,300 1340,400'/%3E%3Cpolygon points='1350,400 1365,330 1380,400'/%3E%3C/g%3E%3C/svg%3E"),
-    radial-gradient(ellipse at 50% 100%, rgba(13, 21, 18, 0) 30%, rgba(13, 21, 18, 0.9) 100%),
-    radial-gradient(at 0% 0%, hsla(152, 30%, 15%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(160, 30%, 12%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(140, 20%, 10%, 1) 0, transparent 50%),
-    radial-gradient(at 50% 100%, hsla(210, 20%, 14%, 1) 0, transparent 50%),
+    /* 2. Aurora tint — dark mode */
+    radial-gradient(at 0% 0%,   hsla(152, 30%, 15%, 0.45) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(160, 30%, 12%, 0.45) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(140, 20%, 10%, 0.45) 0, transparent 50%),
+    radial-gradient(at 50% 100%, hsla(210, 20%, 14%, 0.45) 0, transparent 50%),
+    /* 3. Vertical fade — heavier at top */
+    linear-gradient(180deg,
+      rgba(13, 21, 18, 0.88) 0%,
+      rgba(13, 21, 18, 0.70) 35%,
+      rgba(10, 17, 14, 0.60) 70%,
+      rgba(10, 17, 14, 0.70) 100%),
+    /* 4. AI PHOTO */
+    url('../img/bg/carbon-ecosystem.webp'),
+    /* 5. Fallback */
     linear-gradient(180deg, #0d1512 0%, #0a110e 100%);
+  background-position:
+    center, center, center, center, center, center, center;
+  background-size:
+    100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, cover, 100% 100%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* iOS Safari fix — background-attachment:fixed doesn't work on mobile */
+@media (max-width: 768px) {
+  .nature-bg::before,
+  [data-theme="dark"] .nature-bg::before {
+    background-attachment: scroll;
+    position: absolute;
+    min-height: 100vh;
+    inset: 0;
+  }
 }
 
 /* ==========================================================================
@@ -274,12 +314,12 @@ p { margin: 0; }
 }
 
 .nature-bg .hero {
-  background: linear-gradient(180deg, rgba(244, 251, 247, 0.7) 0%, rgba(251, 249, 245, 0.4) 100%) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
+  background: linear-gradient(180deg, rgba(244, 251, 247, 0.55) 0%, rgba(251, 249, 245, 0.30) 100%) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
 }
 [data-theme="dark"] .nature-bg .hero {
-  background: linear-gradient(180deg, rgba(15, 24, 20, 0.7) 0%, rgba(13, 21, 18, 0.4) 100%) !important;
+  background: linear-gradient(180deg, rgba(15, 24, 20, 0.60) 0%, rgba(13, 21, 18, 0.30) 100%) !important;
 }
 
 .nature-bg .about-panel {
@@ -290,10 +330,7 @@ p { margin: 0; }
 }
 
 /* --------------------------------------------------------------------------
-   5. PRINT (results report)
-   FIX: `#results-section` was overriding `.hidden` because id (1-0-0)
-   beats class (0-1-0), both at `!important`. Use `:not(.hidden)` so an
-   empty results page never prints.
+   5. PRINT
    -------------------------------------------------------------------------- */
 @media print {
   @page { margin: 14mm; }
@@ -304,7 +341,8 @@ p { margin: 0; }
   #what-if-section,
   #challenge-section,
   #problem-section,
-  .nature-bg::before { display: none !important; }
+  .nature-bg::before,
+  .nature-bg::after { display: none !important; }
 
   body, .nature-bg {
     background: #fff !important;
@@ -312,7 +350,6 @@ p { margin: 0; }
     font-size: 11pt;
   }
 
-  /* FIX: only force-show the results section when it is NOT hidden */
   #results-section:not(.hidden),
   #results-empty:not(.hidden) {
     display: block !important;
@@ -331,11 +368,11 @@ p { margin: 0; }
 
   .kpi-card,
   .rec-card,
-  .chart-container { 
-    box-shadow: none !important; 
-    border: 1px solid #ccc !important; 
-    background: #fff !important; 
-    backdrop-filter: none !important; 
+  .chart-container {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    background: #fff !important;
+    backdrop-filter: none !important;
   }
 
   a[href]::after { content: ""; }

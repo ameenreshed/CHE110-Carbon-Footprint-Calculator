@@ -1,13 +1,17 @@
 /* ==========================================================================
    Carbotrack — profile.js
-   Renders user hero, stats, certificate vault and history.
-   Depends on: config.js, storage.js, supabase-auth.js,
-               supabase-challenge.js, auth.js (for gating).
+   Renders user hero, stats, certificate vault, trend chart and history.
+   NEW: Footprint trend line chart with Paris target overlay.
    ========================================================================== */
 (function () {
   'use strict';
 
   const $ = (id) => document.getElementById(id);
+
+  const STATE = {
+    trendChart: null,
+    lastResults: null
+  };
 
   /* ================================================================== */
   /*  HELPERS                                                           */
@@ -36,12 +40,19 @@
     } catch (e) { return String(iso); }
   }
 
+  function shortDate(iso) {
+    try {
+      return new Date(iso).toLocaleDateString(undefined, {
+        day: 'numeric', month: 'short'
+      });
+    } catch (e) { return String(iso); }
+  }
+
   function shortId(uuid) {
     if (!uuid) return '—';
     return uuid.split('-')[0];
   }
 
-  /* Mirrors certificate.js TIERS for classification */
   function classifyTier(tons) {
     const T = (window.CT_CONFIG && window.CT_CONFIG.tierThresholds) ||
               { lowMax: 2, moderateMax: 5, highMax: 10 };
@@ -53,7 +64,6 @@
     return                        { key: 'severe',   title: 'Severe Impact',    icon: 'fa-circle-exclamation', range: '10+ t' };
   }
 
-  /* Minimal FNV-1a — same algorithm as certificate.js for display IDs */
   function fnv1a(str) {
     let h = 0x811c9dc5;
     for (let i = 0; i < str.length; i++) {
@@ -129,7 +139,6 @@
   /*  STATS                                                             */
   /* ================================================================== */
   function renderStats(results, rankData, challenge) {
-    /* Best footprint */
     if (results && results.length) {
       const best = results.reduce(function (a, b) {
         return Number(a.total_tons) <= Number(b.total_tons) ? a : b;
@@ -141,7 +150,6 @@
       $('stat-eco-score').textContent = '—';
     }
 
-    /* Rank */
     if (rankData && rankData.rank != null) {
       $('stat-rank').textContent = '#' + rankData.rank;
     } else if (results && results.length === 0) {
@@ -150,7 +158,6 @@
       $('stat-rank').textContent = '—';
     }
 
-    /* Challenge days */
     if (challenge && challenge.ok && Array.isArray(challenge.days)) {
       const done = challenge.days.filter(Boolean).length;
       $('stat-challenge').textContent = done + '/7';
@@ -176,7 +183,6 @@
 
     const cards = [];
 
-    /* Carbon certificate — earned if any results exist */
     if (results && results.length) {
       const best = results.reduce(function (a, b) {
         return Number(a.total_tons) <= Number(b.total_tons) ? a : b;
@@ -191,10 +197,7 @@
         title: tier.title,
         subtitle: 'Carbon Footprint Certificate',
         badgeLabel: 'EARNED',
-        meta: {
-          date: best.created_at,
-          certId: certId
-        },
+        meta: { date: best.created_at, certId: certId },
         href: 'certificate.html'
       });
     } else {
@@ -210,7 +213,6 @@
       });
     }
 
-    /* Challenge certificate — earned if all 7 days done */
     const challengeDone = !!(challenge && challenge.ok && challenge.days && challenge.days.every(Boolean));
     if (challengeDone) {
       const certId = makeCertId('H', username, challenge.updatedAt || new Date().toISOString());
@@ -222,10 +224,7 @@
         title: 'Challenge Champion',
         subtitle: '7-Day Campus Eco Challenge',
         badgeLabel: 'EARNED',
-        meta: {
-          date: challenge.updatedAt,
-          certId: certId
-        },
+        meta: { date: challenge.updatedAt, certId: certId },
         href: 'certificate.html#type=challenge'
       });
     } else {
@@ -279,6 +278,172 @@
         '<div class="profile-cert-card__actions">' + actionHtml + '</div>' +
       '</article>'
     );
+  }
+
+  /* ================================================================== */
+  /*  TREND CHART (NEW)                                                 */
+  /* ================================================================== */
+  function renderTrendChart(results) {
+    const shell = $('profile-trend-shell');
+    const empty = $('profile-trend-empty');
+    const canvas = $('profile-trend-chart');
+    const subEl = $('profile-trend-sub');
+
+    if (!shell || !empty || !canvas) return;
+
+    STATE.lastResults = results;
+
+    if (!results || !results.length) {
+      shell.classList.add('hidden');
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    shell.classList.remove('hidden');
+    empty.classList.add('hidden');
+
+    /* Newest-first array → chronological order */
+    const sorted = results.slice().sort(function (a, b) {
+      return new Date(a.created_at) - new Date(b.created_at);
+    });
+
+    /* Subtitle with delta since first calculation */
+    if (subEl) {
+      if (sorted.length === 1) {
+        subEl.textContent = 'Your first calculation is on the chart. Run the calculator again to build a trend over time.';
+      } else {
+        const first = Number(sorted[0].total_tons);
+        const latest = Number(sorted[sorted.length - 1].total_tons);
+        const delta = latest - first;
+        if (Math.abs(delta) < 0.01) {
+          subEl.textContent = 'No change since your first calculation. Paris target (2.0 t) shown dashed.';
+        } else {
+          const arrow = delta < 0 ? '↓' : '↑';
+          const absDelta = Math.abs(delta).toFixed(2);
+          const word = delta < 0 ? 'reduction' : 'increase';
+          subEl.textContent = arrow + ' ' + absDelta + ' t ' + word +
+            ' since your first calculation. Paris target (2.0 t) shown dashed.';
+        }
+      }
+    }
+
+    /* Chart.js unavailable → show empty state with clear message */
+    if (typeof Chart === 'undefined') {
+      shell.classList.add('hidden');
+      empty.classList.remove('hidden');
+      const subMsg = empty.querySelector('.profile-empty__sub');
+      if (subMsg) subMsg.textContent = 'Chart library unavailable. Refresh the page to try again.';
+      return;
+    }
+
+    /* Destroy previous instance on re-render (theme change, data refresh) */
+    if (STATE.trendChart) {
+      try { STATE.trendChart.destroy(); } catch (e) { /* ignore */ }
+      STATE.trendChart = null;
+    }
+
+    /* Cap to last 20 points for readability */
+    const MAX_POINTS = 20;
+    const recent = sorted.length > MAX_POINTS ? sorted.slice(-MAX_POINTS) : sorted;
+
+    const labels = recent.map(function (r) { return shortDate(r.created_at); });
+    const values = recent.map(function (r) { return Number(r.total_tons); });
+    const parisLine = recent.map(function () { return 2.0; });
+
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const fontColor  = dark ? '#cbd5e1' : '#334155';
+    const gridColor  = dark ? '#22352c' : '#f1f5f3';
+    const pointBorder = dark ? '#0a110e' : '#ffffff';
+    const targetColor = dark ? '#6fa58e' : '#9dc4b1';
+
+    STATE.trendChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Your Footprint',
+            data: values,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.12)',
+            borderWidth: 2.5,
+            tension: 0.35,
+            fill: true,
+            pointBackgroundColor: '#10b981',
+            pointBorderColor: pointBorder,
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7
+          },
+          {
+            label: 'Paris Target (2.0 t)',
+            data: parisLine,
+            borderColor: targetColor,
+            borderDash: [6, 6],
+            borderWidth: 1.5,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 12,
+              font: { family: 'Inter', size: 11 },
+              color: fontColor,
+              padding: 14
+            }
+          },
+          tooltip: {
+            backgroundColor: dark ? '#131e19' : '#1e293b',
+            titleColor: dark ? '#f2f7f4' : '#ffffff',
+            bodyColor: dark ? '#cbd5e1' : '#e2e8f0',
+            borderColor: gridColor,
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              label: function (ctx) {
+                const dsLabel = ctx.dataset.label || '';
+                const value = ctx.parsed.y;
+                if (dsLabel.indexOf('Paris') !== -1) {
+                  return ' ' + dsLabel;
+                }
+                return ' ' + dsLabel + ': ' + Number(value).toFixed(2) + ' t';
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              font: { family: 'Inter', size: 10 },
+              color: fontColor,
+              maxRotation: 0,
+              autoSkip: true,
+              maxTicksLimit: 8
+            },
+            grid: { display: false }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              font: { family: 'Inter', size: 10 },
+              color: fontColor,
+              callback: function (v) { return v + ' t'; }
+            },
+            grid: { color: gridColor }
+          }
+        }
+      }
+    });
   }
 
   /* ================================================================== */
@@ -350,7 +515,7 @@
           .select('id, total_tons, eco_score, rating_key, rating_label, created_at')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
-          .limit(10);
+          .limit(50);
 
         if (!rErr && Array.isArray(r)) results = r;
       } catch (e) {
@@ -381,7 +546,8 @@
 
     renderStats(results, rankData, challenge);
     renderCertificates(results, challenge);
-    renderHistory(results);
+    renderTrendChart(results);
+    renderHistory(results.slice(0, 10));
   }
 
   /* ================================================================== */
@@ -551,6 +717,11 @@
     wireActions();
     wireEditModal();
     await loadData();
+
+    /* Re-render chart on theme change */
+    document.addEventListener('ct:themechange', function () {
+      if (STATE.lastResults) renderTrendChart(STATE.lastResults);
+    });
 
     /* React to auth state changes (e.g. sign-out from header dropdown) */
     if (window.CT_SB_AUTH && window.CT_SB_AUTH.onChange) {

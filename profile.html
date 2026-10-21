@@ -145,6 +145,31 @@
         <div class="profile-certs" id="profile-certs"></div>
       </div>
 
+      <!-- FOOTPRINT TREND -->
+      <div class="profile-section">
+        <div class="profile-section__head">
+          <h2 class="profile-section__title"><i class="fa-solid fa-chart-line"></i> Footprint Trend</h2>
+          <p class="profile-section__sub" id="profile-trend-sub">
+            Your calculated footprint over time, compared to the Paris Agreement 2.0 t target.
+          </p>
+        </div>
+
+        <div id="profile-trend-empty" class="profile-empty hidden">
+          <div class="profile-empty__icon"><i class="fa-solid fa-chart-line"></i></div>
+          <h3 class="profile-empty__title">No trend to show yet</h3>
+          <p class="profile-empty__sub">Run the calculator at least once to start tracking your progress.</p>
+          <a href="calculator.html" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-calculator"></i> Open Calculator
+          </a>
+        </div>
+
+        <div id="profile-trend-shell" class="profile-trend-shell hidden">
+          <div class="profile-trend-canvas-wrap">
+            <canvas id="profile-trend-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
       <!-- HISTORY -->
       <div class="profile-section">
         <div class="profile-section__head">
@@ -243,6 +268,7 @@
             <li><a href="methodology.html">Emission Factors</a></li>
             <li><a href="challenge.html">7-Day Eco Challenge</a></li>
             <li><a href="about.html">CHE110 Assignment</a></li>
+            <li><a href="privacy.html">Privacy &amp; Ethics</a></li>
           </ul>
         </div>
         <div>
@@ -260,6 +286,8 @@
       </div>
     </div>
   </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>

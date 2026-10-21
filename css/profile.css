@@ -1,6 +1,6 @@
 /* ==========================================================================
    Carbotrack — profile.css
-   User profile page: hero, stat tiles, certificate vault, history.
+   User profile page: hero, stat tiles, certificate vault, trend chart, history.
    ========================================================================== */
 
 /* ---------- Hero ---------- */
@@ -229,7 +229,6 @@
   border-style: dashed;
 }
 
-/* Tier accent bar */
 .profile-cert-card::before {
   content: '';
   position: absolute;
@@ -329,6 +328,31 @@
   .profile-cert-card { flex-wrap: wrap; }
   .profile-cert-card__actions { width: 100%; justify-content: stretch; }
   .profile-cert-card__actions .btn { flex: 1; }
+}
+
+/* ---------- Trend chart (NEW) ---------- */
+.profile-trend-shell {
+  background: #fff;
+  border: 1px solid var(--forest-100);
+  border-radius: var(--r-xl);
+  padding: 1.5rem 1.5rem 1rem;
+  box-shadow: 0 4px 14px rgba(13, 26, 21, .04);
+}
+
+.profile-trend-canvas-wrap {
+  position: relative;
+  height: 18rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .profile-trend-canvas-wrap { height: 20rem; }
+}
+
+[data-theme="dark"] .profile-trend-shell {
+  background: #131e19;
+  border-color: var(--forest-200);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .3);
 }
 
 /* ---------- History empty state ---------- */
