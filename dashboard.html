@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Dashboard — Carbotrack</title>
+  <meta name="robots" content="noindex, nofollow">
+
+  <script>try{var t=localStorage.getItem('carbotrack:theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%231b3027'/><path d='M 32 54 L 32 36 M 32 36 C 22 36 12 30 12 18 C 24 18 30 24 32 32 C 32 24 38 14 52 14 C 52 28 42 36 32 36 Z' stroke='%2334d399' stroke-width='3' stroke-linejoin='round' stroke-linecap='round' fill='%2334d399' fill-opacity='0.15'/></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+
+<body class="font-sans bg-earth text-slate-800 nature-bg">
+
+  <header class="site-header" id="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="index.html" class="brand">
+          <span class="brand__mark"><i class="fa-solid fa-leaf"></i></span>
+          <span>
+            <span class="brand__name">Carbotrack</span>
+            <span class="brand__tag">Understand Your Impact</span>
+          </span>
+        </a>
+        <nav class="main-nav" aria-label="Primary">
+          <a href="index.html" data-nav-link>Home</a>
+          <a href="calculator.html" data-nav-link>Calculator</a>
+          <a href="results.html" data-nav-link>Results</a>
+          <a href="challenge.html" data-nav-link>Challenge</a>
+          <a href="leaderboard.html" data-nav-link>Leaderboard</a>
+          <a href="methodology.html" data-nav-link>Methodology</a>
+          <a href="about.html" data-nav-link>Academic</a>
+        </nav>
+        <div class="header-actions">
+          <a href="calculator.html" class="btn btn-primary btn-sm">
+            <span>Calculator</span>
+            <i class="fa-solid fa-calculator text-[10px]"></i>
+          </a>
+        </div>
+        <button id="mobile-menu-btn" class="mobile-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="mobile-menu">
+      <a href="index.html">Home</a>
+      <a href="calculator.html">Calculator</a>
+      <a href="results.html">Results</a>
+      <a href="challenge.html">7-Day Challenge</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="methodology.html">Methodology</a>
+      <a href="about.html">Academic Info</a>
+    </div>
+  </header>
+
+  <main class="section section--white section--border">
+    <div class="container" style="max-width:78rem;">
+
+      <div class="dash-header">
+        <div>
+          <span class="eyebrow">Live Activity</span>
+          <h2 class="section-heading">Platform Dashboard</h2>
+          <p class="section-sub">Every action tracked. Auto-refreshes every 15 seconds while this page is open.</p>
+        </div>
+        <div class="dash-header__actions">
+          <button type="button" id="dash-refresh-btn" class="btn btn-outline btn-sm">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+          <span id="dash-status" class="dash-status">Connecting…</span>
+        </div>
+      </div>
+
+      <!-- TRAFFIC -->
+      <div class="dash-section">
+        <h3 class="dash-section__title"><i class="fa-solid fa-users"></i> Traffic</h3>
+        <div class="dash-grid">
+          <div class="dash-card" data-key="page_views">
+            <div class="dash-card__icon"><i class="fa-solid fa-eye"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Page Views</div>
+            <div class="dash-card__hint">Raw — every page load</div>
+          </div>
+          <div class="dash-card" data-key="visits">
+            <div class="dash-card__icon"><i class="fa-solid fa-arrow-right-to-bracket"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Visits</div>
+            <div class="dash-card__hint">Once per visitor per day</div>
+          </div>
+          <div class="dash-card" data-key="unique_visits">
+            <div class="dash-card__icon"><i class="fa-solid fa-user-check"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Unique Visitors</div>
+            <div class="dash-card__hint">Distinct sessions (all time)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENGAGEMENT -->
+      <div class="dash-section">
+        <h3 class="dash-section__title"><i class="fa-solid fa-chart-line"></i> Engagement</h3>
+        <div class="dash-grid">
+          <div class="dash-card" data-key="calculator_starts">
+            <div class="dash-card__icon"><i class="fa-solid fa-play"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Calculator Started</div>
+            <div class="dash-card__hint">First input typed</div>
+          </div>
+          <div class="dash-card" data-key="calculator_submits">
+            <div class="dash-card__icon"><i class="fa-solid fa-calculator"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Compute Clicks</div>
+            <div class="dash-card__hint">Raw — every submit</div>
+          </div>
+          <div class="dash-card" data-key="footprints_computed">
+            <div class="dash-card__icon"><i class="fa-solid fa-leaf"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Unique Footprints</div>
+            <div class="dash-card__hint">Deduped by value + day</div>
+          </div>
+          <div class="dash-card" data-key="challenge_ticks">
+            <div class="dash-card__icon"><i class="fa-solid fa-check"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Challenge Ticks</div>
+            <div class="dash-card__hint">Raw — every checkbox</div>
+          </div>
+          <div class="dash-card" data-key="challenge_completions">
+            <div class="dash-card__icon"><i class="fa-solid fa-trophy"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Challenges Completed</div>
+            <div class="dash-card__hint">Once per user</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CERTIFICATES + SHARES -->
+      <div class="dash-section">
+        <h3 class="dash-section__title"><i class="fa-solid fa-certificate"></i> Certificates &amp; Shares</h3>
+        <div class="dash-grid">
+          <div class="dash-card" data-key="certificate_views">
+            <div class="dash-card__icon"><i class="fa-solid fa-eye"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Certificate Views</div>
+            <div class="dash-card__hint">Once per cert per session</div>
+          </div>
+          <div class="dash-card" data-key="certificate_downloads">
+            <div class="dash-card__icon"><i class="fa-solid fa-download"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Downloads</div>
+            <div class="dash-card__hint">Raw — PDF + PNG combined</div>
+          </div>
+          <div class="dash-card" data-key="certificates_issued">
+            <div class="dash-card__icon"><i class="fa-solid fa-award"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Certificates Issued</div>
+            <div class="dash-card__hint">Deduped by cert ID</div>
+          </div>
+          <div class="dash-card" data-key="share_clicks">
+            <div class="dash-card__icon"><i class="fa-solid fa-hand-pointer"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Share Clicks</div>
+            <div class="dash-card__hint">Raw — every button press</div>
+          </div>
+          <div class="dash-card" data-key="shares">
+            <div class="dash-card__icon"><i class="fa-solid fa-share-nodes"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Unique Shares</div>
+            <div class="dash-card__hint">Per cert per channel</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCOUNTS -->
+      <div class="dash-section">
+        <h3 class="dash-section__title"><i class="fa-solid fa-user"></i> Account Activity</h3>
+        <div class="dash-grid">
+          <div class="dash-card" data-key="signups">
+            <div class="dash-card__icon"><i class="fa-solid fa-user-plus"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Signups</div>
+            <div class="dash-card__hint">Accounts created</div>
+          </div>
+          <div class="dash-card" data-key="signins">
+            <div class="dash-card__icon"><i class="fa-solid fa-right-to-bracket"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Sign-ins</div>
+            <div class="dash-card__hint">Successful logins</div>
+          </div>
+          <div class="dash-card" data-key="total_events">
+            <div class="dash-card__icon"><i class="fa-solid fa-database"></i></div>
+            <div class="dash-card__value">—</div>
+            <div class="dash-card__label">Total Events</div>
+            <div class="dash-card__hint">All events ever logged</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE FEED -->
+      <div class="dash-section">
+        <h3 class="dash-section__title"><i class="fa-solid fa-bolt"></i> Live Activity Feed</h3>
+        <div id="dash-feed" class="dash-feed">
+          <p class="dash-feed__empty">Loading…</p>
+        </div>
+      </div>
+
+      <p class="dash-footer">
+        Counters update automatically. <span id="dash-updated">—</span>
+      </p>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <span class="footer-brand__mark"><i class="fa-solid fa-leaf"></i></span>
+            <span>Carbotrack</span>
+          </div>
+          <p style="font-size:.75rem;line-height:1.8;">Measure your impact. Understand your footprint. Take informed action.</p>
+        </div>
+        <div>
+          <h4 class="footer-title">Quick Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home Overview</a></li>
+            <li><a href="calculator.html">Carbon Calculator</a></li>
+            <li><a href="results.html">Results Dashboard</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
+            <li><a href="leaderboard.html">Global Leaderboard</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Academic Resources</h4>
+          <ul class="footer-links">
+            <li><a href="methodology.html">Emission Factors</a></li>
+            <li><a href="challenge.html">7-Day Eco Challenge</a></li>
+            <li><a href="about.html">CHE110 Assignment</a></li>
+            <li><a href="privacy.html">Privacy &amp; Ethics</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Project Dissemination</h4>
+          <div class="footer-social">
+            <a href="https://linkedin.com" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://youtube.com" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
+            <a href="https://instagram.com" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a>
+            <a href="https://github.com" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-current-year>2026</span> Carbotrack Environmental Platform.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/supabase-auth.js"></script>
+  <script src="js/supabase-leaderboard.js"></script>
+
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/stats.js"></script>
+</body>
+</html>

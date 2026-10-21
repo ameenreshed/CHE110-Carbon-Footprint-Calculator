@@ -1,15 +1,9 @@
 /* ==========================================================================
    Carbotrack — certificate.js
-   Dual certificates + full-name resolution + tier messaging +
-   DEDUPED platform stats tracking.
-
-   FIXES in this version:
-   - Stats dedupe: one certificate issuance = 1 count regardless of
-     how many times the user downloads (PDF + PNG + retries).
-   - Stats dedupe: one share per (certificate, channel) — re-clicking
-     the same channel doesn't inflate the counter.
-   - Prior fixes retained: auth-ready grace period, QR at 2× display,
-     tier-specific messaging with "Path Forward" callouts.
+   Dual certificates + tier messaging + deduped stats.
+   Fires: certificate_view (on page load), certificate_download (raw per
+   download), certificate_issued (deduped per cert ID), share_click (raw
+   per click), share (deduped per cert+channel).
    ========================================================================== */
 (function () {
   'use strict';
@@ -17,63 +11,32 @@
   const $ = (id) => document.getElementById(id);
   const S = window.CT_STORAGE;
 
-  /* ================================================================== */
-  /*  TIERS                                                             */
-  /* ================================================================== */
   const TIERS = {
     champion: {
-      key: 'champion',
-      title: 'Climate Champion',
-      subtitle: 'of Environmental Achievement',
-      badge: 'PARIS COMPLIANT',
-      icon: 'fa-trophy',
-      rangeIcon: 'fa-award',
-      range: '0 – 2 t',
-      sealIcon: 'fa-leaf',
-      sealText: 'VERIFIED',
-      mood: 'celebrate',
+      key: 'champion', title: 'Climate Champion', subtitle: 'of Environmental Achievement',
+      badge: 'PARIS COMPLIANT', icon: 'fa-trophy', rangeIcon: 'fa-award', range: '0 – 2 t',
+      sealIcon: 'fa-leaf', sealText: 'VERIFIED', mood: 'celebrate',
       message: 'You live within the Earth\'s natural biocapacity to absorb carbon. Your lifestyle aligns with the 1.5°C Paris Agreement target — a feat achieved by less than 5% of the global population. You are living proof that a sustainable, fulfilling life is possible.',
       callout: null
     },
     moderate: {
-      key: 'moderate',
-      title: 'Global Citizen',
-      subtitle: 'of Conscious Progress',
-      badge: 'TRANSITION ZONE',
-      icon: 'fa-globe',
-      rangeIcon: 'fa-earth-asia',
-      range: '2 – 5 t',
-      sealIcon: 'fa-globe',
-      sealText: 'CERTIFIED',
-      mood: 'encourage',
+      key: 'moderate', title: 'Global Citizen', subtitle: 'of Conscious Progress',
+      badge: 'TRANSITION ZONE', icon: 'fa-globe', rangeIcon: 'fa-earth-asia', range: '2 – 5 t',
+      sealIcon: 'fa-globe', sealText: 'CERTIFIED', mood: 'encourage',
       message: 'Your footprint sits at the global average — a meaningful achievement that places you ahead of most industrialized nations. You have built a foundation of environmental awareness. With intentional shifts in just two or three areas, you can join the Paris-aligned champions within a year.',
       callout: 'Path Forward: Focus on your two largest emission categories. Even small, consistent changes compound dramatically over twelve months.'
     },
     high: {
-      key: 'high',
-      title: 'High Impact',
-      subtitle: 'of Action Commitment',
-      badge: 'ACTION REQUIRED',
-      icon: 'fa-triangle-exclamation',
-      rangeIcon: 'fa-arrow-up',
-      range: '5 – 10 t',
-      sealIcon: 'fa-triangle-exclamation',
-      sealText: 'ACT NOW',
-      mood: 'action',
+      key: 'high', title: 'High Impact', subtitle: 'of Action Commitment',
+      badge: 'ACTION REQUIRED', icon: 'fa-triangle-exclamation', rangeIcon: 'fa-arrow-up', range: '5 – 10 t',
+      sealIcon: 'fa-triangle-exclamation', sealText: 'ACT NOW', mood: 'action',
       message: 'This certificate is not a celebration — it is a wake-up call. Your footprint exceeds the safe planetary boundary, a level typical of European averages that directly accelerates climate disruption. The most important thing to understand: high-impact lifestyles hold the greatest room for improvement. Your next steps matter more than most.',
       callout: 'Path Forward: Prioritize air travel, home energy and diet. Cutting just one of these categories can move you into the moderate tier within a year.'
     },
     severe: {
-      key: 'severe',
-      title: 'Severe Impact',
-      subtitle: 'of Urgent Reckoning',
-      badge: 'URGENT ACTION',
-      icon: 'fa-circle-exclamation',
-      rangeIcon: 'fa-fire',
-      range: '10+ t',
-      sealIcon: 'fa-fire',
-      sealText: 'URGENT',
-      mood: 'urgent',
+      key: 'severe', title: 'Severe Impact', subtitle: 'of Urgent Reckoning',
+      badge: 'URGENT ACTION', icon: 'fa-circle-exclamation', rangeIcon: 'fa-fire', range: '10+ t',
+      sealIcon: 'fa-fire', sealText: 'URGENT', mood: 'urgent',
       message: 'This certificate is a mirror, not an award. Your footprint is in the critical overconsumption range — comparable to the highest-emitting nations on Earth. This level accelerates extreme weather, biodiversity loss and climate migration at a scale that touches real lives today. This is your starting line, not your finish line.',
       callout: 'Path Forward: Meaningful reduction requires structural change — reduce long-haul flights, transition to renewable home energy, and shift toward plant-rich diets. Every tonne prevented is a measurable win.'
     }
@@ -97,16 +60,10 @@
   let shareModalEl = null;
   let shareModalLastFocus = null;
 
-  /* ================================================================== */
-  /*  HELPERS                                                           */
-  /* ================================================================== */
   function escapeHTML(str) {
     return String(str == null ? '' : str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   function fnv1a(str) {
@@ -138,17 +95,12 @@
     return parts.slice(0, 2).map(function (w) { return w[0].toUpperCase(); }).join('');
   }
 
-  /* ================================================================== */
-  /*  NAME RESOLUTION                                                   */
-  /* ================================================================== */
   function resolveUserFullName() {
     const sb = window.CT_SB_AUTH;
     if (!sb) return 'Friend';
-
     const u    = sb.getUser     ? sb.getUser()     : null;
     const p    = sb.getProfile  ? sb.getProfile()  : null;
     const meta = (u && u.user_metadata) || {};
-
     if (p && p.full_name && String(p.full_name).trim()) return String(p.full_name).trim();
     const mName = meta.full_name || meta.name || meta.display_name;
     if (mName && String(mName).trim()) return String(mName).trim();
@@ -168,9 +120,6 @@
       (u && u.email ? u.email.split('@')[0] : 'user');
   }
 
-  /* ================================================================== */
-  /*  WAIT HELPERS                                                      */
-  /* ================================================================== */
   function waitForAuthReady(timeoutMs) {
     if (window.CT_AUTH_READY) return Promise.resolve();
     return new Promise(function (resolve) {
@@ -199,9 +148,7 @@
 
   async function waitForProfile(maxWaitMs) {
     maxWaitMs = maxWaitMs || 4000;
-    if (window.CT_SB_AUTH && window.CT_SB_AUTH.getProfile && window.CT_SB_AUTH.getProfile()) {
-      return true;
-    }
+    if (window.CT_SB_AUTH && window.CT_SB_AUTH.getProfile && window.CT_SB_AUTH.getProfile()) return true;
     if (window.CT_SB_AUTH && window.CT_SB_AUTH.waitForProfile) {
       try { return await window.CT_SB_AUTH.waitForProfile(maxWaitMs); }
       catch (e) { /* fall through */ }
@@ -210,19 +157,14 @@
       const start = Date.now();
       const iv = setInterval(function () {
         if (window.CT_SB_AUTH && window.CT_SB_AUTH.getProfile && window.CT_SB_AUTH.getProfile()) {
-          clearInterval(iv);
-          resolve(true);
+          clearInterval(iv); resolve(true);
         } else if (Date.now() - start >= maxWaitMs) {
-          clearInterval(iv);
-          resolve(false);
+          clearInterval(iv); resolve(false);
         }
       }, 120);
     });
   }
 
-  /* ================================================================== */
-  /*  CHALLENGE LOADER                                                  */
-  /* ================================================================== */
   async function loadChallengeDays() {
     const sb = window.CT_SB_AUTH;
     if (sb && sb.isLoggedIn && sb.isLoggedIn() && window.CT_SB_CHALLENGE) {
@@ -231,9 +173,7 @@
         try {
           const remote = await window.CT_SB_CHALLENGE.load(user.id);
           if (remote.ok && remote.exists) return remote.days;
-        } catch (e) {
-          console.warn('[Carbotrack] challenge remote load failed', e);
-        }
+        } catch (e) { console.warn('[Carbotrack] challenge remote load failed', e); }
       }
     }
     const local = S.getChallenge();
@@ -245,19 +185,13 @@
     return [false, false, false, false, false, false, false];
   }
 
-  /* ================================================================== */
-  /*  FONT PRELOAD                                                      */
-  /* ================================================================== */
   async function waitForFonts() {
     if (!document.fonts) return;
     const specs = [
-      '300 1rem "Inter"', '400 1rem "Inter"', '500 1rem "Inter"',
-      '600 1rem "Inter"', '700 1rem "Inter"',
+      '300 1rem "Inter"', '400 1rem "Inter"', '500 1rem "Inter"', '600 1rem "Inter"', '700 1rem "Inter"',
       '500 1rem "Poppins"', '600 1rem "Poppins"', '700 1rem "Poppins"', '800 1rem "Poppins"',
-      '600 1rem "Playfair Display"', '700 1rem "Playfair Display"',
-      '800 1rem "Playfair Display"', '900 1rem "Playfair Display"',
-      '400 1rem "Cormorant Garamond"', '500 1rem "Cormorant Garamond"',
-      '600 1rem "Cormorant Garamond"', '700 1rem "Cormorant Garamond"',
+      '600 1rem "Playfair Display"', '700 1rem "Playfair Display"', '800 1rem "Playfair Display"', '900 1rem "Playfair Display"',
+      '400 1rem "Cormorant Garamond"', '500 1rem "Cormorant Garamond"', '600 1rem "Cormorant Garamond"', '700 1rem "Cormorant Garamond"',
       'italic 400 1rem "Cormorant Garamond"', 'italic 500 1rem "Cormorant Garamond"'
     ];
     try {
@@ -266,9 +200,6 @@
     } catch (e) { /* ignore */ }
   }
 
-  /* ================================================================== */
-  /*  CLIPBOARD                                                         */
-  /* ================================================================== */
   function copyText(text) {
     if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
       return navigator.clipboard.writeText(text);
@@ -276,9 +207,7 @@
     return new Promise(function (resolve, reject) {
       const ta = document.createElement('textarea');
       ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      ta.style.top = '-1000px';
+      ta.style.cssText = 'position:fixed;opacity:0;top:-1000px';
       document.body.appendChild(ta);
       ta.select();
       try { document.execCommand('copy'); resolve(); }
@@ -288,7 +217,61 @@
   }
 
   /* ================================================================== */
-  /*  RENDER — CARBON                                                   */
+  /*  STATS HELPERS                                                     */
+  /* ================================================================== */
+  function recordCertificateViewOnce() {
+    if (!currentCert.data || !currentCert.data.certId) return;
+    if (!window.CT_STATS) return;
+    window.CT_STATS.recordEvent(
+      'certificate_view',
+      { mode: currentCert.mode, certId: currentCert.data.certId },
+      'certificate_view:' + currentCert.data.certId
+    );
+  }
+
+  function recordCertificateDownloadOnce(format) {
+    if (!currentCert.data || !currentCert.data.certId) return;
+    if (!window.CT_STATS) return;
+    /* Raw — every download counts */
+    window.CT_STATS.recordEvent('certificate_download', {
+      mode: currentCert.mode,
+      certId: currentCert.data.certId,
+      format: format
+    });
+  }
+
+  function recordCertificateIssuedOnce() {
+    if (!currentCert.data || !currentCert.data.certId) return;
+    if (!window.CT_STATS) return;
+    window.CT_STATS.recordEvent(
+      'certificate_issued',
+      { mode: currentCert.mode, certId: currentCert.data.certId },
+      'certificate_issued:' + currentCert.data.certId
+    );
+  }
+
+  function recordShareClickOnce(channel) {
+    if (!currentCert.data || !currentCert.data.certId) return;
+    if (!window.CT_STATS) return;
+    /* Raw — every click */
+    window.CT_STATS.recordEvent('share_click', {
+      channel: channel,
+      mode: currentCert.mode
+    });
+  }
+
+  function recordShareOnce(channel) {
+    if (!currentCert.data || !currentCert.data.certId) return;
+    if (!window.CT_STATS) return;
+    window.CT_STATS.recordEvent(
+      'share',
+      { channel: channel, mode: currentCert.mode },
+      'share:' + currentCert.data.certId + ':' + channel
+    );
+  }
+
+  /* ================================================================== */
+  /*  RENDER                                                            */
   /* ================================================================== */
   function renderCarbonCert(data) {
     const tier = classifyTier(data.totalTons);
@@ -302,14 +285,12 @@
     const sheet = $('cert-sheet-carbon');
     sheet.className = 'cert-sheet cert-sheet--carbon cert-sheet--' + tier.key;
 
-    const set = function (id, v) { const el = $(id); if (el) el.textContent = v; };
-
+    const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
     set('cert-name', data.name);
     set('cert-tons', data.totalTons.toFixed(2) + ' t');
     set('cert-score', data.ecoScore + '/100');
     set('cert-date', formatDate(data.issuedAt));
     set('cert-id', data.certId);
-
     set('cert-tier-badge', tier.badge);
     set('cert-tier-range', tier.range);
     set('cert-tier-title', tier.title);
@@ -335,22 +316,16 @@
 
     const tierIcon = $('cert-tier-icon');
     if (tierIcon) tierIcon.className = 'fa-solid ' + tier.icon;
-
     const rangeIcon = $('cert-tier-range-icon');
     if (rangeIcon) rangeIcon.className = 'fa-solid ' + tier.rangeIcon;
-
     const sealIcon = $('cert-seal-icon');
     if (sealIcon) sealIcon.className = 'fa-solid ' + tier.sealIcon;
-
     const sealText = $('cert-seal-text');
     if (sealText) sealText.textContent = tier.sealText;
 
     document.title = data.name + ' · ' + tier.title + ' Certificate — Carbotrack';
   }
 
-  /* ================================================================== */
-  /*  RENDER — CHALLENGE                                                */
-  /* ================================================================== */
   function renderChallengeCert(data) {
     currentCert.mode = 'challenge';
     currentCert.data = data;
@@ -359,8 +334,7 @@
     $('cert-shell-carbon').classList.add('hidden');
     $('cert-shell-challenge').classList.remove('hidden');
 
-    const set = function (id, v) { const el = $(id); if (el) el.textContent = v; };
-
+    const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
     set('chal-cert-name', data.name);
     set('chal-cert-date', formatDate(data.issuedAt));
     set('chal-cert-id', data.certId);
@@ -368,9 +342,6 @@
     document.title = data.name + ' · Challenge Champion — Carbotrack';
   }
 
-  /* ================================================================== */
-  /*  BUILD                                                             */
-  /* ================================================================== */
   function buildCarbonData(results) {
     const issuedAt = new Date().toISOString();
     const name = resolveUserFullName();
@@ -393,9 +364,6 @@
     };
   }
 
-  /* ================================================================== */
-  /*  SHARE ENCODE / DECODE                                             */
-  /* ================================================================== */
   function encodeShare(data) {
     const payload = {
       typ: data.type === 'challenge' ? 'h' : 'c',
@@ -412,9 +380,7 @@
     if (!payload) return null;
     const raw = S.decodeInputs(payload);
     if (!raw) return null;
-
     const validCertId = /^CT-[CH]-\d{4}-[0-9A-F]{6}$/;
-
     if (raw.typ === 'h') {
       return {
         type: 'challenge',
@@ -423,7 +389,6 @@
         issuedAt: raw.d, certId: raw.i, shared: true
       };
     }
-
     const tons  = Number(raw.t);
     const score = parseInt(raw.e, 10);
     return {
@@ -468,12 +433,8 @@
     ].join('\n');
   }
 
-  /* ================================================================== */
-  /*  CAPTURE                                                           */
-  /* ================================================================== */
   function activeSheet() {
-    if (currentCert.mode === 'challenge') return $('cert-sheet-challenge');
-    return $('cert-sheet-carbon');
+    return currentCert.mode === 'challenge' ? $('cert-sheet-challenge') : $('cert-sheet-carbon');
   }
 
   function activeBgColor() {
@@ -486,70 +447,25 @@
     }[tier.key] || '#07130d';
   }
 
-  /* ================================================================== */
-  /*  STATS HELPERS — DEDUPE                                            */
-  /* ================================================================== */
-  function recordCertificateIssuedOnce() {
-    if (!currentCert.data || !currentCert.data.certId) return;
-    if (!window.CT_STATS) return;
-
-    /* Dedupe by cert ID: PDF download + PNG download of the same
-       certificate = 1 count. Retrying a download = still 1 count. */
-    window.CT_STATS.recordEvent(
-      'certificate_issued',
-      {
-        mode: currentCert.mode,
-        certId: currentCert.data.certId
-      },
-      'certificate_issued:' + currentCert.data.certId
-    );
-  }
-
-  function recordShareOnce(channel) {
-    if (!currentCert.data || !currentCert.data.certId) return;
-    if (!window.CT_STATS) return;
-
-    /* Dedupe by (cert ID + channel):
-       Same cert to WhatsApp twice = 1 count.
-       Same cert to WhatsApp + LinkedIn = 2 counts. */
-    window.CT_STATS.recordEvent(
-      'share',
-      {
-        channel: channel,
-        mode: currentCert.mode
-      },
-      'share:' + currentCert.data.certId + ':' + channel
-    );
-  }
-
-  /* ================================================================== */
-  /*  CAPTURE (continued)                                               */
-  /* ================================================================== */
   async function captureCanvas() {
     const sheet = activeSheet();
     if (!sheet) throw new Error('Certificate element not found');
 
     await waitForFonts();
-    await new Promise(function (r) {
-      requestAnimationFrame(function () { requestAnimationFrame(r); });
-    });
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
     const bg = activeBgColor();
-
     const wrapper = document.createElement('div');
     wrapper.setAttribute('aria-hidden', 'true');
     wrapper.style.cssText =
-      'position:absolute;left:-99999px;top:0;width:' + CAPTURE_W + 'px;height:' + CAPTURE_H + 'px;' +
-      'overflow:hidden;pointer-events:none;background:' + bg + ';';
+      'position:absolute;left:-99999px;top:0;width:' + CAPTURE_W + 'px;height:' + CAPTURE_H + 'px;overflow:hidden;pointer-events:none;background:' + bg + ';';
 
     const clone = sheet.cloneNode(true);
     clone.id = 'cert-capture';
-
     Object.assign(clone.style, {
       width: CAPTURE_W + 'px', height: CAPTURE_H + 'px',
-      maxWidth: 'none', maxHeight: 'none',
-      aspectRatio: 'auto', borderRadius: '0',
-      boxShadow: 'none', margin: '0', transform: 'none'
+      maxWidth: 'none', maxHeight: 'none', aspectRatio: 'auto',
+      borderRadius: '0', boxShadow: 'none', margin: '0', transform: 'none'
     });
 
     wrapper.appendChild(clone);
@@ -569,13 +485,9 @@
     }
   }
 
-  /* ================================================================== */
-  /*  DOWNLOAD PDF                                                      */
-  /* ================================================================== */
   async function downloadPDF() {
     const btn = $('cert-download-pdf-btn');
     if (!btn) return;
-
     const original = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Preparing PDF…</span>';
@@ -584,16 +496,15 @@
       if (typeof window.jspdf === 'undefined') throw new Error('jsPDF not loaded');
       const canvas = await captureCanvas();
       const imgData = canvas.toDataURL('image/png');
-
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
-
       pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
       const prefix = currentCert.mode === 'challenge' ? 'Challenge' : 'Certificate';
       pdf.save('Carbotrack-' + prefix + '-' + currentCert.data.certId + '.pdf');
 
+      recordCertificateDownloadOnce('pdf');
       recordCertificateIssuedOnce();
 
       if (window.CT_TOAST) window.CT_TOAST.show('PDF downloaded successfully!', 'success', 2800);
@@ -606,13 +517,9 @@
     }
   }
 
-  /* ================================================================== */
-  /*  DOWNLOAD PNG                                                      */
-  /* ================================================================== */
   async function downloadPNG() {
     const btn = $('cert-download-png-btn');
     if (!btn) return;
-
     const original = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Preparing image…</span>';
@@ -620,7 +527,6 @@
     try {
       const canvas = await captureCanvas();
       const imgData = canvas.toDataURL('image/png');
-
       const link = document.createElement('a');
       const prefix = currentCert.mode === 'challenge' ? 'Challenge' : 'Certificate';
       link.download = 'Carbotrack-' + prefix + '-' + currentCert.data.certId + '.png';
@@ -629,6 +535,7 @@
       link.click();
       document.body.removeChild(link);
 
+      recordCertificateDownloadOnce('png');
       recordCertificateIssuedOnce();
 
       if (window.CT_TOAST) window.CT_TOAST.show('PNG downloaded!', 'success', 2800);
@@ -641,9 +548,6 @@
     }
   }
 
-  /* ================================================================== */
-  /*  QR                                                                */
-  /* ================================================================== */
   function renderQRCode(container, text, size) {
     if (!container) return;
     container.innerHTML = '';
@@ -658,7 +562,6 @@
         correctLevel: QRCode.CorrectLevel.L
       });
     } catch (err) {
-      console.warn('[Carbotrack] QR failed', err);
       container.innerHTML = '<span class="share-qr__fallback">QR error</span>';
     }
   }
@@ -669,7 +572,6 @@
       const temp = document.createElement('div');
       temp.style.cssText = 'position:fixed;left:-99999px;top:0;';
       document.body.appendChild(temp);
-
       try {
         new QRCode(temp, {
           text: text, width: size, height: size,
@@ -692,46 +594,41 @@
     });
   }
 
-  /* ================================================================== */
-  /*  SHARE TARGETS                                                     */
-  /* ================================================================== */
   const SHARE_TARGETS = [
     { key: 'whatsapp', label: 'WhatsApp', icon: 'fa-brands fa-whatsapp', color: '#25D366',
-      build: function (t, u) { return 'https://wa.me/?text=' + encodeURIComponent(t + '\n\n' + u); } },
+      build: (t, u) => 'https://wa.me/?text=' + encodeURIComponent(t + '\n\n' + u) },
     { key: 'telegram', label: 'Telegram', icon: 'fa-brands fa-telegram', color: '#26A5E4',
-      build: function (t, u) { return 'https://t.me/share/url?url=' + encodeURIComponent(u) + '&text=' + encodeURIComponent(t); } },
+      build: (t, u) => 'https://t.me/share/url?url=' + encodeURIComponent(u) + '&text=' + encodeURIComponent(t) },
     { key: 'x', label: 'X / Twitter', icon: 'fa-brands fa-x-twitter', color: '#1a1a1a',
-      build: function (t, u) { return 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(t) + '&url=' + encodeURIComponent(u); } },
+      build: (t, u) => 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(t) + '&url=' + encodeURIComponent(u) },
     { key: 'linkedin', label: 'LinkedIn', icon: 'fa-brands fa-linkedin-in', color: '#0A66C2',
-      build: function (t, u) { return 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(u); } },
+      build: (t, u) => 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(u) },
     { key: 'facebook', label: 'Facebook', icon: 'fa-brands fa-facebook-f', color: '#1877F2',
-      build: function (t, u) { return 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(u); } },
+      build: (t, u) => 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(u) },
     { key: 'email', label: 'Email', icon: 'fa-solid fa-envelope', color: '#64748b',
-      build: function (t, u) { return 'mailto:?subject=' + encodeURIComponent('My Carbotrack Certificate') + '&body=' + encodeURIComponent(t + '\n\n' + u); } }
+      build: (t, u) => 'mailto:?subject=' + encodeURIComponent('My Carbotrack Certificate') + '&body=' + encodeURIComponent(t + '\n\n' + u) }
   ];
 
   function renderShareTargets() {
     const wrap = $('share-targets');
     if (!wrap) return;
-
-    wrap.innerHTML = SHARE_TARGETS.map(function (t) {
-      return '<button type="button" class="share-target" data-share-target="' + t.key + '">' +
-        '<span class="share-target__icon" style="background:' + t.color + '">' +
-          '<i class="' + t.icon + '"></i>' +
-        '</span>' +
+    wrap.innerHTML = SHARE_TARGETS.map(t =>
+      '<button type="button" class="share-target" data-share-target="' + t.key + '">' +
+        '<span class="share-target__icon" style="background:' + t.color + '"><i class="' + t.icon + '"></i></span>' +
         '<span class="share-target__label">' + escapeHTML(t.label) + '</span>' +
         '<i class="fa-solid fa-chevron-right share-target__arrow"></i>' +
-      '</button>';
-    }).join('');
+      '</button>'
+    ).join('');
 
     wrap.querySelectorAll('[data-share-target]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const key = btn.getAttribute('data-share-target');
-        const target = SHARE_TARGETS.find(function (t) { return t.key === key; });
+        const target = SHARE_TARGETS.find(t => t.key === key);
         if (!target) return;
         const dest = target.build(buildShareText(), getShareUrl());
         window.open(dest, '_blank', 'noopener,noreferrer,width=620,height=680');
 
+        recordShareClickOnce(target.key);
         recordShareOnce(target.key);
 
         if (window.CT_TOAST) window.CT_TOAST.show('Opening ' + target.label + '…', 'info', 2200);
@@ -739,27 +636,19 @@
     });
   }
 
-  /* ================================================================== */
-  /*  NATIVE SHARE                                                      */
-  /* ================================================================== */
   function initNativeShare() {
     const btn = $('share-native-btn');
-    if (!btn) return;
-    if (!navigator.share) return;
-
+    if (!btn || !navigator.share) return;
     btn.classList.remove('hidden');
     btn.addEventListener('click', async function () {
       try {
         await navigator.share({
-          title: currentCert.mode === 'challenge'
-            ? 'My Carbotrack Challenge Certificate'
-            : 'My Carbotrack Certificate',
+          title: currentCert.mode === 'challenge' ? 'My Carbotrack Challenge Certificate' : 'My Carbotrack Certificate',
           text: buildShareText(),
           url: getShareUrl()
         });
-
+        recordShareClickOnce('native');
         recordShareOnce('native');
-
         if (window.CT_TOAST) window.CT_TOAST.show('Shared!', 'success', 2200);
       } catch (err) {
         if (err && err.name !== 'AbortError') {
@@ -769,18 +658,13 @@
     });
   }
 
-  /* ================================================================== */
-  /*  SHARE MODAL                                                       */
-  /* ================================================================== */
   function ensureShareModal() {
     shareModalEl = $('share-modal');
     if (!shareModalEl) return null;
     if (shareModalEl.dataset.wired === '1') return shareModalEl;
     shareModalEl.dataset.wired = '1';
 
-    shareModalEl.querySelectorAll('[data-share-close]').forEach(function (el) {
-      el.addEventListener('click', closeShareModal);
-    });
+    shareModalEl.querySelectorAll('[data-share-close]').forEach(el => el.addEventListener('click', closeShareModal));
 
     const urlInput = $('share-url-input');
     const copyUrlBtn = $('share-copy-url-btn');
@@ -791,6 +675,7 @@
       copyUrlBtn.addEventListener('click', async function () {
         try {
           await copyText(getShareUrl());
+          recordShareClickOnce('clipboard');
           recordShareOnce('clipboard');
           if (window.CT_TOAST) window.CT_TOAST.show('Share link copied!', 'success', 2200);
         } catch (e) {
@@ -804,6 +689,7 @@
       copyTextBtn.addEventListener('click', async function () {
         try {
           await copyText(buildShareText() + '\n\n' + getShareUrl());
+          recordShareClickOnce('copy_text');
           recordShareOnce('copy_text');
           if (window.CT_TOAST) window.CT_TOAST.show('Share text copied!', 'success', 2200);
         } catch (e) {
@@ -815,17 +701,14 @@
     if (cardBtn) cardBtn.addEventListener('click', downloadShareCard);
 
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && isShareModalOpen()) {
-        e.preventDefault();
-        closeShareModal();
-      }
+      if (e.key === 'Escape' && isShareModalOpen()) { e.preventDefault(); closeShareModal(); }
     });
 
     shareModalEl.addEventListener('keydown', function (e) {
       if (e.key !== 'Tab') return;
       const focusables = Array.from(
         shareModalEl.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])')
-      ).filter(function (el) { return el.offsetParent !== null; });
+      ).filter(el => el.offsetParent !== null);
       if (!focusables.length) return;
       const first = focusables[0];
       const last = focusables[focusables.length - 1];
@@ -845,13 +728,10 @@
     if (!currentCert.data) return;
     const modal = ensureShareModal();
     if (!modal) return;
-
     shareModalLastFocus = document.activeElement;
 
-    const av = $('share-preview-avatar');
-    if (av) av.textContent = initialsOf(currentCert.data.name);
-    const nameEl = $('share-preview-name');
-    if (nameEl) nameEl.textContent = currentCert.data.name;
+    const av = $('share-preview-avatar'); if (av) av.textContent = initialsOf(currentCert.data.name);
+    const nameEl = $('share-preview-name'); if (nameEl) nameEl.textContent = currentCert.data.name;
 
     if (currentCert.mode === 'challenge') {
       const sub = $('share-preview-sub'); if (sub) sub.textContent = '7-Day Challenge Champion';
@@ -867,21 +747,16 @@
       const tn = $('share-preview-tons'); if (tn) tn.textContent = currentCert.data.totalTons.toFixed(2) + ' t';
     }
 
-    const urlInput = $('share-url-input');
-    if (urlInput) urlInput.value = getShareUrl();
-
-    /* QR at 2× display size (140 CSS box → 280 render) */
-    const qrHost = $('share-qr-canvas');
-    if (qrHost) renderQRCode(qrHost, getShareUrl(), 280);
-
+    const urlInput = $('share-url-input'); if (urlInput) urlInput.value = getShareUrl();
+    const qrHost = $('share-qr-canvas'); if (qrHost) renderQRCode(qrHost, getShareUrl(), 280);
     renderShareTargets();
 
     modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
-    requestAnimationFrame(function () { modal.classList.add('is-open'); });
+    requestAnimationFrame(() => modal.classList.add('is-open'));
     document.body.classList.add('is-share-open');
 
-    window.setTimeout(function () {
+    setTimeout(function () {
       const closeBtn = modal.querySelector('.share-modal__close');
       if (closeBtn) closeBtn.focus();
     }, 120);
@@ -892,18 +767,13 @@
     shareModalEl.classList.remove('is-open');
     shareModalEl.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('is-share-open');
-    window.setTimeout(function () {
+    setTimeout(function () {
       shareModalEl.hidden = true;
-      if (shareModalLastFocus && typeof shareModalLastFocus.focus === 'function') {
-        shareModalLastFocus.focus();
-      }
+      if (shareModalLastFocus && typeof shareModalLastFocus.focus === 'function') shareModalLastFocus.focus();
       shareModalLastFocus = null;
     }, 240);
   }
 
-  /* ================================================================== */
-  /*  SHARE CARD                                                        */
-  /* ================================================================== */
   async function downloadShareCard() {
     if (!currentCert.data) return;
     const btn = $('share-download-card-btn');
@@ -912,7 +782,6 @@
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating…';
     }
-
     try {
       await waitForFonts();
       const url = getShareUrl();
@@ -924,21 +793,15 @@
       const safeScore    = escapeHTML(currentCert.data.ecoScore);
       const safeTons     = escapeHTML(currentCert.data.totalTons.toFixed(2));
       const safeQr       = qrDataUrl ? escapeHTML(qrDataUrl) : '';
-      const safeTier     = escapeHTML(
-        currentCert.mode === 'challenge'
-          ? '7-DAY CHALLENGE CHAMPION'
-          : currentCert.tier.badge
-      );
-      const subtitleText = currentCert.mode === 'challenge'
-        ? 'Challenge Completion Certificate'
-        : 'Certificate of Environmental Achievement';
+      const safeTier     = escapeHTML(currentCert.mode === 'challenge' ? '7-DAY CHALLENGE CHAMPION' : currentCert.tier.badge);
+      const subtitleText = currentCert.mode === 'challenge' ? 'Challenge Completion Certificate' : 'Certificate of Environmental Achievement';
 
       const card = document.createElement('div');
       card.style.cssText = [
-        'position:absolute', 'left:-99999px', 'top:0',
-        'width:1080px', 'height:1080px', 'padding:72px', 'box-sizing:border-box',
-        'display:flex', 'flex-direction:column', 'justify-content:space-between', 'align-items:center',
-        'text-align:center', 'font-family:"Inter",sans-serif', 'color:#f5f0e1',
+        'position:absolute','left:-99999px','top:0',
+        'width:1080px','height:1080px','padding:72px','box-sizing:border-box',
+        'display:flex','flex-direction:column','justify-content:space-between','align-items:center',
+        'text-align:center','font-family:"Inter",sans-serif','color:#f5f0e1',
         'background-color:#07130d',
         'background-image:radial-gradient(ellipse at 15% 20%, rgba(52,211,153,.18), transparent 55%),radial-gradient(ellipse at 85% 80%, rgba(201,162,39,.16), transparent 55%),linear-gradient(135deg,#0a1a12 0%,#07130d 55%,#04100a 100%)'
       ].join(';');
@@ -972,7 +835,6 @@
         '</div>';
 
       document.body.appendChild(card);
-
       try {
         const canvas = await html2canvas(card, {
           scale: 2, useCORS: true, backgroundColor: '#07130d',
@@ -987,6 +849,7 @@
         link.click();
         document.body.removeChild(link);
 
+        recordShareClickOnce('share_card');
         recordShareOnce('share_card');
 
         if (window.CT_TOAST) window.CT_TOAST.show('Share card downloaded!', 'success', 2800);
@@ -1001,22 +864,14 @@
     }
   }
 
-  /* ================================================================== */
-  /*  WIRING                                                            */
-  /* ================================================================== */
   function wireActions() {
-    const pdfBtn = $('cert-download-pdf-btn');
-    if (pdfBtn) pdfBtn.addEventListener('click', downloadPDF);
-    const pngBtn = $('cert-download-png-btn');
-    if (pngBtn) pngBtn.addEventListener('click', downloadPNG);
-    const shareBtn = $('cert-share-btn');
-    if (shareBtn) shareBtn.addEventListener('click', openShareModal);
+    const pdfBtn = $('cert-download-pdf-btn'); if (pdfBtn) pdfBtn.addEventListener('click', downloadPDF);
+    const pngBtn = $('cert-download-png-btn'); if (pngBtn) pngBtn.addEventListener('click', downloadPNG);
+    const shareBtn = $('cert-share-btn'); if (shareBtn) shareBtn.addEventListener('click', openShareModal);
     initNativeShare();
+    recordCertificateViewOnce();
   }
 
-  /* ================================================================== */
-  /*  STATES                                                            */
-  /* ================================================================== */
   function showEmpty() {
     const main = document.querySelector('main');
     if (!main) return;
@@ -1035,9 +890,6 @@
     main.innerHTML = '<div class="section section--white" style="min-height:70vh;display:grid;place-items:center;"><div class="container" style="max-width:34rem;"><div class="empty-state"><div class="empty-state__icon"><i class="fa-solid fa-triangle-exclamation"></i></div><h2 class="section-heading">Certificate Not Available</h2><p class="section-sub">' + escapeHTML(msg) + '</p><div style="margin-top:1.75rem;"><a href="index.html" class="btn btn-primary btn-lg"><i class="fa-solid fa-house"></i><span>Go Home</span></a></div></div></div></div>';
   }
 
-  /* ================================================================== */
-  /*  INIT                                                              */
-  /* ================================================================== */
   async function init() {
     if (!$('cert-sheet-carbon')) return;
 
@@ -1046,35 +898,27 @@
     const hash = window.location.hash || '';
     const isChallengeMode = /(?:^|#|&)type=challenge(?:&|$)/.test(hash);
 
-    /* 1. Share payload wins over everything else */
     const sharePayload = S.readSharePayload();
     if (sharePayload) {
       const data = decodeShare(sharePayload);
       if (!data) return showError('This share link is invalid or damaged.');
-
       if (data.type === 'challenge') renderChallengeCert(data);
       else renderCarbonCert(data);
-
-      const banner = $('cert-shared-banner');
-      if (banner) banner.style.display = 'flex';
+      const banner = $('cert-shared-banner'); if (banner) banner.style.display = 'flex';
       wireActions();
       return;
     }
 
-    /* 2. Wait for auth (with grace period) */
     await waitForAuthReadyDeep(3000, 4000);
 
     const sb = window.CT_SB_AUTH;
     const loggedIn =
       (sb && typeof sb.isLoggedIn === 'function' && sb.isLoggedIn()) ||
       (window.CT_AUTH && window.CT_AUTH.isLoggedIn());
-
     if (!loggedIn) return;
 
-    /* 3. Wait for profile name */
     await waitForProfile(4000);
 
-    /* 4. Challenge mode */
     if (isChallengeMode) {
       const days = await loadChallengeDays();
       const done = days.filter(Boolean).length;
@@ -1085,7 +929,6 @@
       return;
     }
 
-    /* 5. Carbon mode */
     const results = S.getResults();
     if (!results) return showEmpty();
     const data = buildCarbonData(results);

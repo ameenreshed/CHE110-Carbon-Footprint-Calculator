@@ -1,9 +1,8 @@
 /* ==========================================================================
    Carbotrack — challenge.js
-   7-Day Challenge tracker with styled confirm modal + DEDUPED stats.
-
-   FIX: challenge_completed event uses a per-user dedupe key so
-   completing (or resetting + completing) counts once per user.
+   7-Day Challenge tracker.
+   Fires: 'challenge_tick' (raw, every checkbox), 'challenge_completed'
+   (deduped per user).
    ========================================================================== */
 (function () {
   'use strict';
@@ -20,7 +19,7 @@
   function waitForAuthReady(timeoutMs) {
     if (window.CT_AUTH_READY) { authReady = true; return Promise.resolve(); }
     return new Promise(function (resolve) {
-      const timer = setTimeout(function () { authReady = true; resolve(); }, timeoutMs || 3000);
+      const timer = setTimeout(() => { authReady = true; resolve(); }, timeoutMs || 3000);
       document.addEventListener('ct:auth-ready', function () {
         clearTimeout(timer);
         authReady = true;
@@ -55,15 +54,13 @@
   }
 
   function applyDays(days) {
-    const boxes = document.querySelectorAll('.challenge-checkbox');
-    boxes.forEach(function (cb, i) {
+    document.querySelectorAll('.challenge-checkbox').forEach((cb, i) => {
       cb.checked = i < days.length ? !!days[i] : false;
     });
   }
 
   function readDaysFromCheckboxes() {
-    const boxes = document.querySelectorAll('.challenge-checkbox');
-    return Array.from(boxes).map(function (cb) { return !!cb.checked; });
+    return Array.from(document.querySelectorAll('.challenge-checkbox')).map(cb => !!cb.checked);
   }
 
   async function loadAndRestore() {
@@ -96,7 +93,6 @@
         console.warn('[Carbotrack] challenge remote load failed — using local', e);
       }
     }
-
     applyDays(localDays);
     lastSavedKey = JSON.stringify(localDays);
   }
@@ -104,9 +100,8 @@
   function saveState() {
     const days = readDaysFromCheckboxes();
     saveLocal(days);
-
     if (saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(async function () {
+    saveTimer = setTimeout(async () => {
       const user = getCurrentUser();
       if (!user || !window.CT_SB_CHALLENGE) return;
       const key = JSON.stringify(days);
@@ -118,9 +113,7 @@
 
   function countChecked() {
     let done = 0;
-    document.querySelectorAll('.challenge-checkbox').forEach(function (cb) {
-      if (cb.checked) done++;
-    });
+    document.querySelectorAll('.challenge-checkbox').forEach(cb => { if (cb.checked) done++; });
     return done;
   }
 
@@ -128,23 +121,19 @@
     const total = document.querySelectorAll('.challenge-checkbox').length || TOTAL_DAYS;
     const done = countChecked();
     const pct = Math.round((done / total) * 100);
-
     const fill  = $('challenge-progress-fill');
     const label = $('challenge-score-label');
     const badge = $('challenge-badge-banner');
-
     if (fill)  fill.style.width = pct + '%';
     if (label) label.textContent = done + ' / ' + total + ' Completed';
     if (badge) badge.classList.toggle('hidden', done !== total);
-
     saveState();
     return done;
   }
 
   function spawnConfetti(count) {
     const colors = ['#34d399', '#f7e8b0', '#38bdf8', '#fbbf24', '#ef4444', '#a855f7', '#10b981'];
-    const total = count || 90;
-    for (let i = 0; i < total; i++) {
+    for (let i = 0; i < (count || 90); i++) {
       const conf = document.createElement('div');
       conf.className = 'confetti';
       conf.setAttribute('aria-hidden', 'true');
@@ -156,13 +145,10 @@
       conf.style.height = (10 + Math.random() * 12) + 'px';
       conf.style.borderRadius = Math.random() > 0.5 ? '2px' : '50%';
       document.body.appendChild(conf);
-      window.setTimeout(function () { conf.remove(); }, 5200);
+      setTimeout(() => conf.remove(), 5200);
     }
   }
 
-  /* ================================================================== */
-  /*  CELEBRATE MODAL                                                   */
-  /* ================================================================== */
   function ensureCelebrateModal() {
     celebrateModalEl = $('celebrate-modal');
     if (!celebrateModalEl) return null;
@@ -172,31 +158,30 @@
     const closeBtn = $('celebrate-close-btn');
     if (closeBtn) closeBtn.addEventListener('click', closeCelebration);
 
-    celebrateModalEl.addEventListener('click', function (e) {
+    celebrateModalEl.addEventListener('click', (e) => {
       if (e.target === celebrateModalEl || e.target.classList.contains('celebrate-modal__backdrop')) {
         closeCelebration();
       }
     });
 
-    document.addEventListener('keydown', function (e) {
+    document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && celebrateModalEl && !celebrateModalEl.hidden) closeCelebration();
     });
 
-    celebrateModalEl.addEventListener('keydown', function (e) {
+    celebrateModalEl.addEventListener('keydown', (e) => {
       if (e.key !== 'Tab') return;
       const focusables = Array.from(
         celebrateModalEl.querySelectorAll('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')
       ).filter(el => el.offsetParent !== null);
       if (!focusables.length) return;
       const first = focusables[0];
-      const last  = focusables[focusables.length - 1];
+      const last = focusables[focusables.length - 1];
       if (e.shiftKey && (document.activeElement === first || !celebrateModalEl.contains(document.activeElement))) {
         e.preventDefault(); last.focus();
       } else if (!e.shiftKey && (document.activeElement === last || !celebrateModalEl.contains(document.activeElement))) {
         e.preventDefault(); first.focus();
       }
     });
-
     return celebrateModalEl;
   }
 
@@ -205,10 +190,10 @@
     if (!modal) return;
     modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
-    requestAnimationFrame(function () { modal.classList.add('is-open'); });
+    requestAnimationFrame(() => modal.classList.add('is-open'));
     document.body.style.overflow = 'hidden';
     spawnConfetti(90);
-    window.setTimeout(function () {
+    setTimeout(() => {
       const btn = modal.querySelector('.btn-primary');
       if (btn) btn.focus();
     }, 200);
@@ -219,15 +204,11 @@
     celebrateModalEl.classList.remove('is-open');
     celebrateModalEl.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
-    window.setTimeout(function () { celebrateModalEl.hidden = true; }, 300);
+    setTimeout(() => { celebrateModalEl.hidden = true; }, 300);
   }
 
-  /* ================================================================== */
-  /*  CONFIRM DIALOG                                                    */
-  /* ================================================================== */
   function ensureConfirmModal() {
     if (confirmModalEl) return confirmModalEl;
-
     confirmModalEl = document.createElement('div');
     confirmModalEl.id = 'ct-confirm-modal';
     confirmModalEl.className = 'celebrate-modal';
@@ -250,22 +231,18 @@
       </div>
     `;
     document.body.appendChild(confirmModalEl);
-
-    confirmModalEl.addEventListener('keydown', function (e) {
+    confirmModalEl.addEventListener('keydown', (e) => {
       if (e.key !== 'Tab') return;
-      const focusables = Array.from(
-        confirmModalEl.querySelectorAll('button:not([disabled])')
-      ).filter(el => el.offsetParent !== null);
+      const focusables = Array.from(confirmModalEl.querySelectorAll('button:not([disabled])')).filter(el => el.offsetParent !== null);
       if (!focusables.length) return;
       const first = focusables[0];
-      const last  = focusables[focusables.length - 1];
+      const last = focusables[focusables.length - 1];
       if (e.shiftKey && (document.activeElement === first || !confirmModalEl.contains(document.activeElement))) {
         e.preventDefault(); last.focus();
       } else if (!e.shiftKey && (document.activeElement === last || !confirmModalEl.contains(document.activeElement))) {
         e.preventDefault(); first.focus();
       }
     });
-
     return confirmModalEl;
   }
 
@@ -274,72 +251,62 @@
       const modal = ensureConfirmModal();
       const msgEl = modal.querySelector('#ct-confirm-msg');
       if (msgEl) msgEl.textContent = message;
-
       let settled = false;
-
       function finish(result) {
         if (settled) return;
         settled = true;
         modal.classList.remove('is-open');
         modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
-        window.setTimeout(function () { modal.hidden = true; }, 300);
+        setTimeout(() => { modal.hidden = true; }, 300);
         document.removeEventListener('keydown', onKey);
         resolve(result);
       }
-
-      function onKey(e) {
-        if (e.key === 'Escape') finish(false);
-      }
-
-      modal.querySelector('[data-confirm-yes]').onclick = function () { finish(true); };
-      modal.querySelectorAll('[data-confirm-cancel]').forEach(function (el) {
-        el.onclick = function () { finish(false); };
+      function onKey(e) { if (e.key === 'Escape') finish(false); }
+      modal.querySelector('[data-confirm-yes]').onclick = () => finish(true);
+      modal.querySelectorAll('[data-confirm-cancel]').forEach(el => {
+        el.onclick = () => finish(false);
       });
-
       document.addEventListener('keydown', onKey);
-
       modal.hidden = false;
       modal.setAttribute('aria-hidden', 'false');
-      requestAnimationFrame(function () { modal.classList.add('is-open'); });
+      requestAnimationFrame(() => modal.classList.add('is-open'));
       document.body.style.overflow = 'hidden';
-
-      window.setTimeout(function () {
+      setTimeout(() => {
         const btn = modal.querySelector('[data-confirm-yes]');
         if (btn) btn.focus();
       }, 120);
     });
   }
 
-  /* ================================================================== */
-  /*  EVENT HANDLERS                                                    */
-  /* ================================================================== */
-  function handleChange() {
+  function handleChange(e) {
+    /* Fire challenge_tick when a box is checked (not unchecked) */
+    if (e && e.target && e.target.checked && window.CT_STATS) {
+      const idx = Array.from(document.querySelectorAll('.challenge-checkbox')).indexOf(e.target);
+      window.CT_STATS.recordEvent('challenge_tick', {
+        day: idx + 1
+      });
+    }
+
     const prevDone = window.__ctPrevDone || 0;
     const done = updateProgress();
 
     if (done === TOTAL_DAYS && prevDone < TOTAL_DAYS) {
-      window.setTimeout(openCelebration, 220);
-
-      /* FIX: per-user dedupe — completing the challenge counts once per user
-         even if they reset and complete again. */
+      setTimeout(openCelebration, 220);
       if (window.CT_STATS) {
-        var user = getCurrentUser();
-        var key = user ? ('challenge_completed:' + user.id) : null;
+        const user = getCurrentUser();
+        const key = user ? ('challenge_completed:' + user.id) : null;
         window.CT_STATS.recordEvent('challenge_completed', {}, key);
       }
-
       if (window.CT_TOAST) window.CT_TOAST.show('Challenge complete — you are a Champion!', 'success', 3200);
     }
-
     window.__ctPrevDone = done;
   }
 
   async function resetChallenge() {
     const ok = await confirmDialog('Reset all 7-day challenge progress? This cannot be undone.');
     if (!ok) return;
-
-    document.querySelectorAll('.challenge-checkbox').forEach(function (cb) { cb.checked = false; });
+    document.querySelectorAll('.challenge-checkbox').forEach(cb => { cb.checked = false; });
     try { window.CT_STORAGE.clearChallenge(); } catch (e) { /* ignore */ }
     const user = getCurrentUser();
     if (user && window.CT_SB_CHALLENGE) {
@@ -356,14 +323,10 @@
     if (!boxes.length) return;
 
     await waitForAuthReady(3000);
-
     if (window.CT_SB_AUTH && !window.CT_SB_AUTH.isLoggedIn()) return;
 
     await loadAndRestore();
-
-    boxes.forEach(function (cb) {
-      cb.addEventListener('change', handleChange);
-    });
+    boxes.forEach(cb => cb.addEventListener('change', handleChange));
 
     const resetBtn = $('challenge-reset-btn');
     if (resetBtn) resetBtn.addEventListener('click', resetChallenge);
@@ -374,9 +337,8 @@
     const badge = $('challenge-badge-banner');
     if (badge && done === TOTAL_DAYS) badge.classList.remove('hidden');
 
-    window.addEventListener('beforeunload', function () {
-      const days = readDaysFromCheckboxes();
-      saveLocal(days);
+    window.addEventListener('beforeunload', () => {
+      saveLocal(readDaysFromCheckboxes());
     });
   }
 

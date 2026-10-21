@@ -1,11 +1,7 @@
 /* ==========================================================================
    Carbotrack — auth.js
    Username + password UI. HTML-escaped rendering. Clears all user data on logout.
-   FIXES:
-   - Listener leak: document-level listeners now abort on re-render via AbortController
-   - Modal close/reopen race: hidden is set only if modal is not reopened
-   - NEW: "My Profile" links added to header + mobile dropdowns
-   - NEW: profile.html added to GATED_PAGES
+   Fires: 'signup' (new account), 'signin' (existing account).
    ========================================================================== */
 window.CT_AUTH = (function () {
   'use strict';
@@ -18,16 +14,10 @@ window.CT_AUTH = (function () {
   let pending = null;
   let busy = false;
 
-  /* ================================================================== */
-  /*  HELPERS                                                           */
-  /* ================================================================== */
   function escapeHTML(str) {
     return String(str == null ? '' : str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   function resolveDisplayName(profile, meta, username, email) {
@@ -53,16 +43,10 @@ window.CT_AUTH = (function () {
     const u = sb.getUser();
     const p = sb.getProfile();
     const meta = (u && u.user_metadata) || {};
-
-    const username = (p && p.username) || meta.username ||
-      (u.email ? u.email.split('@')[0] : '');
+    const username = (p && p.username) || meta.username || (u.email ? u.email.split('@')[0] : '');
     const fullName = resolveDisplayName(p, meta, username, u.email ? u.email : '');
-
     return {
-      id: u.id,
-      email: u.email,
-      name: fullName,
-      username: username,
+      id: u.id, email: u.email, name: fullName, username: username,
       initials: resolveInitials(fullName, p)
     };
   }
@@ -81,12 +65,8 @@ window.CT_AUTH = (function () {
     } catch (e) { /* ignore */ }
   }
 
-  /* ================================================================== */
-  /*  MODAL                                                             */
-  /* ================================================================== */
   function ensureModal() {
     if (modalEl) return modalEl;
-
     modalEl = document.createElement('div');
     modalEl.className = 'auth-overlay';
     modalEl.id = 'auth-overlay';
@@ -97,15 +77,12 @@ window.CT_AUTH = (function () {
         <button type="button" class="auth-close" id="auth-close" aria-label="Close">
           <i class="fa-solid fa-xmark"></i>
         </button>
-
         <div class="auth-brand">
           <span class="auth-brand__mark"><i class="fa-solid fa-leaf"></i></span>
           <span>Carbotrack</span>
         </div>
-
         <h3 class="auth-title" id="auth-title">Welcome back</h3>
         <p class="auth-intent" id="auth-intent">Sign in to save scores and unlock the leaderboard.</p>
-
         <div class="auth-tabs" role="tablist">
           <button type="button" class="auth-tab is-active" data-tab="login" role="tab">
             <i class="fa-solid fa-right-to-bracket"></i> Sign In
@@ -114,7 +91,6 @@ window.CT_AUTH = (function () {
             <i class="fa-solid fa-user-plus"></i> Create Account
           </button>
         </div>
-
         <form class="auth-form" id="auth-form" novalidate>
           <label class="auth-field" id="auth-name-field" hidden>
             <span>Full Name</span>
@@ -123,7 +99,6 @@ window.CT_AUTH = (function () {
               <input id="auth-name" type="text" autocomplete="name" placeholder="e.g. Ananya Sharma">
             </div>
           </label>
-
           <label class="auth-field">
             <span>Username</span>
             <div class="auth-input-wrap">
@@ -132,7 +107,6 @@ window.CT_AUTH = (function () {
                      placeholder="lowercase, 3–20 chars" spellcheck="false" autocapitalize="none">
             </div>
           </label>
-
           <label class="auth-field">
             <span>Password</span>
             <div class="auth-input-wrap">
@@ -143,15 +117,12 @@ window.CT_AUTH = (function () {
               </button>
             </div>
           </label>
-
           <p class="auth-error" id="auth-error" hidden></p>
-
           <button type="submit" class="btn btn-primary btn-block" id="auth-submit">
             <i class="fa-solid fa-right-to-bracket"></i>
             <span>Sign In</span>
           </button>
         </form>
-
         <p class="auth-note">
           <i class="fa-solid fa-shield-halved"></i>
           No email needed — just username &amp; password. Accounts secured by Supabase.
@@ -161,11 +132,11 @@ window.CT_AUTH = (function () {
 
     document.body.appendChild(modalEl);
 
-    modalEl.addEventListener('click', function (e) { if (e.target === modalEl) closeModal(); });
+    modalEl.addEventListener('click', (e) => { if (e.target === modalEl) closeModal(); });
     $('auth-close').addEventListener('click', closeModal);
 
-    modalEl.querySelectorAll('.auth-tab').forEach(function (tab) {
-      tab.addEventListener('click', function () { setMode(tab.dataset.tab); });
+    modalEl.querySelectorAll('.auth-tab').forEach((tab) => {
+      tab.addEventListener('click', () => setMode(tab.dataset.tab));
     });
 
     $('auth-eye').addEventListener('click', function () {
@@ -186,21 +157,18 @@ window.CT_AUTH = (function () {
 
     $('auth-form').addEventListener('submit', onSubmit);
 
-    document.addEventListener('keydown', function (e) {
+    document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && modalEl && !modalEl.hidden) closeModal();
     });
 
-    /* Focus trap — keep Tab inside the dialog. */
     modalEl.addEventListener('keydown', function (e) {
       if (e.key !== 'Tab') return;
       const focusables = Array.from(
-        modalEl.querySelectorAll(
-          'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        )
+        modalEl.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])')
       ).filter(el => el.offsetParent !== null);
       if (!focusables.length) return;
       const first = focusables[0];
-      const last  = focusables[focusables.length - 1];
+      const last = focusables[focusables.length - 1];
       if (e.shiftKey && (document.activeElement === first || !modalEl.contains(document.activeElement))) {
         e.preventDefault(); last.focus();
       } else if (!e.shiftKey && (document.activeElement === last || !modalEl.contains(document.activeElement))) {
@@ -213,10 +181,7 @@ window.CT_AUTH = (function () {
 
   function setMode(next) {
     mode = next === 'register' ? 'register' : 'login';
-
-    modalEl.querySelectorAll('.auth-tab').forEach(function (t) {
-      t.classList.toggle('is-active', t.dataset.tab === mode);
-    });
+    modalEl.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('is-active', t.dataset.tab === mode));
 
     const nameField = $('auth-name-field');
     if (nameField) nameField.hidden = mode !== 'register';
@@ -234,7 +199,6 @@ window.CT_AUTH = (function () {
       submit.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i><span>Sign In</span>';
       pw.setAttribute('autocomplete', 'current-password');
     }
-
     hideError();
   }
 
@@ -250,13 +214,12 @@ window.CT_AUTH = (function () {
         : 'Sign in to save scores and unlock the leaderboard.';
     }
 
-    /* Cancel any pending hide from a previous close */
     modalEl.classList.remove('is-open');
     modalEl.hidden = false;
-    requestAnimationFrame(function () { modalEl.classList.add('is-open'); });
+    requestAnimationFrame(() => modalEl.classList.add('is-open'));
     document.body.style.overflow = 'hidden';
 
-    window.setTimeout(function () {
+    setTimeout(function () {
       const focusId = mode === 'register' ? 'auth-name' : 'auth-username';
       const el = $(focusId);
       if (el) el.focus();
@@ -267,8 +230,7 @@ window.CT_AUTH = (function () {
     if (!modalEl) return;
     modalEl.classList.remove('is-open');
     document.body.style.overflow = '';
-    /* Only hide if the modal hasn't been reopened in the meantime */
-    window.setTimeout(function () {
+    setTimeout(function () {
       if (!modalEl.classList.contains('is-open')) modalEl.hidden = true;
     }, 260);
     pending = null;
@@ -296,7 +258,6 @@ window.CT_AUTH = (function () {
 
     busy = true;
     hideError();
-
     const btn = $('auth-submit');
     const original = btn.innerHTML;
     btn.disabled = true;
@@ -304,11 +265,8 @@ window.CT_AUTH = (function () {
 
     let result;
     try {
-      if (mode === 'register') {
-        result = await sb.signUp(username, password, name);
-      } else {
-        result = await sb.signIn(username, password);
-      }
+      if (mode === 'register') result = await sb.signUp(username, password, name);
+      else result = await sb.signIn(username, password);
     } catch (err) {
       result = { ok: false, error: 'Something went wrong. Please try again.' };
       console.error('[Carbotrack auth]', err);
@@ -319,6 +277,12 @@ window.CT_AUTH = (function () {
     busy = false;
 
     if (!result.ok) { showError(result.error); return; }
+
+    /* Fire signup / signin event */
+    if (window.CT_STATS) {
+      const evType = mode === 'register' ? 'signup' : 'signin';
+      window.CT_STATS.recordEvent(evType, { method: 'username_password' });
+    }
 
     const redirect = pending && pending.redirect;
     const onSuccess = pending && pending.onSuccess;
@@ -344,24 +308,14 @@ window.CT_AUTH = (function () {
       );
     }
 
-    if (redirect) {
-      window.setTimeout(function () { window.location.href = redirect; }, 550);
-    } else if (onSuccess) {
-      onSuccess(publicUser());
-    } else {
-      window.setTimeout(function () { window.location.reload(); }, 550);
-    }
+    if (redirect) setTimeout(() => { window.location.href = redirect; }, 550);
+    else if (onSuccess) onSuccess(publicUser());
+    else setTimeout(() => { window.location.reload(); }, 550);
   }
 
-  /* ================================================================== */
-  /*  HEADER ACCOUNT DROPDOWN (HTML-escaped)                            */
-  /*  Every listener is bound to a per-wrap AbortController.            */
-  /*  NEW: "My Profile" link added.                                     */
-  /* ================================================================== */
   function renderHeaderButton() {
     const host = document.querySelector('.header-actions');
     if (!host) return;
-
     const existing = host.querySelector('.account-wrap');
     if (existing) {
       if (existing._ctAbort) existing._ctAbort.abort();
@@ -375,10 +329,10 @@ window.CT_AUTH = (function () {
     const sig = wrap._ctAbort.signal;
 
     if (user) {
-      const safeName     = escapeHTML(user.name);
+      const safeName = escapeHTML(user.name);
       const safeUsername = escapeHTML(user.username);
       const safeInitials = escapeHTML(user.initials);
-      const firstName    = escapeHTML(user.name.split(' ')[0]);
+      const firstName = escapeHTML(user.name.split(' ')[0]);
 
       wrap.innerHTML = `
         <button type="button" class="account-btn" id="account-toggle"
@@ -390,10 +344,7 @@ window.CT_AUTH = (function () {
         <div class="account-menu" id="account-menu">
           <div class="account-menu__head">
             <span class="account-avatar account-avatar--lg">${safeInitials}</span>
-            <div>
-              <strong>${safeName}</strong>
-              <small>@${safeUsername}</small>
-            </div>
+            <div><strong>${safeName}</strong><small>@${safeUsername}</small></div>
           </div>
           <a href="profile.html"><i class="fa-solid fa-user"></i> My Profile</a>
           <a href="leaderboard.html"><i class="fa-solid fa-ranking-star"></i> Leaderboard</a>
@@ -406,25 +357,23 @@ window.CT_AUTH = (function () {
         </div>
       `;
 
-      /* Insert before theme toggle when present, so order stays stable */
       const themeToggle = host.querySelector('[data-theme-toggle]');
       if (themeToggle) host.insertBefore(wrap, themeToggle);
       else host.appendChild(wrap);
 
       const toggle = wrap.querySelector('#account-toggle');
-      const menu   = wrap.querySelector('#account-menu');
-      const caret  = toggle.querySelector('.account-caret');
+      const menu = wrap.querySelector('#account-menu');
+      const caret = toggle.querySelector('.account-caret');
 
-      toggle.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
+      toggle.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
         const opening = !menu.classList.contains('is-open');
         menu.classList.toggle('is-open', opening);
         toggle.setAttribute('aria-expanded', String(opening));
         caret.style.transform = opening ? 'rotate(180deg)' : '';
       }, { signal: sig });
 
-      document.addEventListener('click', function (e) {
+      document.addEventListener('click', (e) => {
         if (!menu.classList.contains('is-open')) return;
         if (wrap.contains(e.target)) return;
         menu.classList.remove('is-open');
@@ -432,7 +381,7 @@ window.CT_AUTH = (function () {
         caret.style.transform = '';
       }, { signal: sig });
 
-      document.addEventListener('keydown', function (e) {
+      document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape') return;
         if (!menu.classList.contains('is-open')) return;
         menu.classList.remove('is-open');
@@ -441,17 +390,16 @@ window.CT_AUTH = (function () {
         toggle.focus();
       }, { signal: sig });
 
-      menu.querySelectorAll('a').forEach(function (a) {
-        a.addEventListener('click', function () {
+      menu.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => {
           menu.classList.remove('is-open');
           toggle.setAttribute('aria-expanded', 'false');
           caret.style.transform = '';
         }, { signal: sig });
       });
 
-      wrap.querySelector('#account-logout').addEventListener('click', async function (e) {
-        e.preventDefault();
-        e.stopPropagation();
+      wrap.querySelector('#account-logout').addEventListener('click', async (e) => {
+        e.preventDefault(); e.stopPropagation();
         menu.classList.remove('is-open');
         toggle.setAttribute('aria-expanded', 'false');
         caret.style.transform = '';
@@ -465,8 +413,7 @@ window.CT_AUTH = (function () {
     } else {
       wrap.innerHTML = `
         <button type="button" class="account-btn account-btn--ghost" id="account-signin">
-          <i class="fa-solid fa-user"></i>
-          <span>Sign In</span>
+          <i class="fa-solid fa-user"></i><span>Sign In</span>
         </button>
       `;
       const themeToggle = host.querySelector('[data-theme-toggle]');
@@ -474,18 +421,13 @@ window.CT_AUTH = (function () {
       else host.appendChild(wrap);
 
       wrap.querySelector('#account-signin')
-        .addEventListener('click', function () { openModal('login'); }, { signal: sig });
+        .addEventListener('click', () => openModal('login'), { signal: sig });
     }
   }
 
-  /* ================================================================== */
-  /*  MOBILE DRAWER ACCOUNT PANEL (HTML-escaped)                        */
-  /*  NEW: "My Profile" link added.                                     */
-  /* ================================================================== */
   function renderMobileLinks() {
     const menu = document.getElementById('mobile-menu');
     if (!menu) return;
-
     const old = menu.querySelector('.mobile-account');
     if (old) {
       if (old._ctAbort) old._ctAbort.abort();
@@ -499,7 +441,7 @@ window.CT_AUTH = (function () {
     const sig = block._ctAbort.signal;
 
     if (user) {
-      const safeName     = escapeHTML(user.name);
+      const safeName = escapeHTML(user.name);
       const safeUsername = escapeHTML(user.username);
       const safeInitials = escapeHTML(user.initials);
 
@@ -526,13 +468,13 @@ window.CT_AUTH = (function () {
       insertBeforeActions(menu, block);
 
       const head = block.querySelector('.mobile-account__head');
-      head.addEventListener('click', function () {
+      head.addEventListener('click', () => {
         const opening = !block.classList.contains('is-open');
         block.classList.toggle('is-open', opening);
         head.setAttribute('aria-expanded', String(opening));
       }, { signal: sig });
 
-      block.querySelector('#mobile-logout').addEventListener('click', async function () {
+      block.querySelector('#mobile-logout').addEventListener('click', async () => {
         await sb.signOut();
         clearUserLocalData();
         if (window.CT_NAV) window.CT_NAV.close();
@@ -540,7 +482,6 @@ window.CT_AUTH = (function () {
         renderHeaderButton();
         renderMobileLinks();
       }, { signal: sig });
-
     } else {
       block.innerHTML = `
         <button type="button" class="btn btn-primary btn-block" id="mobile-signin">
@@ -548,15 +489,14 @@ window.CT_AUTH = (function () {
         </button>
       `;
       insertBeforeActions(menu, block);
-
-      block.querySelector('#mobile-signin').addEventListener('click', function () {
+      block.querySelector('#mobile-signin').addEventListener('click', () => {
         if (window.CT_NAV) window.CT_NAV.close();
         openModal('login');
       }, { signal: sig });
     }
 
-    block.querySelectorAll('a').forEach(function (a) {
-      a.addEventListener('click', function () {
+    block.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
         if (window.CT_NAV) window.CT_NAV.close();
       }, { signal: sig });
     });
@@ -568,28 +508,23 @@ window.CT_AUTH = (function () {
     else menu.appendChild(block);
   }
 
-  /* ================================================================== */
-  /*  GATING                                                            */
-  /*  NEW: profile.html added.                                          */
-  /* ================================================================== */
   const GATED_PAGES = {
     'challenge.html':   { feature: 'the 7-Day Eco Challenge', icon: 'fa-list-check' },
     'certificate.html': { feature: 'your certificate',        icon: 'fa-certificate' },
     'leaderboard.html': { feature: 'the leaderboard',         icon: 'fa-ranking-star' },
-    'profile.html':     { feature: 'your profile',            icon: 'fa-user' }
+    'profile.html':     { feature: 'your profile',            icon: 'fa-user' },
+    'dashboard.html':   { feature: 'the live dashboard',      icon: 'fa-chart-line' }
   };
 
   function bindGatedLinks() {
     const here = window.location.pathname.split('/').pop() || 'index.html';
-
-    document.querySelectorAll('a[href]').forEach(function (link) {
+    document.querySelectorAll('a[href]').forEach((link) => {
       const raw = link.getAttribute('href') || '';
       const target = raw.split('#')[0].split('?')[0];
       if (!GATED_PAGES[target] || target === here) return;
       if (link.dataset.authBound) return;
       link.dataset.authBound = '1';
-
-      link.addEventListener('click', function (e) {
+      link.addEventListener('click', (e) => {
         if (isLoggedIn()) return;
         e.preventDefault();
         request({ feature: GATED_PAGES[target].feature, redirect: target });
@@ -612,44 +547,30 @@ window.CT_AUTH = (function () {
     const here = window.location.pathname.split('/').pop() || 'index.html';
     const config = GATED_PAGES[here];
     if (!config || isLoggedIn()) return false;
-
     if (here === 'certificate.html' && window.location.hash.indexOf('#s=') === 0) return false;
 
     const main = document.querySelector('main');
     if (!main) return false;
-
     main.innerHTML = '<div class="section section--white" style="min-height:70vh;display:grid;place-items:center;"><div class="container" style="max-width:36rem;"><div class="lock-panel"><div class="lock-panel__icon"><i class="fa-solid fa-' + config.icon + '"></i></div><span class="eyebrow">Members Only</span><h2 class="lock-panel__title">Sign in to open ' + config.feature + '</h2><p class="lock-panel__text">The <strong>calculator</strong> and <strong>results dashboard</strong> are completely free — no account needed. The leaderboard, challenge tracker and printable certificate are part of the member area.</p><div class="lock-panel__actions"><button type="button" class="btn btn-primary btn-lg" id="lock-signin"><i class="fa-solid fa-right-to-bracket"></i><span>Sign In / Create Account</span></button><a href="calculator.html" class="btn btn-outline btn-lg"><i class="fa-solid fa-calculator"></i><span>Back to Calculator</span></a></div><ul class="lock-perks"><li><i class="fa-solid fa-check"></i> No email needed — username &amp; password only</li><li><i class="fa-solid fa-check"></i> Save your scores to the global leaderboard</li><li><i class="fa-solid fa-check"></i> Sync challenge progress across all devices</li><li><i class="fa-solid fa-check"></i> Generate a printable certificate</li></ul></div></div></div>';
-
     const btn = document.getElementById('lock-signin');
-    if (btn) btn.addEventListener('click', function () { openModal('register'); });
-
-    if (window.CT_TOAST) {
-      window.CT_TOAST.show('Please sign in to continue.', 'info', 2600);
-    }
-
+    if (btn) btn.addEventListener('click', () => openModal('register'));
+    if (window.CT_TOAST) window.CT_TOAST.show('Please sign in to continue.', 'info', 2600);
     return true;
   }
 
-  /* ================================================================== */
-  /*  BOOT                                                              */
-  /* ================================================================== */
   async function init() {
     if (!sb || !sb.init) return;
-
     await sb.init();
-
     if (sb.isLoggedIn() && !sb.getProfile() && sb.waitForProfile) {
-      sb.waitForProfile(3000).then(function () {
+      sb.waitForProfile(3000).then(() => {
         renderHeaderButton();
         renderMobileLinks();
       });
     }
-
-    sb.onChange(function () {
+    sb.onChange(() => {
       renderHeaderButton();
       renderMobileLinks();
     });
-
     renderHeaderButton();
     renderMobileLinks();
     bindGatedLinks();

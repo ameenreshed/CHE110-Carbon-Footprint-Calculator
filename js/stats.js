@@ -1,11 +1,12 @@
 /* ==========================================================================
    Carbotrack — stats.js
-   Anonymous counters with server-side deduplication.
+   Server-side counters with raw + deduped tiers.
 
-   FIX: recordEvent now accepts an optional dedupeKey. The RPC returns
-   true/false — true means it was newly counted, false means duplicate.
-   Local increment only happens when server returns true. Local dedupe
-   short-circuits repeated calls within the same browser/session.
+   Auto-fires on every page load:
+     - 'page_view'  (raw, every load)
+     - 'visit'      (deduped, once per visitor per day)
+
+   Exposes CT_STATS.recordEvent(type, meta, dedupeKey) for other modules.
    ========================================================================== */
 window.CT_STATS = (function () {
   'use strict';
@@ -23,7 +24,7 @@ window.CT_STATS = (function () {
   let inflightFetch = null;
 
   /* ================================================================== */
-  /*  HELPERS                                                           */
+  /*  IDENTITY                                                          */
   /* ================================================================== */
   function generateId() {
     if (window.crypto && window.crypto.randomUUID) {
@@ -60,8 +61,13 @@ window.CT_STATS = (function () {
     try { localStorage.setItem(VISIT_SENT_KEY, todayKey()); } catch (e) {}
   }
 
+  function pagePath() {
+    const path = window.location.pathname.split('/').pop() || 'index.html';
+    return path || 'index.html';
+  }
+
   /* ================================================================== */
-  /*  LOCAL DEDUPE (fast short-circuit before RPC)                      */
+  /*  LOCAL DEDUPE                                                      */
   /* ================================================================== */
   function readFired() {
     try { return JSON.parse(localStorage.getItem(FIRED_KEY) || '{}'); }
@@ -70,7 +76,6 @@ window.CT_STATS = (function () {
 
   function writeFired(obj) {
     try {
-      /* Keep only the newest 300 keys to prevent localStorage bloat */
       const keys = Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; });
       keys.slice(MAX_FIRED_KEYS).forEach(function (k) { delete obj[k]; });
       localStorage.setItem(FIRED_KEY, JSON.stringify(obj));
@@ -79,8 +84,7 @@ window.CT_STATS = (function () {
 
   function hasFiredLocally(key) {
     if (!key) return false;
-    const fired = readFired();
-    return !!fired[key];
+    return !!readFired()[key];
   }
 
   function markFiredLocally(key) {
@@ -91,7 +95,7 @@ window.CT_STATS = (function () {
   }
 
   /* ================================================================== */
-  /*  VISITS                                                            */
+  /*  VISIT (deduped, once per visitor per day)                        */
   /* ================================================================== */
   async function recordVisit() {
     const client = window.CT_SUPABASE_CLIENT;
@@ -102,28 +106,25 @@ window.CT_STATS = (function () {
       const { data, error } = await client.rpc('record_visit', {
         p_session_id: getVisitorId()
       });
-      if (error) { console.warn('[Carbotrack stats] record_visit failed', error); return null; }
+      if (error) { console.warn('[CT stats] record_visit failed', error); return null; }
       markVisitSent();
       if (data) {
         cachedStats = Array.isArray(data) ? data[0] : data;
         cacheTime = Date.now();
         return cachedStats;
       }
-    } catch (e) { console.warn('[Carbotrack stats] record_visit threw', e); }
+    } catch (e) { console.warn('[CT stats] record_visit threw', e); }
     return null;
   }
 
   /* ================================================================== */
-  /*  EVENTS  (server-side dedupe via p_dedupe_key)                     */
+  /*  EVENT                                                             */
   /* ================================================================== */
   async function recordEvent(type, metadata, dedupeKey) {
     const client = window.CT_SUPABASE_CLIENT;
     if (!client) return;
 
-    /* 1. Local dedupe — skip entirely if already fired in this browser */
-    if (dedupeKey && hasFiredLocally(dedupeKey)) {
-      return;
-    }
+    if (dedupeKey && hasFiredLocally(dedupeKey)) return;
 
     try {
       const params = {
@@ -136,47 +137,53 @@ window.CT_STATS = (function () {
       const { data: inserted, error } = await client.rpc('record_event', params);
 
       if (error) {
-        /* If the DB hasn't been updated with the new RPC signature,
-           tell the developer clearly. */
         const msg = (error.message || '').toLowerCase();
         if (/p_dedupe_key|unknown.*parameter|function.*record_event/i.test(msg)) {
           console.error(
-            '[Carbotrack stats] record_event RPC signature mismatch. ' +
-            'Run stats-dedupe.sql in Supabase SQL Editor to enable deduplication.'
+            '[CT stats] record_event RPC signature mismatch. ' +
+            'Run stats-dashboard.sql in Supabase SQL Editor.'
           );
         } else {
-          console.warn('[Carbotrack stats] record_event failed', error);
+          console.warn('[CT stats] record_event failed', error);
         }
         return;
       }
 
-      /* 2. Mark local dedupe as fired regardless of server response —
-            server may also dedupe if this browser fired it before
-            localStorage was cleared. */
       if (dedupeKey) markFiredLocally(dedupeKey);
 
-      /* 3. Only increment local cache if server confirms it inserted */
       if (inserted === true && cachedStats) {
         const map = {
-          footprint_computed:  'footprints_computed',
-          certificate_issued:  'certificates_issued',
-          share:               'shares',
-          challenge_completed: 'challenge_completions'
+          page_view:            'page_views',
+          calculator_start:     'calculator_starts',
+          calculator_submit:    'calculator_submits',
+          footprint_computed:   'footprints_computed',
+          certificate_view:     'certificate_views',
+          certificate_download: 'certificate_downloads',
+          certificate_issued:   'certificates_issued',
+          share_click:          'share_clicks',
+          share:                'shares',
+          signup:               'signups',
+          signin:               'signins',
+          challenge_tick:       'challenge_ticks',
+          challenge_completed:  'challenge_completions'
         };
         const dbKey = map[type];
         if (dbKey && cachedStats[dbKey] != null) {
           cachedStats[dbKey] = Number(cachedStats[dbKey]) + 1;
-          repaintNumbers();
         }
       }
     } catch (e) {
-      console.warn('[Carbotrack stats] record_event threw', e);
+      console.warn('[CT stats] record_event threw', e);
     }
   }
 
   /* ================================================================== */
-  /*  FETCH STATS                                                       */
+  /*  PUBLIC API — auto page-view                                      */
   /* ================================================================== */
+  function trackPageView() {
+    recordEvent('page_view', { page: pagePath() });
+  }
+
   async function fetchStats(force) {
     const client = window.CT_SUPABASE_CLIENT;
     if (!client) return null;
@@ -186,13 +193,13 @@ window.CT_STATS = (function () {
     inflightFetch = (async function () {
       try {
         const { data, error } = await client.rpc('get_public_stats');
-        if (error) { console.warn('[Carbotrack stats] fetch failed', error); return cachedStats; }
+        if (error) { console.warn('[CT stats] fetch failed', error); return cachedStats; }
         if (data) {
           cachedStats = Array.isArray(data) ? data[0] : data;
           cacheTime = Date.now();
           return cachedStats;
         }
-      } catch (e) { console.warn('[Carbotrack stats] fetch threw', e); }
+      } catch (e) { console.warn('[CT stats] fetch threw', e); }
       return cachedStats;
     })();
 
@@ -200,9 +207,6 @@ window.CT_STATS = (function () {
     finally { inflightFetch = null; }
   }
 
-  /* ================================================================== */
-  /*  RENDER                                                            */
-  /* ================================================================== */
   function fmt(n) {
     n = Number(n) || 0;
     if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -259,6 +263,7 @@ window.CT_STATS = (function () {
     bootstrapped = true;
     if (!window.CT_SUPABASE_CLIENT) return;
 
+    trackPageView();
     recordVisit();
 
     document.querySelectorAll('[data-stats-strip]').forEach(function (host) {
@@ -279,6 +284,7 @@ window.CT_STATS = (function () {
     fetchStats:    fetchStats,
     render:        render,
     formatNumber:  fmt,
-    getVisitorId:  getVisitorId
+    getVisitorId:  getVisitorId,
+    trackPageView: trackPageView
   };
 })();
