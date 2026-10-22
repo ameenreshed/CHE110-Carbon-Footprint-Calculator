@@ -1,8 +1,6 @@
 /* ==========================================================================
    Carbotrack — challenge.js
-   7-Day Challenge tracker.
-   Fires: 'challenge_tick' (raw, every checkbox), 'challenge_completed'
-   (deduped per user).
+   7-Day Challenge tracker. No platform stats tracking.
    ========================================================================== */
 (function () {
   'use strict';
@@ -279,25 +277,12 @@
     });
   }
 
-  function handleChange(e) {
-    /* Fire challenge_tick when a box is checked (not unchecked) */
-    if (e && e.target && e.target.checked && window.CT_STATS) {
-      const idx = Array.from(document.querySelectorAll('.challenge-checkbox')).indexOf(e.target);
-      window.CT_STATS.recordEvent('challenge_tick', {
-        day: idx + 1
-      });
-    }
-
+  function handleChange() {
     const prevDone = window.__ctPrevDone || 0;
     const done = updateProgress();
 
     if (done === TOTAL_DAYS && prevDone < TOTAL_DAYS) {
       setTimeout(openCelebration, 220);
-      if (window.CT_STATS) {
-        const user = getCurrentUser();
-        const key = user ? ('challenge_completed:' + user.id) : null;
-        window.CT_STATS.recordEvent('challenge_completed', {}, key);
-      }
       if (window.CT_TOAST) window.CT_TOAST.show('Challenge complete — you are a Champion!', 'success', 3200);
     }
     window.__ctPrevDone = done;

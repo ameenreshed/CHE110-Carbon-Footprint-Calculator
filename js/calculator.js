@@ -1,15 +1,12 @@
 /* ==========================================================================
    Carbotrack — calculator.js
-   Multi-step form controller.
-   Fires: 'calculator_start' (once per page load), 'calculator_submit' (raw,
-   every click), 'footprint_computed' (deduped per total+score+day).
+   Multi-step form controller. No platform stats tracking.
    ========================================================================== */
 window.CT_CALCULATOR = (function () {
   'use strict';
 
   const TOTAL_STEPS = 6;
   let currentStep = 1;
-  let startFired = false;
 
   const STEP_TITLES = [
     'Transportation', 'Home Energy & Grid', 'Food & Diet',
@@ -132,7 +129,7 @@ window.CT_CALCULATOR = (function () {
   }
 
   /* ================================================================== */
-  /*  COLLECT / APPLY                                                   */
+  /*  INPUT COLLECTION                                                  */
   /* ================================================================== */
   function collectInputs() {
     return {
@@ -159,6 +156,9 @@ window.CT_CALCULATOR = (function () {
     };
   }
 
+  /* ================================================================== */
+  /*  APPLY INPUTS                                                      */
+  /* ================================================================== */
   function setText(id, v) {
     const el = $(id);
     if (el && v !== undefined && v !== null && v !== '') el.value = v;
@@ -244,23 +244,6 @@ window.CT_CALCULATOR = (function () {
     window.CT_STORAGE.saveInputs(normalized);
     window.CT_STORAGE.saveResults(results);
 
-    if (window.CT_STATS) {
-      /* Raw submit — every click */
-      window.CT_STATS.recordEvent('calculator_submit', {
-        totalTons: results.totalTons,
-        rating: results.rating.key
-      });
-
-      /* Deduped footprint — same values same day = 1 */
-      var today = new Date().toISOString().slice(0, 10);
-      var sig = 'footprint_computed:' + results.totalTons.toFixed(2) + ':' + results.ecoScore + ':' + today;
-      window.CT_STATS.recordEvent(
-        'footprint_computed',
-        { totalTons: results.totalTons, rating: results.rating.key },
-        sig
-      );
-    }
-
     const payload = window.CT_STORAGE.encodeInputs(normalized);
     const hash = payload ? ('#d=' + payload) : '';
 
@@ -282,6 +265,9 @@ window.CT_CALCULATOR = (function () {
     }, 480);
   }
 
+  /* ================================================================== */
+  /*  RESET                                                             */
+  /* ================================================================== */
   function reset() {
     const form = $('footprint-form');
     if (form) form.reset();
@@ -319,15 +305,6 @@ window.CT_CALCULATOR = (function () {
     if (nextBtn)  nextBtn.addEventListener('click', () => navigate(1));
     if (calcBtn)  calcBtn.addEventListener('click', execute);
     if (resetBtn) resetBtn.addEventListener('click', reset);
-
-    /* FIX: fire calculator_start once — on first user input */
-    root.addEventListener('input', function () {
-      if (startFired) return;
-      startFired = true;
-      if (window.CT_STATS) {
-        window.CT_STATS.recordEvent('calculator_start', { page: 'calculator.html' });
-      }
-    });
 
     root.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter') return;

@@ -1,9 +1,7 @@
 /* ==========================================================================
    Carbotrack — certificate.js
-   Dual certificates + tier messaging + deduped stats.
-   Fires: certificate_view (on page load), certificate_download (raw per
-   download), certificate_issued (deduped per cert ID), share_click (raw
-   per click), share (deduped per cert+channel).
+   Dual certificates + full-name resolution + tier messaging.
+   Platform stats tracking REMOVED — no CT_STATS calls anywhere.
    ========================================================================== */
 (function () {
   'use strict';
@@ -216,63 +214,6 @@
     });
   }
 
-  /* ================================================================== */
-  /*  STATS HELPERS                                                     */
-  /* ================================================================== */
-  function recordCertificateViewOnce() {
-    if (!currentCert.data || !currentCert.data.certId) return;
-    if (!window.CT_STATS) return;
-    window.CT_STATS.recordEvent(
-      'certificate_view',
-      { mode: currentCert.mode, certId: currentCert.data.certId },
-      'certificate_view:' + currentCert.data.certId
-    );
-  }
-
-  function recordCertificateDownloadOnce(format) {
-    if (!currentCert.data || !currentCert.data.certId) return;
-    if (!window.CT_STATS) return;
-    /* Raw — every download counts */
-    window.CT_STATS.recordEvent('certificate_download', {
-      mode: currentCert.mode,
-      certId: currentCert.data.certId,
-      format: format
-    });
-  }
-
-  function recordCertificateIssuedOnce() {
-    if (!currentCert.data || !currentCert.data.certId) return;
-    if (!window.CT_STATS) return;
-    window.CT_STATS.recordEvent(
-      'certificate_issued',
-      { mode: currentCert.mode, certId: currentCert.data.certId },
-      'certificate_issued:' + currentCert.data.certId
-    );
-  }
-
-  function recordShareClickOnce(channel) {
-    if (!currentCert.data || !currentCert.data.certId) return;
-    if (!window.CT_STATS) return;
-    /* Raw — every click */
-    window.CT_STATS.recordEvent('share_click', {
-      channel: channel,
-      mode: currentCert.mode
-    });
-  }
-
-  function recordShareOnce(channel) {
-    if (!currentCert.data || !currentCert.data.certId) return;
-    if (!window.CT_STATS) return;
-    window.CT_STATS.recordEvent(
-      'share',
-      { channel: channel, mode: currentCert.mode },
-      'share:' + currentCert.data.certId + ':' + channel
-    );
-  }
-
-  /* ================================================================== */
-  /*  RENDER                                                            */
-  /* ================================================================== */
   function renderCarbonCert(data) {
     const tier = classifyTier(data.totalTons);
     currentCert.mode = 'carbon';
@@ -504,9 +445,6 @@
       const prefix = currentCert.mode === 'challenge' ? 'Challenge' : 'Certificate';
       pdf.save('Carbotrack-' + prefix + '-' + currentCert.data.certId + '.pdf');
 
-      recordCertificateDownloadOnce('pdf');
-      recordCertificateIssuedOnce();
-
       if (window.CT_TOAST) window.CT_TOAST.show('PDF downloaded successfully!', 'success', 2800);
     } catch (err) {
       console.error('[Carbotrack] PDF failed', err);
@@ -534,9 +472,6 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      recordCertificateDownloadOnce('png');
-      recordCertificateIssuedOnce();
 
       if (window.CT_TOAST) window.CT_TOAST.show('PNG downloaded!', 'success', 2800);
     } catch (err) {
@@ -627,10 +562,6 @@
         if (!target) return;
         const dest = target.build(buildShareText(), getShareUrl());
         window.open(dest, '_blank', 'noopener,noreferrer,width=620,height=680');
-
-        recordShareClickOnce(target.key);
-        recordShareOnce(target.key);
-
         if (window.CT_TOAST) window.CT_TOAST.show('Opening ' + target.label + '…', 'info', 2200);
       });
     });
@@ -647,8 +578,6 @@
           text: buildShareText(),
           url: getShareUrl()
         });
-        recordShareClickOnce('native');
-        recordShareOnce('native');
         if (window.CT_TOAST) window.CT_TOAST.show('Shared!', 'success', 2200);
       } catch (err) {
         if (err && err.name !== 'AbortError') {
@@ -675,8 +604,6 @@
       copyUrlBtn.addEventListener('click', async function () {
         try {
           await copyText(getShareUrl());
-          recordShareClickOnce('clipboard');
-          recordShareOnce('clipboard');
           if (window.CT_TOAST) window.CT_TOAST.show('Share link copied!', 'success', 2200);
         } catch (e) {
           if (urlInput) { urlInput.select(); urlInput.setSelectionRange(0, 99999); }
@@ -689,8 +616,6 @@
       copyTextBtn.addEventListener('click', async function () {
         try {
           await copyText(buildShareText() + '\n\n' + getShareUrl());
-          recordShareClickOnce('copy_text');
-          recordShareOnce('copy_text');
           if (window.CT_TOAST) window.CT_TOAST.show('Share text copied!', 'success', 2200);
         } catch (e) {
           if (window.CT_TOAST) window.CT_TOAST.show('Copy failed.', 'error', 2600);
@@ -848,10 +773,6 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
-        recordShareClickOnce('share_card');
-        recordShareOnce('share_card');
-
         if (window.CT_TOAST) window.CT_TOAST.show('Share card downloaded!', 'success', 2800);
       } finally {
         if (card.parentNode) card.parentNode.removeChild(card);
@@ -869,7 +790,6 @@
     const pngBtn = $('cert-download-png-btn'); if (pngBtn) pngBtn.addEventListener('click', downloadPNG);
     const shareBtn = $('cert-share-btn'); if (shareBtn) shareBtn.addEventListener('click', openShareModal);
     initNativeShare();
-    recordCertificateViewOnce();
   }
 
   function showEmpty() {

@@ -1,7 +1,7 @@
 /* ==========================================================================
    Carbotrack — auth.js
    Username + password UI. HTML-escaped rendering. Clears all user data on logout.
-   Fires: 'signup' (new account), 'signin' (existing account).
+   No platform stats tracking.
    ========================================================================== */
 window.CT_AUTH = (function () {
   'use strict';
@@ -278,12 +278,6 @@ window.CT_AUTH = (function () {
 
     if (!result.ok) { showError(result.error); return; }
 
-    /* Fire signup / signin event */
-    if (window.CT_STATS) {
-      const evType = mode === 'register' ? 'signup' : 'signin';
-      window.CT_STATS.recordEvent(evType, { method: 'username_password' });
-    }
-
     const redirect = pending && pending.redirect;
     const onSuccess = pending && pending.onSuccess;
     const wasRegister = mode === 'register';
@@ -512,8 +506,7 @@ window.CT_AUTH = (function () {
     'challenge.html':   { feature: 'the 7-Day Eco Challenge', icon: 'fa-list-check' },
     'certificate.html': { feature: 'your certificate',        icon: 'fa-certificate' },
     'leaderboard.html': { feature: 'the leaderboard',         icon: 'fa-ranking-star' },
-    'profile.html':     { feature: 'your profile',            icon: 'fa-user' },
-    'dashboard.html':   { feature: 'the live dashboard',      icon: 'fa-chart-line' }
+    'profile.html':     { feature: 'your profile',            icon: 'fa-user' }
   };
 
   function bindGatedLinks() {
