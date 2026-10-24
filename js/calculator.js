@@ -108,7 +108,7 @@ window.CT_CALCULATOR = (function () {
     }
     if (currentStep === 5) {
       const bags = num('waste-bags');
-      if (bags < 1 || bags > 25) return fail('Weekly waste bags must be between 1 and 25.');
+      if (bags < 0 || bags > 25) return fail('Weekly waste bags must be between 0 and 25.');
     }
     return true;
   }

@@ -1,0 +1,107 @@
+/* ==========================================================================
+   Eco — Visit Counter
+   Clean, real counter. No admin panel.
+   ========================================================================== */
+
+.visit-counter-wrap {
+  padding: 2rem 1rem;
+  background: linear-gradient(180deg, #fbf9f5 0%, #f5f2eb 100%);
+  border-bottom: 1px solid #e1ede7;
+}
+
+.visit-counter {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 20rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem;
+  background: #fff;
+  border: 1px solid #e1ede7;
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgba(13,26,21,.08);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.visit-counter:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(13,26,21,.12);
+}
+
+.vc-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  color: #059669;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.vc-icon svg { width: 1.4rem; height: 1.4rem; }
+
+.vc-body { flex: 1; min-width: 0; }
+
+.vc-value {
+  font-family: 'Poppins', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0d1a15;
+  line-height: 1;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  transition: color .15s ease;
+}
+
+.vc-value.is-bumped { color: #10b981; }
+
+.vc-label {
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-top: .35rem;
+}
+
+/* ---------- Dark theme ---------- */
+[data-theme="dark"] .visit-counter-wrap {
+  background: linear-gradient(180deg, #0d1512 0%, #0f1814 100%);
+  border-bottom-color: #22352c;
+}
+
+[data-theme="dark"] .visit-counter {
+  background: #131e19;
+  border-color: #22352c;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+}
+
+[data-theme="dark"] .visit-counter:hover {
+  border-color: #2f4a3d;
+  box-shadow: 0 10px 30px rgba(0,0,0,.55);
+}
+
+[data-theme="dark"] .vc-icon {
+  background: linear-gradient(135deg, rgba(16,185,129,.18), rgba(52,211,153,.08));
+  color: #34d399;
+}
+
+[data-theme="dark"] .vc-value { color: #f2f7f4; }
+[data-theme="dark"] .vc-value.is-bumped { color: #34d399; }
+[data-theme="dark"] .vc-label { color: #94a3b8; }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 480px) {
+  .visit-counter-wrap { padding: 1.5rem 1rem; }
+  .visit-counter { padding: 1rem 1.2rem; gap: .8rem; }
+  .vc-icon { width: 2.5rem; height: 2.5rem; }
+  .vc-icon svg { width: 1.2rem; height: 1.2rem; }
+  .vc-value { font-size: 1.65rem; }
+  .vc-label { font-size: .6rem; }
+}
+
+/* ---------- Print ---------- */
+@media print {
+  .visit-counter-wrap { display: none !important; }
+}

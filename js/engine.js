@@ -90,7 +90,7 @@ window.CT_ENGINE = (function () {
     /* ---------- CLASSIFICATION (config-driven thresholds) ---------- */
     const T = C.tierThresholds;
     let rating;
-    if (totalTons < T.lowMax)           rating = { key: 'low',       label: 'Lower Impact — Target Compliant' };
+    if (totalTons < T.lowMax)           rating = { key: 'low',       label: 'Low Estimated Footprint' };
     else if (totalTons < T.moderateMax) rating = { key: 'moderate',  label: 'Moderate Impact' };
     else if (totalTons < T.highMax)     rating = { key: 'high',      label: 'High Impact' };
     else                                rating = { key: 'very-high', label: 'Very High Impact' };
@@ -99,6 +99,7 @@ window.CT_ENGINE = (function () {
       ? +((totalTons / C.benchmarks.parisTarget) * 100).toFixed(0)
       : 0;
 
+    // Illustrative comparison only; not used as a verified sequestration claim.
     const treesEquivalent = Math.round((totalKg / 1000) * 47);
 
     return {
@@ -149,7 +150,7 @@ window.CT_ENGINE = (function () {
       washingLoads:    clamp(num(raw.washingLoads, 3),   0, 30),
       tapHabits:       raw.tapHabits || 'average',
 
-      wasteBags:       clamp(num(raw.wasteBags, 3),      1, 25),
+      wasteBags:       clamp(num(raw.wasteBags, 3),      0, 25),
       recyclingRate:   clamp(num(raw.recyclingRate, 0.25), 0, 0.95),
       composting:      raw.composting === 'yes' || raw.composting === true,
 

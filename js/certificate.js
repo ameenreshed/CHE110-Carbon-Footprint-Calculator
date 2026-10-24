@@ -12,31 +12,31 @@
   const TIERS = {
     champion: {
       key: 'champion', title: 'Climate Champion', subtitle: 'of Environmental Achievement',
-      badge: 'PARIS COMPLIANT', icon: 'fa-trophy', rangeIcon: 'fa-award', range: '0 – 2 t',
-      sealIcon: 'fa-leaf', sealText: 'VERIFIED', mood: 'celebrate',
-      message: 'You live within the Earth\'s natural biocapacity to absorb carbon. Your lifestyle aligns with the 1.5°C Paris Agreement target — a feat achieved by less than 5% of the global population. You are living proof that a sustainable, fulfilling life is possible.',
+      badge: 'LOW ESTIMATE', icon: 'fa-trophy', rangeIcon: 'fa-award', range: '0 – 2 t',
+      sealIcon: 'fa-leaf', sealText: 'MODELLED', mood: 'celebrate',
+      message: 'Your estimated annual footprint is below this calculator’s illustrative 2.0-tonne reference. This result is a modelled estimate based on simplified assumptions, not an official certification or proof of Paris Agreement alignment.',
       callout: null
     },
     moderate: {
       key: 'moderate', title: 'Global Citizen', subtitle: 'of Conscious Progress',
-      badge: 'TRANSITION ZONE', icon: 'fa-globe', rangeIcon: 'fa-earth-asia', range: '2 – 5 t',
-      sealIcon: 'fa-globe', sealText: 'CERTIFIED', mood: 'encourage',
-      message: 'Your footprint sits at the global average — a meaningful achievement that places you ahead of most industrialized nations. You have built a foundation of environmental awareness. With intentional shifts in just two or three areas, you can join the Paris-aligned champions within a year.',
-      callout: 'Path Forward: Focus on your two largest emission categories. Even small, consistent changes compound dramatically over twelve months.'
+      badge: 'MODERATE ESTIMATE', icon: 'fa-globe', rangeIcon: 'fa-earth-asia', range: '2 – 5 t',
+      sealIcon: 'fa-globe', sealText: 'MODELLED', mood: 'encourage',
+      message: 'Your estimated annual footprint falls in this calculator’s moderate range. Review your largest categories and choose practical changes. Results are modelled estimates and depend on the assumptions and emission factors used.',
+      callout: 'Next step: Focus on your two largest estimated emission categories and track changes using the same assumptions.'
     },
     high: {
       key: 'high', title: 'High Impact', subtitle: 'of Action Commitment',
-      badge: 'ACTION REQUIRED', icon: 'fa-triangle-exclamation', rangeIcon: 'fa-arrow-up', range: '5 – 10 t',
+      badge: 'HIGH ESTIMATE', icon: 'fa-triangle-exclamation', rangeIcon: 'fa-arrow-up', range: '5 – 10 t',
       sealIcon: 'fa-triangle-exclamation', sealText: 'ACT NOW', mood: 'action',
-      message: 'This certificate is not a celebration — it is a wake-up call. Your footprint exceeds the safe planetary boundary, a level typical of European averages that directly accelerates climate disruption. The most important thing to understand: high-impact lifestyles hold the greatest room for improvement. Your next steps matter more than most.',
-      callout: 'Path Forward: Prioritize air travel, home energy and diet. Cutting just one of these categories can move you into the moderate tier within a year.'
+      message: 'Your estimated annual footprint falls in the high range used by this calculator. The largest categories are useful places to start reducing impact. This is a modelled estimate, not a diagnosis of an individual’s environmental responsibility.',
+      callout: 'Next step: Review travel, home energy and food assumptions. Recalculate after changes to compare modelled estimates.'
     },
     severe: {
       key: 'severe', title: 'Severe Impact', subtitle: 'of Urgent Reckoning',
-      badge: 'URGENT ACTION', icon: 'fa-circle-exclamation', rangeIcon: 'fa-fire', range: '10+ t',
+      badge: 'VERY HIGH ESTIMATE', icon: 'fa-circle-exclamation', rangeIcon: 'fa-fire', range: '10+ t',
       sealIcon: 'fa-fire', sealText: 'URGENT', mood: 'urgent',
-      message: 'This certificate is a mirror, not an award. Your footprint is in the critical overconsumption range — comparable to the highest-emitting nations on Earth. This level accelerates extreme weather, biodiversity loss and climate migration at a scale that touches real lives today. This is your starting line, not your finish line.',
-      callout: 'Path Forward: Meaningful reduction requires structural change — reduce long-haul flights, transition to renewable home energy, and shift toward plant-rich diets. Every tonne prevented is a measurable win.'
+      message: 'Your estimated annual footprint falls in the very-high range used by this calculator. Review the largest categories and consider changes that are practical for your circumstances. This is a modelled estimate, not a formal environmental certification.',
+      callout: 'Next step: Review long-distance travel, home energy and food choices where changes are feasible, then compare estimates again.'
     }
   };
 
@@ -665,7 +665,7 @@
       const s2 = $('share-preview-stat2-label'); if (s2) s2.textContent = 'Days';
       const tn = $('share-preview-tons'); if (tn) tn.textContent = '7';
     } else {
-      const sub = $('share-preview-sub'); if (sub) sub.textContent = currentCert.tier.title + ' · Carbotrack Certified';
+      const sub = $('share-preview-sub'); if (sub) sub.textContent = currentCert.tier.title + ' · Carbotrack Estimate';
       const s1 = $('share-preview-stat1-label'); if (s1) s1.textContent = 'Score';
       const sc = $('share-preview-score'); if (sc) sc.textContent = currentCert.data.ecoScore + '/100';
       const s2 = $('share-preview-stat2-label'); if (s2) s2.textContent = 'Footprint';

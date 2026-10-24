@@ -27,9 +27,18 @@
     const toast = document.createElement('div');
     toast.className = `toast toast--${type}`;
     toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
-    toast.innerHTML =
-      `<span class="toast__icon"><i class="fa-solid ${TOAST_ICONS[type] || TOAST_ICONS.success}"></i></span>
-       <span class="toast__msg">${message}</span>`;
+    const iconWrap = document.createElement('span');
+    iconWrap.className = 'toast__icon';
+    const icon = document.createElement('i');
+    icon.className = `fa-solid ${TOAST_ICONS[type] || TOAST_ICONS.success}`;
+    icon.setAttribute('aria-hidden', 'true');
+    iconWrap.appendChild(icon);
+
+    const messageEl = document.createElement('span');
+    messageEl.className = 'toast__msg';
+    messageEl.textContent = String(message == null ? '' : message);
+
+    toast.append(iconWrap, messageEl);
     container.appendChild(toast);
     window.setTimeout(() => {
       toast.classList.add('is-leaving');

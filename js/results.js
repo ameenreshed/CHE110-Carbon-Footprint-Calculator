@@ -87,22 +87,37 @@
 
     const badge = $('res-rating-badge');
     if (badge) {
-      const iconCls = RATING_ICONS[r.rating.key] || RATING_ICONS.moderate;
-      badge.innerHTML = '<i class="fa-solid ' + iconCls + '"></i> <span>' + r.rating.label + '</span>';
-      badge.className = 'rating-badge rating-' + r.rating.key;
+      const safeKey = Object.prototype.hasOwnProperty.call(RATING_ICONS, r.rating && r.rating.key)
+        ? r.rating.key : 'moderate';
+      const icon = document.createElement('i');
+      icon.className = 'fa-solid ' + RATING_ICONS[safeKey];
+      icon.setAttribute('aria-hidden', 'true');
+      const label = document.createElement('span');
+      label.textContent = String((r.rating && r.rating.label) || 'Estimated footprint');
+      badge.replaceChildren(icon, label);
+      badge.className = 'rating-badge rating-' + safeKey;
     }
 
     const cmp = $('res-comparison-note');
     if (cmp) {
-      if (r.vsParis > 100) {
-        cmp.innerHTML = 'Your footprint is <strong>' + r.vsParis + '%</strong> of the Paris Agreement 2.0 t personal target — about <strong>' + (r.totalTons - 2).toFixed(2) + ' t</strong> above it.';
+      const tons = Number.isFinite(Number(r.totalTons)) ? Number(r.totalTons) : 0;
+      const delta = Math.max(0, tons - 2).toFixed(2);
+      cmp.replaceChildren();
+      if (tons > 2) {
+        cmp.append('Your estimate is ');
+        const percent = document.createElement('strong');
+        percent.textContent = Math.round((tons / 2) * 100) + '%';
+        cmp.append(percent, ' of the calculator’s illustrative 2.0 t/person/year reference — about ');
+        const amount = document.createElement('strong');
+        amount.textContent = delta + ' t';
+        cmp.append(amount, ' above it. This is not an official Paris Agreement rating.');
       } else {
-        cmp.innerHTML = 'Excellent — you are within the Paris Agreement 2.0 t personal target.';
+        cmp.textContent = 'Your estimate is within the calculator’s illustrative 2.0 t/person/year reference. This is not an official Paris Agreement rating.';
       }
     }
 
     const trees = $('res-trees-note');
-    if (trees) trees.textContent = 'Equivalent to the annual carbon sequestered by ' + r.treesEquivalent + ' mature urban trees.';
+    if (trees) trees.textContent = 'Illustrative tree-equivalent estimate only (about 47 trees per tonne in this model); actual carbon uptake varies by species, age, and location.';
 
     const ts = $('res-timestamp');
     if (ts && r.generatedAt) ts.textContent = 'Generated ' + new Date(r.generatedAt).toLocaleString();
