@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Carbotrack Report — GitHub</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#e8ede9;color:#1e293b;line-height:1.55;padding:40px 20px;-webkit-font-smoothing:antialiased}
+.page{width:1400px;margin:0 auto;background:#fbf9f5;border-radius:12px;box-shadow:0 20px 60px rgba(13,26,21,.15);overflow:hidden}
+.toolbar{position:fixed;top:20px;right:20px;z-index:100;display:flex;gap:8px}
+.toolbar button{padding:10px 18px;background:#1b3027;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.toolbar button:hover{background:#10b981}
+.toolbar button.secondary{background:#c9a227}
+.doc-header{background:linear-gradient(135deg,#1b3027 0%,#2f5747 100%);color:#fff;padding:44px 60px;position:relative}
+.doc-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#10b981,#c9a227,#10b981)}
+.doc-eyebrow{font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#c9a227;margin-bottom:12px}
+.doc-title{font-size:32px;font-weight:800;line-height:1.2;margin-bottom:8px;letter-spacing:-.02em}
+.doc-subtitle{font-size:14px;color:#a7c1b4;line-height:1.6}
+.doc-body{padding:48px 60px}
+.section{margin-bottom:40px}
+.section:last-child{margin-bottom:0}
+.section-title{font-size:20px;font-weight:800;color:#1b3027;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.section-title .num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:#10b981;color:#fff;border-radius:50%;font-size:13px;font-weight:800;flex-shrink:0}
+.section-subtitle{font-size:13px;color:#64748b;margin-bottom:18px;line-height:1.6}
+.repo-card{background:linear-gradient(135deg,#1b3027,#0d1a15);color:#fff;padding:32px;border-radius:14px;margin-bottom:24px;position:relative;overflow:hidden}
+.repo-card::before{content:'\f09b';font-family:'Font Awesome 6 Brands','Segoe UI',sans-serif;position:absolute;right:20px;bottom:-20px;font-size:180px;opacity:.05}
+.repo-label{font-size:11px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#c9a227;margin-bottom:10px}
+.repo-url{font-family:'SF Mono',Menlo,Consolas,monospace;font-size:18px;font-weight:700;color:#a7f3d0;word-break:break-all;line-height:1.4}
+.repo-meta{margin-top:16px;display:flex;gap:24px;flex-wrap:wrap;font-size:12px;color:#a7c1b4}
+.repo-meta strong{color:#fff;display:block;font-size:14px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(13,26,21,.06);border:1px solid #e1ede7}
+.tbl thead{background:#f0f4f1}
+.tbl th{padding:12px 16px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#1b3027;border-bottom:2px solid #c5ddcf}
+.tbl td{padding:11px 16px;border-top:1px solid #f1f5f3;color:#334155;vertical-align:top}
+.tbl tbody tr:hover{background:#fafdfb}
+.tbl td strong{color:#1b3027}
+.checklist{background:#fff;border:1px solid #e1ede7;border-radius:12px;padding:20px 24px;box-shadow:0 2px 8px rgba(13,26,21,.04)}
+.checklist li{list-style:none;padding:10px 0;border-bottom:1px solid #f1f5f3;font-size:13px;color:#334155;display:flex;gap:12px;align-items:flex-start}
+.checklist li:last-child{border-bottom:none}
+.checklist li::before{content:'☐';color:#10b981;font-weight:700;font-size:16px;line-height:1}
+.checklist li strong{color:#1b3027}
+.callout{background:#ecfdf5;border-left:4px solid #10b981;padding:16px 20px;border-radius:8px;font-size:13px;color:#065f46;line-height:1.6;margin-bottom:24px}
+.callout--blue{background:#eff6ff;border-left-color:#3b82f6;color:#1e40af}
+.doc-footer{padding:24px 60px;background:#f0f4f1;border-top:1px solid #e1ede7;font-size:11px;color:#64748b;display:flex;justify-content:space-between;align-items:center}
+@media print{body{background:#fff;padding:0}.page{box-shadow:none;border-radius:0;width:100%}.toolbar{display:none}}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <button onclick="downloadPNG()">Download PNG</button>
+  <button onclick="window.print()" class="secondary">Print / Save PDF</button>
+</div>
+
+<div class="page" id="page">
+  <div class="doc-header">
+    <div class="doc-eyebrow">Report Section 01</div>
+    <div class="doc-title">GitHub Repository & Source Code</div>
+    <div class="doc-subtitle">Repository link, team identification, and verification checklist for the source code submission.</div>
+  </div>
+
+  <div class="doc-body">
+    <div class="section">
+      <div class="section-title"><span class="num">1</span>Repository</div>
+      <div class="repo-card">
+        <div class="repo-label">Public Repository</div>
+        <div class="repo-url">github.com/ameenreshed/CHE110-Carbon-Footprint-Calculator</div>
+        <div class="repo-meta">
+          <div><strong>Project</strong>Carbotrack</div>
+          <div><strong>Course</strong>CHE110 Environmental Studies</div>
+          <div><strong>Team</strong>Group 1 · Section K4P26HB</div>
+          <div><strong>Type</strong>Static Web Application</div>
+        </div>
+      </div>
+      <div class="callout">
+        <strong>Note:</strong> Verify the repository is set to <strong>Public</strong> before submission. Open the link in an incognito browser window — if it loads without login, it's public. If not, go to <strong>Settings → General → Danger Zone → Change visibility → Public</strong>.
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="num">2</span>Team Identification</div>
+      <p class="section-subtitle">As recorded in <code>about.html</code> of the source code.</p>
+      <table class="tbl">
+        <thead>
+          <tr><th>Roll No.</th><th>Full Name</th><th>Registration</th><th>Section</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>RK4P26HBA01</strong></td><td>Shreya Singh</td><td>12618141</td><td>K4P26HB</td></tr>
+          <tr><td><strong>RK4P26HBA02</strong></td><td>Ankit Singh</td><td>12619429</td><td>K4P26HB</td></tr>
+          <tr><td><strong>RK4P26HBA03</strong></td><td>Ameen Reshed</td><td>12617520</td><td>K4P26HB</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="num">3</span>What to Capture from GitHub</div>
+      <p class="section-subtitle">Take these screenshots to attach alongside your report. Use <strong>Chrome → DevTools (F12) → Ctrl+Shift+P → "Capture full size screenshot"</strong>.</p>
+      <ul class="checklist">
+        <li><strong>Repository homepage</strong> — banner, About section, latest commit timestamp visible.</li>
+        <li><strong>File tree view</strong> — expand <code>js/</code>, <code>css/</code>, and root to show the full project structure.</li>
+        <li><strong>README.md</strong> — the project description, setup steps, and team names.</li>
+        <li><strong>Commit history</strong> — click "N Commits" → shows activity across all three members.</li>
+        <li><strong>Contributors graph</strong> — <code>/graphs/contributors</code> — shows per-member line counts.</li>
+        <li><strong>Latest release / tag</strong> — if you created one (recommended: <code>v1.0</code>).</li>
+        <li><strong>License file</strong> — if you added MIT/Apache-2.0.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="num">4</span>Source Code — File Inventory</div>
+      <p class="section-subtitle">Summary of what's actually in the repository (from the files shared with this report).</p>
+      <table class="tbl">
+        <thead>
+          <tr><th>Folder</th><th>Files</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>/</strong> (root)</td><td>10 HTML pages · 2 SQL schemas · sw.js · README</td><td>Pages + database + service worker</td></tr>
+          <tr><td><strong>js/</strong></td><td>18 JS modules</td><td>Calculator engine, auth, charts, certificates, leaderboard, notifications</td></tr>
+          <tr><td><strong>css/</strong></td><td>13 CSS files</td><td>Base tokens, layout, components, pages, theme, per-page styles</td></tr>
+          <tr><td><strong>img/</strong></td><td>1 image (bg)</td><td>Background photo (referenced but <em>missing</em> in repo — see note below)</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout--blue" style="margin-top:16px">
+        <strong>⚠ Known gap:</strong> <code>css/base.css</code> references <code>img/bg/carbon-ecosystem.webp</code> but the file is not in the repo. Either add it, or accept the graceful fallback (gradient) — the site works fine without it.
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="num">5</span>Reproduction Steps</div>
+      <p class="section-subtitle">Copy-paste these into your report so the evaluator can run the project.</p>
+      <div style="background:#1b3027;color:#e2e8f0;padding:20px 24px;border-radius:10px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12.5px;line-height:1.7;border-left:4px solid #10b981;white-space:pre"># 1. Clone the repository
+git clone https://github.com/ameenreshed/CHE110-Carbon-Footprint-Calculator.git
+cd CHE110-Carbon-Footprint-Calculator
+
+# 2. Serve locally (any static server works)
+python -m http.server 8000
+#   or:  npx serve .
+#   or:  VS Code → Live Server extension
+
+# 3. Open in browser
+#   →  http://localhost:8000/index.html
+
+# 4. (Optional) Rebuild Supabase schema
+#   Copy schema.sql + schema-patch-leaderboard.sql
+#   → Supabase Dashboard → SQL Editor → Paste → Run</div>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <span>Carbotrack — CHE110 Environmental Studies Project · Group 1 · Section K4P26HB</span>
+    <span>Section 01 of 09</span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+function downloadPNG(){
+  if(typeof html2canvas==='undefined'){alert('PNG download needs internet on first use. Use "Print / Save PDF" instead.');return;}
+  html2canvas(document.getElementById('page'),{scale:2,backgroundColor:'#fbf9f5',useCORS:true,logging:false}).then(canvas=>{
+    const a=document.createElement('a');a.download='carbotrack-01-github.png';a.href=canvas.toDataURL('image/png');a.click();
+  });
+}
+</script>
+</body>
+</html>
