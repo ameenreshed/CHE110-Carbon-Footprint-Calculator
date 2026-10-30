@@ -1,8 +1,8 @@
-# 🌱 ECO — Carbon Footprint Calculator
+# 🌱 CARBO-TRACK — Carbon Footprint Calculator
 
 ### Measure Your Impact. Make Every Choice Count.
 
-**ECO** is a web-based environmental sustainability platform developed as part of the **CHE110 Environmental Studies project**. It helps individuals understand, calculate, and reduce their personal carbon footprint through an interactive and user-friendly experience.
+**CARBO-TRACK** is a web-based environmental sustainability platform developed as part of the **CHE110 Environmental Studies project**. It helps individuals understand, calculate, and reduce their personal carbon footprint through an interactive and user-friendly experience.
 
 The platform estimates annual CO₂-equivalent emissions based on everyday activities such as transportation, food consumption, household electricity usage, and waste generation. It presents the results through visual dashboards, emission breakdowns, personalized recommendations, and sustainability challenges.
 
@@ -35,7 +35,7 @@ Climate change and global warming are among the most significant environmental c
 
 Everyday human activities contribute to greenhouse gas emissions, often without individuals realizing the extent of their environmental impact.
 
-ECO aims to make environmental awareness more accessible by providing a platform where users can estimate their carbon footprint and understand how their daily lifestyle choices affect the environment.
+CARBO-TRACK aims to make environmental awareness more accessible by providing a platform where users can estimate their carbon footprint and understand how their daily lifestyle choices affect the environment.
 
 The application transforms user-provided lifestyle information into understandable emission estimates and encourages practical steps towards a more sustainable lifestyle.
 
@@ -45,7 +45,7 @@ By combining web technology, environmental awareness, and interactive visualizat
 
 ## 🎯 Project Objectives
 
-The primary objectives of ECO are:
+The primary objectives of CARBO-TRACK are:
 
 - Help individuals understand their personal carbon footprint.
 - Estimate annual greenhouse gas emissions from everyday activities.
@@ -269,7 +269,7 @@ git clone YOUR_REPOSITORY_URL
 ### Step 2: Open the Project Folder
 
 ```bash
-cd ECO
+cd CARBO-TRACK 
 ```
 
 Open the project folder in Visual Studio Code.
@@ -307,7 +307,7 @@ Open the local website in your browser.
 
 ## ⚙️ Supabase Configuration
 
-ECO uses Supabase for backend services and data management.
+CARBO-TRACK uses Supabase for backend services and data management.
 
 The integration supports features such as:
 
@@ -375,7 +375,7 @@ Full production testing is still necessary for backend integration, security pol
 
 ## 🔮 Future Improvements
 
-ECO can be expanded with additional features and improvements.
+CARBO-TRACK can be expanded with additional features and improvements.
 
 Potential future developments include:
 
@@ -404,15 +404,15 @@ Potential future developments include:
 
 ## 👥 Project Team and Contributions
 
-ECO — Carbon Footprint Calculator was developed through collaborative teamwork. Each team member contributed to different aspects of the project, including web development, technical implementation, deployment, media production, and project documentation.
+CARBO-TRACK — Carbon Footprint Calculator was developed through collaborative teamwork. Each team member contributed to different aspects of the project, including web development, technical implementation, deployment, media production, and project documentation.
 
 ### Team Members
 
 | Team Member | Role | Contributions |
 |---|---|---|
 | **Ameen Reshed** | Web Development & Deployment | Website design and development, frontend implementation, application functionality, technical integration, website hosting, deployment, maintenance, and improvements. |
-| **Ankith** | Video Production & Media | Project demonstration video, screen recordings, video editing, and visual media preparation. |
-| **Shreya** | Project Documentation & Report | Project report preparation, documentation, organizing project information, and presenting project objectives, methodology, implementation, and outcomes. |
+| **Ankit Singh** | Video Production & Media | Project demonstration video, screen recordings, video editing, and visual media preparation. |
+| **Shreya Singh** | Project Documentation & Report | Project report preparation, documentation, organizing project information, and presenting project objectives, methodology, implementation, and outcomes. |
 
 ### Detailed Contribution Breakdown
 
@@ -425,11 +425,11 @@ ECO — Carbon Footprint Calculator was developed through collaborative teamwork
 | Database and Backend Integration | Ameen Reshed |
 | Website Hosting and Deployment | Ameen Reshed |
 | Technical Maintenance and Improvements | Ameen Reshed |
-| Project Demonstration Video | Ankith |
-| Video Recording and Editing | Ankith |
-| Media Preparation | Ankith |
-| Project Report Preparation | Shreya |
-| Project Documentation | Shreya |
+| Project Demonstration Video | Ankit Singh |
+| Video Recording and Editing | Ankit Singh |
+| Media Preparation | Ankit Singh |
+| Project Report Preparation | Shreya Singh |
+| Project Documentation | Shreya Singh|
 
 ### 🤝 Team Collaboration
 
@@ -445,13 +445,13 @@ Through the contributions of each team member, the project brings together a fun
 
 Understand your footprint. Change your habits. Build a greener future.
 
-**ECO — Measure Your Impact. Make Every Choice Count.**
+**CARBO-TRACK — Measure Your Impact. Make Every Choice Count.**
 
 ---
 
 <div align="center">
 
-### 🌍 ECO — Carbon Footprint Calculator
+### 🌍 CARBO-TRACK — Carbon Footprint Calculator
 
 **Developed as part of the CHE110 Environmental Studies Project.**
 
