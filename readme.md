@@ -1,4 +1,4 @@
-#  ECO — Carbon Footprint Calculator
+#  Carbo-Track: Carbon Footprint Calculator
 
 ### Measure Your Impact. Make Every Choice Count.
 
