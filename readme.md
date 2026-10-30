@@ -2,7 +2,7 @@
 
 ### Measure Your Impact. Make Every Choice Count.
 
-**ECO (Carbon Footprint Calculator)** is a web-based environmental sustainability platform designed to help individuals understand, calculate, and reduce their personal carbon footprint.
+**Carbo-Track(Carbon Footprint Calculator)** is a web-based environmental sustainability platform designed to help individuals understand, calculate, and reduce their personal carbon footprint.
 
 The platform estimates annual CO₂-equivalent emissions based on everyday activities such as transportation, food consumption, electricity usage, and waste generation. It presents the results through visual dashboards, personalized insights, and sustainability challenges.
 
