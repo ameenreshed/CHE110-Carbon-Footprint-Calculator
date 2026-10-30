@@ -39,7 +39,7 @@ CARBO-TRACK aims to make environmental awareness more accessible by providing a 
 
 The application transforms user-provided lifestyle information into understandable emission estimates and encourages practical steps towards a more sustainable lifestyle.
 
-By combining web technology, environmental awareness, and interactive visualizations, ECO makes understanding personal carbon emissions easier and more engaging.
+By combining web technology, environmental awareness, and interactive visualizations, CARBO-TRACK makes understanding personal carbon emissions easier and more engaging.
 
 ---
 
@@ -113,7 +113,7 @@ Includes information about data handling and privacy practices.
 
 ## 🧮 Carbon Footprint Calculation
 
-ECO estimates carbon emissions using an activity-based calculation approach.
+CARBO-TRACK estimates carbon emissions using an activity-based calculation approach.
 
 The general calculation formula is:
 
