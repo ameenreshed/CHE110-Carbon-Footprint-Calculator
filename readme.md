@@ -27,6 +27,7 @@ The platform estimates annual CO₂-equivalent emissions based on everyday activ
 13. [Project Team and Contributions](#-project-team-and-contributions)
 14. [Our Vision](#-our-vision)
 15. [Social Media Coverage ](#-social-media-coverage)
+16. [Project Refrences & Important Links](#-project-refrences-&-important-links)
 ---
 
 ## 🌍 About the Project
@@ -468,6 +469,22 @@ The project **Carbon Footprint Calculator (eco.amnrd.com)** was shared across di
 | YouTube | [Watch on YouTube](https://youtu.be/6S8Uxjzk6rY?si=8G4JJ2TNhjkmu1zP) | 24 October 2026 |
 | LinkedIn | [View on LinkedIn](https://lnkd.in/p/gsCZYePH) | 24 October 2026 |
 
+
+## 16. Project References & Important Links
+
+The following links provide access to our Carbon Footprint Calculator project, its source code, and its public awareness campaign.
+
+| Reference | Description | Link |
+|---|---|---|
+| Live Website | Access the working Carbon Footprint Calculator | [eco.amnrd.com](https://eco.amnrd.com) |
+| GitHub Repository | Project source code and documentation | [View Repository](YOUR_GITHUB_REPOSITORY_LINK) |
+| Instagram | Project demonstration and awareness video | [View Post](https://www.instagram.com/reel/De4f8OxJ-6x/?xtok=bHJqZXNoc2wyZmF6) |
+| YouTube | Project demonstration video | [Watch Video](https://youtu.be/6S8Uxjzk6rY?si=8G4JJ2TNhjkmu1zP) |
+| LinkedIn | Project promotion and professional outreach | [View Post](https://lnkd.in/p/gsCZYePH) |
+
+**Project:** Carbon Footprint Calculator  
+**Website:** https://eco.amnrd.com  
+**Objective:** To spread environmental awareness and encourage individuals to understand and reduce their daily carbon footprint.
 
 *Making environmental awareness simple, interactive, and accessible.*
 
