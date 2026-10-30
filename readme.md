@@ -35,7 +35,7 @@ Climate change and global warming are among the major environmental challenges f
 
 Everyday activities contribute to greenhouse gas emissions, often without individuals realizing their environmental impact.
 
-ECO aims to make environmental awareness more accessible by providing a platform where users can estimate their carbon footprint and understand how their daily choices affect the environment.
+Carbo-Track aims to make environmental awareness more accessible by providing a platform where users can estimate their carbon footprint and understand how their daily choices affect the environment.
 
 The application transforms user-provided lifestyle information into understandable emission estimates and encourages practical steps towards a more sustainable lifestyle.
 
@@ -247,7 +247,7 @@ git clone https://github.com/ameenreshed/CHE110-Carbon-Footprint-Calculator
 ### Step 2: Open the Project
 
 ```bash
-cd ECO
+cd CARBO-TRACK 
 ```
 
 Open the project folder in Visual Studio Code.
@@ -281,7 +281,7 @@ Open the local website in your browser.
 
 ##  Database and Security
 
-ECO uses Supabase for authentication and database functionality.
+CARBO-TRACK uses Supabase for authentication and database functionality.
 
 The database supports features such as:
 
@@ -355,7 +355,7 @@ The application is an educational sustainability tool, not a certified carbon ac
 
  Disclaimer
 
-ECO is developed as an educational and environmental awareness project.
+CARBO-TRACK is developed as an educational and environmental awareness project.
 
 The calculated carbon footprint represents an approximate estimate based on the information entered by users and the assumptions used by the calculation model.
 
