@@ -263,7 +263,7 @@ Before running the project locally, make sure you have:
 ### Step 1: Clone the Repository
 
 ```bash
-git clone YOUR_REPOSITORY_URL
+git clone https://github.com/ameenreshed/CHE110-Carbon-Footprint-Calculator
 ```
 
 ### Step 2: Open the Project Folder
