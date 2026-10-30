@@ -455,7 +455,7 @@ Understand your footprint. Change your habits. Build a greener future.
 
 **Developed as part of the CHE110 Environmental Studies Project.**
 
-[Visit Website](https://eco.amnrd.com) · [Project Repository](YOUR_REPOSITORY_URL)
+[Visit Website](https://eco.amnrd.com) · [Project Repository](https://github.com/ameenreshed/CHE110-Carbon-Footprint-Calculator)
 
 *Making environmental awareness simple, interactive, and accessible.*
 
