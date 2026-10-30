@@ -279,7 +279,7 @@ Open the local website in your browser.
 
 ---
 
-## 🗄️ Database and Security
+##  Database and Security
 
 ECO uses Supabase for authentication and database functionality.
 
@@ -377,7 +377,7 @@ GitHub: https://github.com/ameenreshed
 
 LinkedIn: https://www.linkedin.com/in/ameenreshed/
 
-🌱 Our Vision
+ Our Vision
 
 Small choices. Big impact.
 
