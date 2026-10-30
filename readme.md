@@ -26,7 +26,7 @@ The platform estimates annual CO₂-equivalent emissions based on everyday activ
 12. [Project Limitations](#️-project-limitations)
 13. [Project Team and Contributions](#-project-team-and-contributions)
 14. [Our Vision](#-our-vision)
-
+15. [Social Media Coverage ](#-social-media-coverage)
 ---
 
 ## 🌍 About the Project
@@ -456,6 +456,18 @@ Understand your footprint. Change your habits. Build a greener future.
 **Developed as part of the CHE110 Environmental Studies Project.**
 
 [Visit Website](https://eco.amnrd.com) · [Project Repository](https://github.com/ameenreshed/CHE110-Carbon-Footprint-Calculator)
+
+
+## 15. Social Media Coverage
+
+The project **Carbon Footprint Calculator (eco.amnrd.com)** was shared across different social media platforms to create awareness about environmental sustainability and encourage people to calculate and reduce their carbon footprint.
+
+| Platform | Link to Post | Date Posted |
+|---|---|---|
+| Instagram | [Watch on Instagram](https://www.instagram.com/reel/De4f8OxJ-6x/?xtok=bHJqZXNoc2wyZmF6) | 24 October 2026 |
+| YouTube | [Watch on YouTube](https://youtu.be/6S8Uxjzk6rY?si=8G4JJ2TNhjkmu1zP) | 24 October 2026 |
+| LinkedIn | [View on LinkedIn](https://lnkd.in/p/gsCZYePH) | 24 October 2026 |
+
 
 *Making environmental awareness simple, interactive, and accessible.*
 
